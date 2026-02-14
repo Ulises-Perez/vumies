@@ -43,7 +43,7 @@
     <!-- Scroll Container -->
     <div
       ref="scrollContainer"
-      class="flex space-x-4 overflow-x-auto pb-8 scrollbar-hide px-4 md:px-0 scroll-smooth"
+      class="flex space-x-4 overflow-x-auto pb-8 pt-6 scrollbar-hide px-4 -ml-4 md:px-12 md:-ml-12 scroll-smooth"
       @scroll="handleScroll"
     >
       <slot />
