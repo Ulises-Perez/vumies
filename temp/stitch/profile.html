@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vumies User Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#5b13ec",
+                "background-light": "#f6f6f8",
+                "background-dark": "#0f0f12",
+              },
+              fontFamily: {
+                "display": ["Be Vietnam Pro"]
+              },
+              borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-nav {
+            background: rgba(15, 15, 18, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        .text-glow {
+            text-shadow: 0 0 10px rgba(91, 19, 236, 0.5);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white min-h-screen pb-32">
+<!-- Background Accents -->
+<div class="fixed top-[-10%] left-[-20%] w-[80%] h-[40%] bg-primary/10 rounded-full blur-[120px] -z-10"></div>
+<div class="fixed bottom-[20%] right-[-10%] w-[60%] h-[30%] bg-primary/5 rounded-full blur-[100px] -z-10"></div>
+<!-- Header Section -->
+<header class="pt-16 pb-8 px-6 flex flex-col items-center">
+<div class="relative mb-4">
+<div class="absolute inset-0 bg-primary blur-xl opacity-30 rounded-full scale-110"></div>
+<div class="relative w-28 h-28 rounded-full border-2 border-primary p-1">
+<img alt="User Profile" class="w-full h-full rounded-full object-cover" data-alt="Professional portrait of a young male user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFHsS6DC3-sI8J8RVF8St_Lz2o1-6RSUEYqYuuahDhEoYQV2SMXgR3imGTviwmraHUUo8KC0cFl27Lubq8Z6jviw1LIigsHW-aKrYFTW0P2SMyHpVMliaPPFlAdjUtqlv6CVb_qr4GOWBIVKDiQ0pmA9o7FwZs4KZ1rzCgxSOss3oN9pU88IyMsjoQWDYCFjky98sjH3cMLwLl8n7oBAPnXfeOVMb025OZJDWGlBf8FVSwAFEU2cJx3nKixdQ2PBtySh3uBJnZ3jU"/>
+</div>
+</div>
+<h1 class="text-2xl font-bold tracking-tight mb-4">Alex Rivera</h1>
+<button class="glass px-8 py-2.5 rounded-full text-sm font-medium hover:bg-white/10 transition-colors flex items-center gap-2">
+<span class="material-icons text-sm">edit</span>
+            Edit Profile
+        </button>
+</header>
+<!-- Stats Bento Grid -->
+<section class="px-6 mb-10">
+<div class="grid grid-cols-4 grid-rows-3 gap-3 h-[380px]">
+<!-- Total Watch Time (Large) -->
+<div class="col-span-4 row-span-1 glass rounded-xl p-5 relative overflow-hidden">
+<div class="flex flex-col">
+<span class="text-xs text-white/50 uppercase tracking-widest font-semibold">Total Watch Time</span>
+<span class="text-3xl font-bold mt-1">1,240 <span class="text-sm font-normal text-white/40">hrs</span></span>
+</div>
+<!-- Neon Glow Line Graph (SVG) -->
+<div class="absolute bottom-0 left-0 w-full h-1/2 px-2">
+<svg class="w-full h-full opacity-80" preserveaspectratio="none" viewbox="0 0 400 100">
+<path d="M0,80 Q50,75 100,50 T200,60 T300,30 T400,10" fill="none" stroke="#5b13ec" stroke-width="3"></path>
+<path d="M0,80 Q50,75 100,50 T200,60 T300,30 T400,10 V100 H0 Z" fill="url(#gradient)" opacity="0.2"></path>
+<defs>
+<lineargradient id="gradient" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#5b13ec;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#5b13ec;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+</div>
+<!-- Movies Watched (Small) -->
+<div class="col-span-2 row-span-1 glass rounded-xl p-5 flex flex-col justify-center items-center text-center">
+<span class="text-3xl font-bold text-primary text-glow">342</span>
+<span class="text-xs text-white/50 uppercase tracking-wider mt-1">Movies</span>
+</div>
+<!-- Favorite Genre (Small) -->
+<div class="col-span-2 row-span-1 glass rounded-xl p-5 flex flex-col justify-center items-center text-center">
+<span class="text-xl font-bold">Sci-Fi</span>
+<span class="text-xs text-white/50 uppercase tracking-wider mt-1">Fav Genre</span>
+</div>
+<!-- Level 5 Cinephile Badge (Wide) -->
+<div class="col-span-4 row-span-1 glass rounded-xl p-5 flex items-center gap-5 relative overflow-hidden group">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all"></div>
+<div class="w-14 h-14 bg-gradient-to-br from-primary to-primary/40 rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-icons text-3xl text-white">verified</span>
+</div>
+<div>
+<h3 class="font-bold text-lg">Level 5 Cinephile</h3>
+<p class="text-sm text-white/60">Top 2% of movie enthusiasts worldwide.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- My List Section -->
+<section class="mb-10">
+<div class="px-6 flex justify-between items-center mb-4">
+<h2 class="text-xl font-bold tracking-tight">Watch Later</h2>
+<button class="text-primary text-sm font-semibold">View All</button>
+</div>
+<div class="flex overflow-x-auto gap-4 px-6 pb-2 no-scrollbar">
+<!-- Movie Posters -->
+<div class="flex-none w-32 group">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden mb-2">
+<img alt="Dune" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Dune movie poster with desert landscape" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaWyZmaRFQ1hlRrTapWv1v7Nx9hqpG3NaEU2hEJJNSPCsLXApOoXxb_CtvB159gdv29cFeAxCo9g8x-mBnrIRBPMR7uTxocC9crzMh-e33ZpySt7lNBhxLB3mZOCu9Teo4k18Pi0uMe5Dm54l_PJ7EhloEscu3COjw5svujW6hY6XK0MLwjHxvVaH8FOyvZZpdwaf4tJ_8YlT9_wvyQYc46crSRf1UXcBnVAxyHRSHSddQ9l5GUHhaoYOy55o6jC3e0hO6EFPejRs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+<span class="text-[10px] font-bold">DUNE: PART TWO</span>
+</div>
+</div>
+</div>
+<div class="flex-none w-32 group">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden mb-2">
+<img alt="Interstellar" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Outer space themed movie poster with astronaut" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcfonQU2QJkF2v2qPYXMOMFSZ8nlVpmYIQ937X7kjTUIieHbT7Gw02TxusH7zElC2CQ_fq0c88WgALv-vVdTDu75S2W73OEj5_PcL6yosToETUO4XavnLZELzdKNRKtM2AhF4_pF9wQFHbL_rplbrMkjmHbM_kDJBzuLun8rwd-Jgy_mZxFYIOZixe8bW6nB-pZ6nHf3gBQXNmI8hNQXyh0iTdrraPClItIYJRnTS9SclT57kiep-qdZvCwFV0WmoTAgqi8a9R_fA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+<span class="text-[10px] font-bold">INTERSTELLAR</span>
+</div>
+</div>
+</div>
+<div class="flex-none w-32 group">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden mb-2">
+<img alt="Blade Runner" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Neon cyberpunk movie poster aesthetics" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxXHbNWLvtP6tGZXW_AihHD8JFM83VTmxNQ-ekHQ2JA2MBWttACrMglR1a9-5ZK-2jfQluUBTWR-yylQlRiQe-t_pZENz7951HGnV59yacz3DWdNvjGL9G-fbzAERcCBV53ti89yU4CxHT2ud0pvkQkPjOvtDtqKfHpnwBMPbaG5BeEtTG6nuOquEvv4EWmsxnLZuoV2bmEnFPtMUeUfJfFU55KuDRcR9JETJCpud38MJIpf6whM9qqOa8U6-rbLa3J7Tnd7bOhMI"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+<span class="text-[10px] font-bold">BLADE RUNNER</span>
+</div>
+</div>
+</div>
+<div class="flex-none w-32 group">
+<div class="relative aspect-[2/3] rounded-lg overflow-hidden mb-2">
+<img alt="Inception" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Abstract architectural movie poster design" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGjpWC6PkOb6dtCQYtJDznnS83htr-EbR4kISYJdZrUW0fSf4_OR7t2Bs84FFiIsLWdRhLGweIuBy7rc8AmXTD8OMcwTwEqmSlnUVgGtNfFtpTD1_wqT6i7lMq-NtWDF1rcA37cV4VXxT4PSDy59wM7fe0A6WlXZKOZn0WtbykYG9gB34GVpiIBfR6pomF43dJSxsevolkOz9LNcPeVlKRkcpVeseyNLE1vJIfEFTzVcNZoDpF7fWk6OqcO1BiK2tb37B8gp_clAA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+<span class="text-[10px] font-bold">INCEPTION</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Settings List -->
+<section class="px-6 mb-12">
+<h2 class="text-sm font-semibold text-white/40 uppercase tracking-widest mb-4">Settings</h2>
+<div class="glass rounded-xl divide-y divide-white/5 overflow-hidden">
+<button class="w-full px-5 py-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-icons text-white/50">person</span>
+<span class="font-medium">Account Settings</span>
+</div>
+<span class="material-icons text-white/30">chevron_right</span>
+</button>
+<button class="w-full px-5 py-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-icons text-white/50">notifications</span>
+<span class="font-medium">Notifications</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs text-white/30">On</span>
+<span class="material-icons text-white/30">chevron_right</span>
+</div>
+</button>
+<button class="w-full px-5 py-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-icons text-white/50">settings</span>
+<span class="font-medium">App Preferences</span>
+</div>
+<span class="material-icons text-white/30">chevron_right</span>
+</button>
+<button class="w-full px-5 py-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-icons text-red-400/70">logout</span>
+<span class="font-medium text-red-400/70">Logout</span>
+</div>
+</button>
+</div>
+</section>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 glass-nav px-8 pt-4 pb-8 flex justify-between items-center z-50">
+<a class="flex flex-col items-center gap-1 text-white/40" href="#">
+<span class="material-icons">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-white/40" href="#">
+<span class="material-icons">explore</span>
+<span class="text-[10px] font-medium">Explore</span>
+</a>
+<div class="relative -mt-12 flex flex-col items-center">
+<div class="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/40 mb-1 border-4 border-background-dark">
+<span class="material-icons text-white text-3xl">play_arrow</span>
+</div>
+<span class="text-[10px] font-bold text-primary">Vumies</span>
+</div>
+<a class="flex flex-col items-center gap-1 text-white/40" href="#">
+<span class="material-icons">movie</span>
+<span class="text-[10px] font-medium">My List</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-icons text-glow">person</span>
+<span class="text-[10px] font-bold">Profile</span>
+</a>
+</nav>
+<!-- iOS Notch Area Spacer -->
+<div class="fixed top-0 left-0 right-0 h-12 bg-transparent pointer-events-none"></div>
+</body></html>

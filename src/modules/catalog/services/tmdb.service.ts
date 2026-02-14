@@ -29,139 +29,144 @@ class TMDBService {
   // Movies
   async getTrendingMovies(timeWindow: TimeWindow = 'day', page = 1): Promise<TMDBResponse<Movie>> {
     const response = await this.api.get(`/trending/movie/${timeWindow}`, {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getPopularMovies(page = 1): Promise<TMDBResponse<Movie>> {
     const response = await this.api.get('/movie/popular', {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getNowPlayingMovies(page = 1): Promise<TMDBResponse<Movie>> {
     const response = await this.api.get('/movie/now_playing', {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getUpcomingMovies(page = 1): Promise<TMDBResponse<Movie>> {
     const response = await this.api.get('/movie/upcoming', {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getTopRatedMovies(page = 1): Promise<TMDBResponse<Movie>> {
     const response = await this.api.get('/movie/top_rated', {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getMovieDetails(movieId: number): Promise<MovieDetails> {
     const response = await this.api.get(`/movie/${movieId}`, {
-      params: { language: 'es-ES' },
+      params: { language: 'es-MX' },
     })
     return response.data
   }
 
   async getMovieCredits(movieId: number): Promise<Credits> {
     const response = await this.api.get(`/movie/${movieId}/credits`, {
-      params: { language: 'es-ES' },
+      params: { language: 'es-MX' },
     })
     return response.data
   }
 
   async getMovieRecommendations(movieId: number, page = 1): Promise<TMDBResponse<Movie>> {
     const response = await this.api.get(`/movie/${movieId}/recommendations`, {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getSimilarMovies(movieId: number, page = 1): Promise<TMDBResponse<Movie>> {
     const response = await this.api.get(`/movie/${movieId}/similar`, {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getMovieVideos(movieId: number): Promise<TMDBVideosResponse> {
-    const response = await this.api.get(`/movie/${movieId}/videos`)
+    const response = await this.api.get(`/movie/${movieId}/videos`, {
+      params: {
+        language: 'es-MX',
+        include_video_language: 'es-MX,es,en'
+      }
+    })
     return response.data
   }
 
   // TV Shows
   async getTrendingTVShows(timeWindow: TimeWindow = 'day', page = 1): Promise<TMDBResponse<TVShow>> {
     const response = await this.api.get(`/trending/tv/${timeWindow}`, {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getPopularTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
     const response = await this.api.get('/tv/popular', {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getTopRatedTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
     const response = await this.api.get('/tv/top_rated', {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getAiringTodayTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
     const response = await this.api.get('/tv/airing_today', {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getOnTheAirTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
     const response = await this.api.get('/tv/on_the_air', {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getTVShowDetails(tvId: number): Promise<TVShowDetails> {
     const response = await this.api.get(`/tv/${tvId}`, {
-      params: { language: 'es-ES' },
+      params: { language: 'es-MX' },
     })
     return response.data
   }
 
   async getTVShowCredits(tvId: number): Promise<Credits> {
     const response = await this.api.get(`/tv/${tvId}/credits`, {
-      params: { language: 'es-ES' },
+      params: { language: 'es-MX' },
     })
     return response.data
   }
 
   async getTVShowRecommendations(tvId: number, page = 1): Promise<TMDBResponse<TVShow>> {
     const response = await this.api.get(`/tv/${tvId}/recommendations`, {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getSimilarTVShows(tvId: number, page = 1): Promise<TMDBResponse<TVShow>> {
     const response = await this.api.get(`/tv/${tvId}/similar`, {
-      params: { page, language: 'es-ES' },
+      params: { page, language: 'es-MX' },
     })
     return response.data
   }
 
   async getSeasonDetails(tvId: number, seasonNumber: number): Promise<Season> {
     const response = await this.api.get(`/tv/${tvId}/season/${seasonNumber}`, {
-      params: { language: 'es-ES' },
+      params: { language: 'es-MX' },
     })
     return response.data
   }
@@ -174,14 +179,14 @@ class TMDBService {
   // Genres
   async getMovieGenres(): Promise<TMDBGenresResponse> {
     const response = await this.api.get('/genre/movie/list', {
-      params: { language: 'es-ES' },
+      params: { language: 'es-MX' },
     })
     return response.data
   }
 
   async getTVGenres(): Promise<TMDBGenresResponse> {
     const response = await this.api.get('/genre/tv/list', {
-      params: { language: 'es-ES' },
+      params: { language: 'es-MX' },
     })
     return response.data
   }
@@ -191,7 +196,7 @@ class TMDBService {
       params: {
         with_genres: genreId,
         page,
-        language: 'es-ES',
+        language: 'es-MX',
         sort_by: 'popularity.desc',
       },
     })
@@ -203,7 +208,7 @@ class TMDBService {
       params: {
         with_genres: genreId,
         page,
-        language: 'es-ES',
+        language: 'es-MX',
         sort_by: 'popularity.desc',
       },
     })
@@ -213,21 +218,21 @@ class TMDBService {
   // Search
   async searchMulti(query: string, page = 1): Promise<TMDBResponse<Movie | TVShow>> {
     const response = await this.api.get('/search/multi', {
-      params: { query, page, language: 'es-ES' },
+      params: { query, page, language: 'es-MX' },
     })
     return response.data
   }
 
   async searchMovies(query: string, page = 1): Promise<TMDBResponse<Movie>> {
     const response = await this.api.get('/search/movie', {
-      params: { query, page, language: 'es-ES' },
+      params: { query, page, language: 'es-MX' },
     })
     return response.data
   }
 
   async searchTVShows(query: string, page = 1): Promise<TMDBResponse<TVShow>> {
     const response = await this.api.get('/search/tv', {
-      params: { query, page, language: 'es-ES' },
+      params: { query, page, language: 'es-MX' },
     })
     return response.data
   }

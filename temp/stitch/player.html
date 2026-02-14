@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vumies Movie Player</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5b13ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#0f0f12", // Modified slightly to match context prompt
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-dark {
+            background: rgba(15, 15, 18, 0.6);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        body {
+            background-color: #0f0f12;
+            overflow: hidden;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display text-white selection:bg-primary/30">
+<!-- Immersive Movie Background -->
+<div class="fixed inset-0 z-0">
+<img alt="Cinematic movie scene" class="w-full h-full object-cover" data-alt="Cinematic wide shot of a futuristic sci-fi landscape" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGx86F9vnY1-dJBKvysPqwHxd5cQjAX_WVbuDNd-8P9AP6i7a6Se7sZ4oJVjBDzfgA1DVDAaA8831djW68FPeE3DH4rDR702ns0u0IxZk6QUJ9GCP03mXCxMwsjXw-od0m-IPYeazEwZc0GZ3P8I8eR2M04ZlYF9lm18ymM8JKm8YSRKFKRmSEfd1Pex8U1NdgcwOrXz0qQ6l02BWhzE5TFyRhqfrjz1Hslsvcuiez_oRYTAyqwK0wkiuNQ-tCj52T5oCKJtE5kNQ"/>
+<!-- Overlays for legibility -->
+<div class="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90"></div>
+</div>
+<!-- Main Player Interface -->
+<div class="relative z-10 h-screen w-full flex flex-col justify-between p-6 pb-12">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between pt-8 px-4">
+<button class="glass w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+<span class="material-icons-round">arrow_back_ios_new</span>
+</button>
+<div class="text-center">
+<h1 class="text-sm font-medium tracking-widest uppercase opacity-60">Now Playing</h1>
+<p class="text-lg font-semibold">The Neon Horizon</p>
+</div>
+<div class="flex gap-3">
+<button class="glass w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+<span class="material-icons-round">airplay</span>
+</button>
+<button class="glass w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+<span class="material-icons-round">settings</span>
+</button>
+</div>
+</header>
+<!-- Central Playback Controls -->
+<main class="flex items-center justify-center gap-12">
+<button class="glass w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/10 transition-transform active:scale-90">
+<span class="material-icons-round text-3xl">replay_10</span>
+</button>
+<button class="w-24 h-24 rounded-full bg-primary flex items-center justify-center shadow-2xl shadow-primary/40 hover:scale-105 transition-transform active:scale-95">
+<span class="material-icons-round text-5xl">pause</span>
+</button>
+<button class="glass w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/10 transition-transform active:scale-90">
+<span class="material-icons-round text-3xl">forward_10</span>
+</button>
+</main>
+<!-- Bottom Interface Stack -->
+<footer class="space-y-8">
+<!-- Progress Bar Section -->
+<div class="px-4">
+<div class="relative group cursor-pointer">
+<!-- Seek Track -->
+<div class="h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
+<!-- Progress Fill -->
+<div class="h-full bg-primary w-[42%] relative">
+<!-- Glow effect -->
+<div class="absolute right-0 top-0 h-full w-4 bg-primary blur-md"></div>
+</div>
+</div>
+<!-- Playhead Thumb -->
+<div class="absolute left-[42%] top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform"></div>
+</div>
+<div class="flex justify-between mt-3 text-sm font-medium opacity-70">
+<span>42:15</span>
+<span>1:24:00</span>
+</div>
+</div>
+<!-- Bottom Tools & Up Next -->
+<div class="flex items-end justify-between px-2">
+<!-- Left: Volume & Subtitles -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3 glass px-4 py-2.5 rounded-full">
+<span class="material-icons-round text-xl opacity-70">volume_up</span>
+<div class="w-24 h-1 bg-white/20 rounded-full overflow-hidden">
+<div class="h-full bg-white w-2/3"></div>
+</div>
+</div>
+<button class="glass w-12 h-12 rounded-full flex items-center justify-center text-primary">
+<span class="material-icons-round">subtitles</span>
+</button>
+</div>
+<!-- Right: Up Next Card -->
+<div class="glass-dark p-3 rounded-xl flex items-center gap-4 max-w-[240px] border-white/10">
+<div class="relative w-20 h-12 rounded-lg overflow-hidden shrink-0">
+<img alt="Next episode preview" class="w-full h-full object-cover" data-alt="Close up of a futuristic glowing interface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxEN_R6dLa0FDxfNgxBcBQEqZ_k0VzyKtqs7yv1rQQD6tlY8_7HSTwJGprNSFygAsBkiQUxwxpcztl6hgb1v8GcGQJnePws4d5-ko2sIQ2K6LEWxQ-hYzMIRg7xtyVr9A0XlA_VVNv4ye1IEiwnMNXeN4LOhFXx-EvkITKdE4osWj8pAeJJG1s1EuJac0kiKmcbwXH84484iSix0zuq1JchEffX9jtBV8I2Ji1AynNA13OExKKddUReN-VgvBlbdsxbM0_Ab8W5Lo"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+<span class="material-icons-round text-xs">play_arrow</span>
+</div>
+</div>
+<div class="pr-2">
+<p class="text-[10px] uppercase tracking-wider text-primary font-bold">Up Next</p>
+<p class="text-xs font-semibold truncate w-24">S2 • E04: Shadow Protocol</p>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<!-- iOS Home Indicator -->
+<div class="fixed bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-white/20 rounded-full z-20"></div>
+</body></html>

@@ -86,6 +86,7 @@ export function usePlayer() {
     // Methods
     generateMovieUrl,
     generateSeriesUrl,
+    generateEpisodeUrl: generateSeriesUrl,
     generateAnimeUrl,
     showPlayer,
     hidePlayer,

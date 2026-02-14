@@ -1,12 +1,12 @@
 import { ref, computed, type Ref } from 'vue'
 import { tmdbService } from '../services/tmdb.service'
-import type { TVShow, TVShowDetails, Credits, Season } from '../types/tmdb.types'
+import type { TVShow, TVShowDetails, Credits, SeasonDetails } from '../types/tmdb.types'
 
 export function useSeries() {
   const series: Ref<TVShow[]> = ref([])
   const seriesDetails: Ref<TVShowDetails | null> = ref(null)
   const credits: Ref<Credits | null> = ref(null)
-  const currentSeason: Ref<Season | null> = ref(null)
+  const currentSeason: Ref<SeasonDetails | null> = ref(null)
   const recommendations: Ref<TVShow[]> = ref([])
   const similar: Ref<TVShow[]> = ref([])
   const loading = ref(false)
@@ -111,8 +111,8 @@ export function useSeries() {
     error.value = null
     try {
       const season = await tmdbService.getSeasonDetails(tvId, seasonNumber)
-      currentSeason.value = season
-      return season
+      currentSeason.value = season as SeasonDetails
+      return season as SeasonDetails
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Error al cargar temporada'
       throw err

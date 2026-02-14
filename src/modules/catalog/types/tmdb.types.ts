@@ -72,6 +72,12 @@ export interface Season {
   episode_count: number
 }
 
+export interface SeasonDetails extends Season {
+  episodes: Episode[]
+  _id: string
+}
+
+
 export interface Episode {
   id: number
   episode_number: number

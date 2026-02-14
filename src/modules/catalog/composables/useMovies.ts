@@ -13,9 +13,12 @@ export function useMovies() {
   const currentPage = ref(1)
   const totalPages = ref(1)
 
+  const genres: Ref<{ id: number; name: string }[]> = ref([])
+
   const hasMovies = computed(() => movies.value.length > 0)
   const hasRecommendations = computed(() => recommendations.value.length > 0)
   const hasSimilar = computed(() => similar.value.length > 0)
+  const hasGenres = computed(() => genres.value.length > 0)
 
   async function fetchTrendingMovies(timeWindow: 'day' | 'week' = 'day', page = 1) {
     loading.value = true
@@ -143,6 +146,27 @@ export function useMovies() {
     }
   }
 
+  async function fetchMovieVideos(movieId: number) {
+    try {
+      const response = await tmdbService.getMovieVideos(movieId)
+      return response.results
+    } catch (err) {
+      console.error('Error al cargar videos:', err)
+      return []
+    }
+  }
+
+  async function fetchGenres() {
+    try {
+      const response = await tmdbService.getMovieGenres()
+      genres.value = response.genres
+      return response.genres
+    } catch (err) {
+      console.error('Error al cargar géneros:', err)
+      return []
+    }
+  }
+
   async function searchMovies(query: string, page = 1) {
     loading.value = true
     error.value = null
@@ -195,6 +219,19 @@ export function useMovies() {
     fetchMovieDetails,
     fetchMovieRecommendations,
     fetchSimilarMovies,
+    fetchMovieVideos,
+    fetchMoviesByGenre: async (genreId: number, page = 1) => {
+      try {
+        const response = await tmdbService.discoverMoviesByGenre(genreId, page)
+        return response.results
+      } catch (err) {
+        console.error('Error al cargar películas por género:', err)
+        return []
+      }
+    },
+    hasGenres,
+    genres,
+    fetchGenres,
     searchMovies,
     clearMovies,
   }

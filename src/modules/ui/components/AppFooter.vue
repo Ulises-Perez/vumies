@@ -5,8 +5,8 @@
         <!-- Logo & Info -->
         <div class="col-span-1 md:col-span-3 lg:col-span-1">
           <router-link to="/" class="flex items-center space-x-2 mb-4">
-            <div class="text-3xl font-bold text-primary">De</div>
-            <span class="text-2xl font-poppins font-bold text-white">Peli</span>
+            <div class="text-3xl font-bold text-primary">Vu</div>
+            <span class="text-2xl font-poppins font-bold text-white">mies</span>
           </router-link>
           <p class="text-sm text-gray-400">
             Tu plataforma favorita para ver películas y series online. Contenido actualizado

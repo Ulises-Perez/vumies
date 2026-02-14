@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vumies - Premium Cinema</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5b13ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#0f0f12", // Custom deep black for Vumies
+                        "surface": "#1a1a20",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hero-gradient {
+            background: linear-gradient(to top, #0f0f12 0%, transparent 100%);
+        }
+        .bento-glow {
+            box-shadow: 0 0 20px rgba(91, 19, 236, 0.15);
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white selection:bg-primary/30">
+<!-- Mobile Container (Simulating Phone Form Factor) -->
+<div class="max-w-md mx-auto min-h-screen relative overflow-hidden bg-background-dark pb-24">
+<!-- Status Bar Space -->
+<div class="h-12 w-full absolute top-0 z-30 flex justify-between px-6 items-center">
+<span class="text-xs font-semibold">9:41</span>
+<div class="flex gap-1.5 items-center">
+<span class="material-icons-round text-[14px]">signal_cellular_alt</span>
+<span class="material-icons-round text-[14px]">wifi</span>
+<span class="material-icons-round text-[14px]">battery_full</span>
+</div>
+</div>
+<!-- Hero Section -->
+<section class="relative h-[520px] w-full overflow-hidden">
+<img alt="Featured Movie" class="w-full h-full object-cover scale-110" data-alt="Cinematic movie poster of a desert landscape" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgV6JgSznU4G8J7-Gf_kXIqGhALw4ClGQ3k2Rg9h1o4jc83ks0encAm6pcDKUkI_UPXAScb2ItpcYqc59ivGKqj7sG4NLhSWLAwv6LRTk3Ic6EE9B3Ki9OcMemZlE5lG5l8XYkJSy9jZHQVxlLiciKwvXmyLFBayawlQU7_R3T86Cxpxi6U6q7lKQm109Qe6jTTCG-EnCWZ7JK1OKMiFTGVfOKbwFTu8dejY3K3SZ0v0dUqkQzLSGVKh8x8EKqtgIjbw0llIDVd7Y"/>
+<div class="absolute inset-0 hero-gradient"></div>
+<!-- Hero Content Overlay -->
+<div class="absolute bottom-0 left-0 w-full p-6 space-y-4">
+<div class="space-y-1">
+<span class="text-primary font-bold text-xs uppercase tracking-widest">New Release</span>
+<h1 class="text-4xl font-bold tracking-tight">Dune: Part Two</h1>
+<div class="flex items-center gap-3 text-sm text-gray-400">
+<span>2024</span>
+<span class="w-1 h-1 bg-gray-600 rounded-full"></span>
+<span>Sci-Fi / Action</span>
+<span class="w-1 h-1 bg-gray-600 rounded-full"></span>
+<span class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[10px] font-bold">IMAX</span>
+</div>
+</div>
+<div class="flex gap-3 pt-2">
+<button class="flex-1 bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95">
+<span class="material-icons-round">play_arrow</span>
+                        Play
+                    </button>
+<button class="flex-1 glass text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95">
+<span class="material-icons-round text-[20px]">info</span>
+                        Details
+                    </button>
+</div>
+</div>
+</section>
+<!-- Continue Watching Section -->
+<section class="mt-8 px-6">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-bold">Continue Watching</h2>
+<button class="text-primary text-sm font-medium">See all</button>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scroll-smooth">
+<!-- Movie Card 1 -->
+<div class="min-w-[200px] group cursor-pointer">
+<div class="relative rounded-lg overflow-hidden mb-2 aspect-video">
+<img alt="Interstellar" class="w-full h-full object-cover" data-alt="Deep space galaxy view with stars" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAg4BKBSuxABDfjSJZY7VE6_29uHX-iDwM6PN0PPaHE-v-EDmW4rG3r6rOWQZ3hGllO0z_pXvaSYvYJiAKoTse8EIpmPdyS7AgrA26OorLi3G1AEAZbVxm_DCwEsEpxGsU33TrCe1Ruy0HbyrHjVJ-WKipEEAHF1G97tuQpyCBe_bOmTnTVnfBDybEezBT620dyNmb8GcW1Sq8mQRMxJ9fTTL94Js1UUOlyfBxRQiZNsGUKTNxHHfR5_H8f9YKf35xxSRZ3RBEVXPw"/>
+<div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+<div class="absolute bottom-0 left-0 w-full h-1 bg-white/30">
+<div class="h-full bg-primary w-[75%] rounded-r-full shadow-[0_0_8px_rgba(91,19,236,0.8)]"></div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<div class="bg-white/20 backdrop-blur-md rounded-full p-2">
+<span class="material-icons-round text-white">play_arrow</span>
+</div>
+</div>
+</div>
+<h3 class="text-sm font-semibold truncate">Interstellar</h3>
+<p class="text-xs text-gray-400">1h 45m left</p>
+</div>
+<!-- Movie Card 2 -->
+<div class="min-w-[200px] group cursor-pointer">
+<div class="relative rounded-lg overflow-hidden mb-2 aspect-video">
+<img alt="The Batman" class="w-full h-full object-cover" data-alt="Dark moody city silhouette at night" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6Mi87B4VFtAtSRQQ3UH283i06yJC9ccdSr-kydBCRwXMnF4SMC6-7NfwMIPpI4q9BzDLQdHDNSGqFE-bGD1y-gx8k7d--NKdumJY3gC-1nghY_xtWobGpDLKnUjDhCyOzZnwovXlbPT0LawGzzGFEinWw0egjVHfqplxN7wDueNoH9fLHR8HKnAz0OqKOJGdyVff9W654QRIZqkpNazfqQTrKawcE75H1mDPXtNf01TsSKqt1lWnsmL_9FNnauvr6WX0RbBUC8wQ"/>
+<div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+<div class="absolute bottom-0 left-0 w-full h-1 bg-white/30">
+<div class="h-full bg-primary w-[20%] rounded-r-full shadow-[0_0_8px_rgba(91,19,236,0.8)]"></div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<div class="bg-white/20 backdrop-blur-md rounded-full p-2">
+<span class="material-icons-round text-white">play_arrow</span>
+</div>
+</div>
+</div>
+<h3 class="text-sm font-semibold truncate">The Batman</h3>
+<p class="text-xs text-gray-400">2h 10m left</p>
+</div>
+</div>
+</section>
+<!-- Trending Now - Bento Grid -->
+<section class="mt-8 px-6">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-bold">Trending Now</h2>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-gray-700"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-gray-700"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 auto-rows-[160px]">
+<!-- Bento Item Large (2x2) -->
+<div class="col-span-1 row-span-2 relative rounded-xl overflow-hidden bento-glow group cursor-pointer">
+<img alt="Oppenheimer" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Cinematic close up portrait lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhGyFjX27LIMtpwT0adj5yrNQGhdqNQiHYJ7GGU2LVawVubTr0OxKVMCAxs_Tcpwc26do1nt0mrKF77uNlZxY1xEx8CPCHP3dPzVjr6wzJ8CJOMV7ivW7OJLh3mXwrWI5SEqBuPOrbPyl8GYxTiryOSnTc8JD9uLcrolVWXVcx-suGwr7L2vq-PqD99hT8KDbkwAdpks4IxMKdy3KI4kwq-8yN9d8QQ1IXMwm1EY3FKn4co1O8JAkoS7QMgnxQrsU1HUw7WIfLSeU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4">
+<p class="text-[10px] font-bold text-primary uppercase mb-1">Trending #1</p>
+<h3 class="text-sm font-bold leading-tight">Oppenheimer</h3>
+</div>
+</div>
+<!-- Bento Item Small (1x1) -->
+<div class="col-span-1 row-span-1 relative rounded-xl overflow-hidden group cursor-pointer">
+<img alt="Spider-Man" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Vibrant red and blue abstract pattern" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaykDjo_7yormQWb8PK7er8IVdmjxmBu0viV5DfPCyoCbu6BYWhdqG2i3Tbqr7DROg4KxCa4FiXb0cJEUS_6xTfhW5q8C7OrqBcEpxEbv2hKI0SmKcfUUhAvZzL1x35EaJpeyNyFrcVwPCp_0SGtVovZUirrAa61eTqKMh9S026RWvxaK7JzoUjsIDeYHGv9Sf50dn9wQ5UYzs0j99WJP8RWtzLZnWoKP8rrblupMCddNuVZhaSOHS0jAnXeX6j0w7w5oYiuZ1__4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-3 left-3">
+<h3 class="text-xs font-bold">Spider-Man</h3>
+</div>
+</div>
+<!-- Bento Item Small (1x1) -->
+<div class="col-span-1 row-span-1 relative rounded-xl overflow-hidden group cursor-pointer">
+<img alt="Inception" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Modern architectural spiral staircase" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1njHDKTL2rjeFiP9syXmmPyeYc-L2eEqDUo1Xlwh8U4fK0UwoLTqGXGeDghiwlH3n5mg08DNrWnMLhCFhewKp9kbkJ7OontjbjFa3Qx0inGsoWXuVKsl5t4CwkF2nxuIdC97T9QPGIE8xRcZxT-HlKmAe5Xvz5uVVc0WElY_EFrK1ekLPzUmHqYRcf4_PbNuUUdjMo4O9GzeAzlfbqqYjcxGzTQ9Fo9ZDnvQpBGZx99KCEUxpm2sKRHgaPnwx88YTnRWruMdYswc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-3 left-3">
+<h3 class="text-xs font-bold">Inception</h3>
+</div>
+</div>
+<!-- Bento Item Long (2x1) -->
+<div class="col-span-2 row-span-1 relative rounded-xl overflow-hidden group cursor-pointer">
+<img alt="The Prestige" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Stage lighting and theater curtains" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuYs8YbSL7DOG1s8-8rkd3c-qLaAeiswsCaXILjEg6pfWnH0ivAeBHrrUdX8PfBv3sjoJlFPBCMkUo9K_116BYLFBbUeh8Y5izR_NiIuRBXnYz7XWUdrE3v8jKhvm70E4zXR053D3ahwkNZMID1mzj6p8vQ3_Sr6zgAbHXK-rbHvSVVPPqyKWU4cdrbEt18_LwkiQ1D17-0oYj9TupC1djbQhkwYNqpG_ddMoLD5i3vIc-MNgAVGIoLDVsNPjGcRiFxYygFnGMD44"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<h3 class="text-sm font-bold">The Prestige</h3>
+<p class="text-[10px] text-gray-400">Highly Recommended for You</p>
+</div>
+<div class="absolute top-4 right-4 glass px-2 py-1 rounded-md">
+<div class="flex items-center gap-1">
+<span class="material-icons-round text-yellow-500 text-[12px]">star</span>
+<span class="text-[10px] font-bold">8.5</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-6 left-6 right-6 h-16 glass rounded-full flex items-center justify-around px-4 z-50">
+<a class="flex flex-col items-center justify-center text-primary" href="#">
+<span class="material-icons-round">home</span>
+<span class="text-[10px] font-bold mt-0.5">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-400 hover:text-white transition-colors" href="#">
+<span class="material-icons-round">search</span>
+<span class="text-[10px] font-medium mt-0.5">Explore</span>
+</a>
+<div class="relative -top-8 bg-primary w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-primary/40 border-4 border-background-dark active:scale-90 transition-transform cursor-pointer">
+<span class="material-icons-round text-white text-3xl">add</span>
+</div>
+<a class="flex flex-col items-center justify-center text-gray-400 hover:text-white transition-colors" href="#">
+<span class="material-icons-round">bookmarks</span>
+<span class="text-[10px] font-medium mt-0.5">My List</span>
+</a>
+<a class="flex flex-col items-center justify-center" href="#">
+<div class="w-6 h-6 rounded-full overflow-hidden border border-gray-600">
+<img alt="User" class="w-full h-full object-cover" data-alt="User profile avatar portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj8Sz5X7vq1SLA7SHXjFekY7aX34q4OaL6hqDR62mqiCmO0lP67olCYSvVuwX6hofonuG11SQEGAmYyv807KGdLGmThcnWCuoCb5HzQlQBgJ8w9vxWOYXVJOQcFjIZp7yZpZOAB4T9qhHh0m2aAd4jZ69fZnP95dMAVnADSFvCmtF9ES42Bzg2J1bYPdAsKhU4j4aZZAR_l6N5oSShJi5K21HKh2Tyob6RHkMrTr08iwQm8xEZ5afMhwSp65eAS33LQeC6gOINN4M"/>
+</div>
+<span class="text-[10px] font-medium mt-0.5 text-gray-400">Profile</span>
+</a>
+</nav>
+<!-- Safe Area Inset Bottom -->
+<div class="h-8 bg-background-dark"></div>
+</div>
+</body></html>

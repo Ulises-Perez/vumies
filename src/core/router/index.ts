@@ -34,10 +34,10 @@ const router = createRouter({
       meta: { title: 'Serie - Vumies' },
     },
     {
-      path: '/serie/:id/season/:season/episode/:episode',
-      name: 'episode-player',
-      component: () => import('@/modules/player/views/EpisodePlayerView.vue'),
-      meta: { title: 'Episodio - Vumies' },
+      path: '/player/:type/:id/:season?/:episode?',
+      name: 'player',
+      component: () => import('@/modules/player/views/PlayerView.vue'),
+      meta: { title: 'Reproductor - Vumies' },
     },
     {
       path: '/search',
@@ -50,6 +50,12 @@ const router = createRouter({
       name: 'favorites',
       component: () => import('@/modules/user/views/FavoritesView.vue'),
       meta: { title: 'Mis Favoritos - Vumies' },
+    },
+    {
+      path: '/recent',
+      name: 'recent',
+      component: () => import('@/modules/user/views/HistoryView.vue'),
+      meta: { title: 'Historial - Vumies' },
     },
     {
       path: '/:pathMatch(.*)*',
