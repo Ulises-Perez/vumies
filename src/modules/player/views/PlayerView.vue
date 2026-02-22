@@ -33,7 +33,7 @@
     <div class="w-full md:w-96 bg-gray-900 border-l border-white/5 flex flex-col h-[40vh] md:h-full">
       
       <!-- SERIES SIDEBAR -->
-      <template v-if="type === 'tv' || type === 'serie'">
+      <template v-if="type === 'tv'">
         <!-- Header: Season Selector -->
         <div class="p-4 border-b border-white/5 bg-gray-900 z-10">
           
@@ -185,8 +185,7 @@ const {
   fetchSeasonDetails, 
   seriesDetails, 
   currentSeason, 
-  loading: loadingEpisodes,
-  fetchSeriesRecommendations 
+  loading: loadingEpisodes
 } = useSeries()
 const { generateMovieUrl, generateEpisodeUrl } = usePlayer()
 
@@ -288,7 +287,7 @@ function nextEpisode() {
   // 1. Try Next Episode in Current Season (Sidebar List)
   if (currentEpIndex !== -1 && currentEpIndex < episodes.value.length - 1) {
     const nextEp = episodes.value[currentEpIndex + 1]
-    goToEpisode(nextEp.episode_number)
+    if (nextEp) goToEpisode(nextEp.episode_number)
     return
   }
   
@@ -296,6 +295,7 @@ function nextEpisode() {
   const currentSeasonIndex = seasons.value.findIndex(s => s.season_number === season.value)
   if (currentSeasonIndex !== -1 && currentSeasonIndex < seasons.value.length - 1) {
     const nextSeason = seasons.value[currentSeasonIndex + 1]
+    if (!nextSeason) return
     // Navigate manually to next season
     router.push({
       name: 'player',

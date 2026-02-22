@@ -266,7 +266,7 @@ function onPlayerReady(event: any) {
   startCheckInterval()
 }
 
-function onPlayerStateChange(event: any) {
+function onPlayerStateChange(_event: any) {
   // If ended or playing, ensure logic holds
 }
 

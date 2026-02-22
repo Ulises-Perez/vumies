@@ -139,7 +139,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlayer } from '../composables/usePlayer'
 import { useSeries } from '@/modules/catalog/composables/useSeries'
-import type { Episode } from '@/modules/catalog/types/tmdb.types'
+
 
 const route = useRoute()
 const router = useRouter()
@@ -218,7 +218,7 @@ function nextEpisode() {
   // 1. Try Next Episode in Current Season
   if (currentEpIndex !== -1 && currentEpIndex < episodes.value.length - 1) {
     const nextEp = episodes.value[currentEpIndex + 1]
-    goToEpisode(nextEp.episode_number)
+    if (nextEp) goToEpisode(nextEp.episode_number)
     return
   }
   
@@ -226,6 +226,7 @@ function nextEpisode() {
   const currentSeasonIndex = seasons.value.findIndex(s => s.season_number === seasonNumber.value)
   if (currentSeasonIndex !== -1 && currentSeasonIndex < seasons.value.length - 1) {
     const nextSeason = seasons.value[currentSeasonIndex + 1]
+    if (!nextSeason) return
     // Navigate to Ep 1 of next season
     // NOTE: goToEpisode uses selectedSeasonNumber, so we must manually push route
     router.push({
