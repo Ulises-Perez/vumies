@@ -5,7 +5,7 @@
       <!-- Back Button -->
       <button 
         @click="goBack"
-        class="absolute top-4 left-4 z-20 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 duration-300"
+        class="absolute top-4 right-4 z-20 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 duration-300"
       >
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -29,8 +29,8 @@
       </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="w-full md:w-96 bg-gray-900 border-l border-white/5 flex flex-col h-[40vh] md:h-full">
+    <!-- Sidebar (Desktop Only) -->
+    <div class="w-full md:w-96 bg-gray-900 border-l border-white/5 hidden md:flex flex-col md:h-full">
       
       <!-- SERIES SIDEBAR -->
       <template v-if="type === 'tv'">
