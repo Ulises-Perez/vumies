@@ -93,7 +93,7 @@
   </Teleport>
 
   <!-- Bottom Navigation Bar -->
-  <nav class="bottom-nav" v-show="!isPlayerRoute">
+  <nav class="bottom-nav md:hidden" v-show="!isPlayerRoute">
     <div class="bottom-nav-inner">
       <router-link
         to="/"
