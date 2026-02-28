@@ -14,8 +14,19 @@
 
       <!-- Iframe -->
       <div class="flex-1 bg-black relative w-full h-full">
+        <!-- Empty State Preview/Error -->
+        <div v-if="hasContentError" class="absolute inset-0 flex flex-col items-center justify-center text-white bg-black/90 z-20">
+          <svg class="w-16 h-16 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+          </svg>
+          <h2 class="text-2xl font-bold font-poppins mb-2 text-white">Próximamente</h2>
+          <p class="text-gray-400 max-w-sm text-center">Este contenido no está disponible por el momento. Mientras tanto, puedes explorar otras recomendaciones.</p>
+        </div>
+
         <iframe
-          v-if="embedUrl"
+          v-show="embedUrl && !hasContentError"
+          @error="handleIframeError"
+          @load="handleIframeLoad"
           :src="embedUrl"
           class="w-full h-full absolute inset-0"
           frameborder="0"
@@ -23,7 +34,7 @@
           allowfullscreen
           referrerpolicy="origin"
         />
-        <div v-else class="flex items-center justify-center h-full text-white">
+        <div v-show="!embedUrl && !hasContentError" class="flex items-center justify-center h-full text-white">
           <LoadingSpinner message="Cargando reproductor..." />
         </div>
       </div>
@@ -33,7 +44,7 @@
     <div class="w-full md:w-96 bg-gray-900 border-l border-white/5 hidden md:flex flex-col md:h-full">
       
       <!-- SERIES SIDEBAR -->
-      <template v-if="type === 'tv'">
+      <template v-if="(type === 'tv' || type === 'anime') && !hasContentError">
         <!-- Header: Season Selector -->
         <div class="p-4 border-b border-white/5 bg-gray-900 z-10">
           
@@ -129,7 +140,7 @@
         </div>
       </template>
 
-      <!-- MOVIES SIDEBAR (Recommendations) -->
+      <!-- MOVIES SIDEBAR & FALLBACK RECOMMENDATIONS -->
       <template v-else>
         <div class="p-4 border-b border-white/5">
           <h2 class="text-white font-bold font-poppins">A continuación</h2>
@@ -179,7 +190,7 @@ import { usePlayer } from '@/modules/player'
 
 const route = useRoute()
 const router = useRouter()
-const { fetchMovieRecommendations } = useMovies()
+const { fetchMovieRecommendations, fetchSimilarMovies, fetchTrendingMovies } = useMovies()
 const { 
   fetchSeriesDetails, 
   fetchSeasonDetails, 
@@ -187,18 +198,21 @@ const {
   currentSeason, 
   loading: loadingEpisodes
 } = useSeries()
-const { generateMovieUrl, generateEpisodeUrl } = usePlayer()
+const { generateMovieUrl, generateEpisodeUrl, generateAnimeUrl } = usePlayer()
 
 // State
 const embedUrl = ref('')
 const queue = ref<any[]>([])
 const loadingQueue = ref(false)
 const selectedSeasonNumber = ref(1)
+const hasContentError = ref(false)
+let iframeTimeout: number | null = null
 
 // Computed Params
 const type = computed(() => {
    const t = route.params.type as string
-   // Normalize 'serie' or 'tv'
+   // Normalize 'serie' or 'tv', handle 'anime' intentionally
+   if (t === 'anime') return 'anime'
    return (t === 'serie' || t === 'tv') ? 'tv' : 'movie'
 })
 const id = computed(() => Number(route.params.id))
@@ -221,6 +235,8 @@ function isCurrentEpisode(epNum: number) {
 function goBack() {
   if (type.value === 'movie') {
     router.push({ name: 'movie-detail', params: { id: id.value } })
+  } else if (type.value === 'anime') {
+    router.push({ name: 'anime-detail', params: { id: id.value } })
   } else {
     router.push({ name: 'serie-detail', params: { id: id.value } })
   }
@@ -228,16 +244,45 @@ function goBack() {
 
 async function loadContent() {
   // Clear previous state if needed
+  hasContentError.value = false
   
   if (type.value === 'movie') {
     embedUrl.value = generateMovieUrl(id.value)
     
     // Load Recommendations for Queue
     loadingQueue.value = true
-    const res = await fetchMovieRecommendations(id.value)
-    queue.value = res?.results || []
+    let res = await fetchMovieRecommendations(id.value)
+    if (!res?.results || res.results.length === 0) {
+      res = await fetchSimilarMovies(id.value)
+      if (!res?.results || res.results.length === 0) {
+        res = await fetchTrendingMovies('day')
+      }
+    }
+    queue.value = res?.results?.filter((m: any) => m.id !== id.value) || []
     loadingQueue.value = false
     
+  } else if (type.value === 'anime') {
+    // ANIME LOGIC
+    embedUrl.value = generateAnimeUrl(id.value, season.value, episode.value)
+
+    if (!seriesDetails.value || seriesDetails.value.id !== id.value) {
+       await fetchSeriesDetails(id.value)
+    }
+
+    selectedSeasonNumber.value = season.value
+
+    loadingEpisodes.value = true
+    await fetchSeasonDetails(id.value, season.value)
+    loadingEpisodes.value = false
+
+    let fallbackRes = await fetchMovieRecommendations(id.value) 
+    if (!fallbackRes?.results || fallbackRes.results.length === 0) {
+      fallbackRes = await fetchSimilarMovies(id.value)
+      if (!fallbackRes?.results || fallbackRes.results.length === 0) {
+        fallbackRes = await fetchTrendingMovies('day')
+      }
+    }
+    queue.value = fallbackRes?.results?.filter((m: any) => m.id !== id.value) || []
   } else {
     // SERIES LOGIC
     embedUrl.value = generateEpisodeUrl(id.value, season.value, episode.value)
@@ -254,7 +299,47 @@ async function loadContent() {
     loadingEpisodes.value = true
     await fetchSeasonDetails(id.value, season.value)
     loadingEpisodes.value = false
+    
+    // Fallback Recommendations for series (if error happens)
+    let fallbackRes = await fetchMovieRecommendations(id.value) 
+    if (!fallbackRes?.results || fallbackRes.results.length === 0) {
+      fallbackRes = await fetchSimilarMovies(id.value)
+      if (!fallbackRes?.results || fallbackRes.results.length === 0) {
+        fallbackRes = await fetchTrendingMovies('day')
+      }
+    }
+    queue.value = fallbackRes?.results?.filter((m: any) => m.id !== id.value) || []
   }
+
+  // Set a timeout to check if the iframe hasn't loaded (fallback for undetected 404s)
+  if (iframeTimeout) clearTimeout(iframeTimeout)
+  iframeTimeout = window.setTimeout(() => {
+    // If it takes too long and we haven't received any 'ready' or video data
+    // we could potentially assume an error, but let's rely on fetch detection first.
+  }, 10000)
+
+  // As iframe @error does not always catch 404s from cross-origin, we double check by fetching the URL head
+  checkEmbedUrlStatus(embedUrl.value)
+}
+
+async function checkEmbedUrlStatus(url: string) {
+  try {
+     const res = await fetch(url, { method: 'HEAD' })
+     if (!res.ok && res.status === 404) {
+       hasContentError.value = true
+     }
+  } catch (e) {
+     // Fetch might fail due to CORS. If it does, rely on visual fallback or iframe load error.
+     console.warn('Could not verify embed URL status via fetch', e)
+  }
+}
+
+function handleIframeError() {
+  hasContentError.value = true
+}
+
+function handleIframeLoad() {
+  if (iframeTimeout) clearTimeout(iframeTimeout)
 }
 
 async function handleSeasonChange() {
@@ -271,7 +356,7 @@ function goToEpisode(epNum: number) {
   router.push({
     name: 'player', // route name
     params: {
-      type: 'serie', 
+      type: type.value === 'anime' ? 'anime' : 'serie', 
       id: id.value,
       season: selectedSeasonNumber.value,
       episode: epNum
@@ -280,7 +365,7 @@ function goToEpisode(epNum: number) {
 }
 
 function nextEpisode() {
-  if (type.value !== 'tv') return
+  if (type.value === 'movie') return
 
   const currentEpIndex = episodes.value.findIndex(e => e.episode_number === episode.value)
   
@@ -300,7 +385,7 @@ function nextEpisode() {
     router.push({
       name: 'player',
       params: {
-        type: 'serie',
+        type: type.value === 'anime' ? 'anime' : 'serie',
         id: id.value,
         season: nextSeason.season_number,
         episode: 1
@@ -321,9 +406,13 @@ function playItem(item: any) {
 // Auto-play Listener
 function handleMessage(event: MessageEvent) {
   if (event.data === 'ended' || event.data?.event === 'ended') {
-    if (type.value === 'tv') {
+    if (type.value === 'tv' || type.value === 'anime') {
        nextEpisode()
     }
+  }
+  // Vimeus or other players might send specific errors
+  if (event.data === 'error' || event.data?.event === 'error' || event.data?.status === 404) {
+    hasContentError.value = true
   }
 }
 
@@ -334,6 +423,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('message', handleMessage)
+  if (iframeTimeout) clearTimeout(iframeTimeout)
 })
 
 watch(() => route.params, () => {

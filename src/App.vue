@@ -26,16 +26,20 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useAppStore } from '@/core/stores/app.store'
+import { useAnimeStore } from '@/core/stores/anime.store'
 import AppNavbar from '@/modules/ui/components/AppNavbar.vue'
 import AppFooter from '@/modules/ui/components/AppFooter.vue'
 import BottomMenu from '@/modules/ui/components/BottomMenu.vue'
 import SideMenu from '@/modules/ui/components/SideMenu.vue'
 
 const appStore = useAppStore()
+const animeStore = useAnimeStore()
 
 onMounted(() => {
   // Load genres on app mount
   appStore.fetchGenres()
+  // Pre-fetch anime TMDB IDs from Vimeus
+  animeStore.fetchAnimeIds()
 })
 </script>
 

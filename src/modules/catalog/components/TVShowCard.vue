@@ -86,7 +86,7 @@
         </h3>
         <div class="flex items-center justify-between mt-1">
           <span v-if="releaseYear" class="text-xs text-gray-400 font-medium">{{ releaseYear }}</span>
-          <span class="text-xs text-gray-500 border border-gray-700 rounded px-1.5 py-0.5">Series</span>
+          <span class="text-xs text-gray-500 border border-gray-700 rounded px-1.5 py-0.5">{{ resolvedContentType === 'anime' ? 'Anime' : 'Series' }}</span>
         </div>
       </div>
     </router-link>
@@ -98,11 +98,13 @@ import { computed } from 'vue'
 import type { TVShow } from '../types/tmdb.types'
 import { getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
+import { useAnimeStore } from '@/core/stores/anime.store'
 
 interface Props {
   series: TVShow
   showRating?: boolean
   showFavorite?: boolean
+  contentType?: 'serie' | 'anime'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -111,6 +113,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const userStore = useUserStore()
+const animeStore = useAnimeStore()
+
+// Auto-detect: if contentType is explicitly set, use it. Otherwise check the anime store.
+const resolvedContentType = computed(() => {
+  if (props.contentType) return props.contentType
+  return animeStore.isAnime(props.series.id) ? 'anime' : 'serie'
+})
 
 const posterUrl = computed(() => getPosterUrl(props.series.poster_path, 'w342'))
 
@@ -120,7 +129,7 @@ const releaseYear = computed(() => {
 })
 
 const seriesLink = computed(() => ({
-  name: 'serie-detail',
+  name: resolvedContentType.value === 'anime' ? 'anime-detail' : 'serie-detail',
   params: { id: props.series.id },
 }))
 

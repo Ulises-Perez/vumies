@@ -90,11 +90,13 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/core/stores/app.store'
+import { useAnimeStore } from '@/core/stores/anime.store'
 import { tmdbService } from '@/modules/catalog/services/tmdb.service'
 import { getPosterUrl } from '@/core/config/api.config'
 
 const router = useRouter()
 const appStore = useAppStore()
+const animeStore = useAnimeStore()
 
 const scrolled = ref(false)
 const showDropdown = ref(false)
@@ -150,7 +152,13 @@ function handleSearch() {
 function handleSuggestionClick(item: any) {
   showDropdown.value = false
   searchQuery.value = '' // Optional: clear search query on selection
-  const routeName = item.media_type === 'movie' ? 'movie-detail' : 'serie-detail'
+  let routeName: string
+  if (item.media_type === 'movie') {
+    routeName = 'movie-detail'
+  } else {
+    // Check if it's an anime via the Vimeus store
+    routeName = animeStore.isAnime(item.id) ? 'anime-detail' : 'serie-detail'
+  }
   router.push({ name: routeName, params: { id: item.id } })
 }
 

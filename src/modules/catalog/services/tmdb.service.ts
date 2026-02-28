@@ -136,6 +136,34 @@ class TMDBService {
     return response.data
   }
 
+  // Animes
+  async getPopularAnimes(page = 1): Promise<TMDBResponse<TVShow>> {
+    const response = await this.api.get('/discover/tv', {
+      params: {
+        page,
+        language: 'es-MX',
+        with_genres: 16,
+        with_original_language: 'ja',
+        sort_by: 'popularity.desc',
+      },
+    })
+    return response.data
+  }
+
+  async getTopRatedAnimes(page = 1): Promise<TMDBResponse<TVShow>> {
+    const response = await this.api.get('/discover/tv', {
+      params: {
+        page,
+        language: 'es-MX',
+        with_genres: 16,
+        with_original_language: 'ja',
+        sort_by: 'vote_average.desc',
+        'vote_count.gte': 100,
+      },
+    })
+    return response.data
+  }
+
   async getTVShowDetails(tvId: number): Promise<TVShowDetails> {
     const response = await this.api.get(`/tv/${tvId}`, {
       params: { language: 'es-MX' },

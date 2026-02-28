@@ -209,10 +209,11 @@ function toggleFavorite() {
 
 function playEpisode(episodeNumber: number) {
   if (seriesDetails.value) {
+    const isAnimeRoute = route.name === 'anime-detail';
     router.push({
       name: 'player',
       params: { 
-        type: 'tv', 
+        type: isAnimeRoute ? 'anime' : 'tv', 
         id: seriesDetails.value.id,
         season: selectedSeasonNumber.value,
         episode: episodeNumber

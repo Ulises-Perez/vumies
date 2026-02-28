@@ -72,7 +72,8 @@ import {
   TvIcon, 
   HeartIcon, 
   ClockIcon, 
-  Cog6ToothIcon 
+  Cog6ToothIcon,
+  SparklesIcon
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -84,6 +85,7 @@ const menuGroups = [
       { name: 'Inicio', path: '/', icon: HomeIcon },
       { name: 'Películas', path: '/movies', icon: FilmIcon },
       { name: 'Series', path: '/series', icon: TvIcon },
+      { name: 'Anime', path: '/animes', icon: SparklesIcon },
     ]
   },
   {

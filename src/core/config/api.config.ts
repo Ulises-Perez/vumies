@@ -9,6 +9,7 @@ export const API_CONFIG = {
     BASE_URL: 'https://vimeus.com',
     EMBED_URL: 'https://vimeus.com/e',
     VIEW_KEY: import.meta.env.VITE_VIMEUS_VIEW_KEY || '',
+    API_KEY: import.meta.env.VITE_VIMEUS_API_KEY || '',
   },
 } as const
 

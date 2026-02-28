@@ -28,10 +28,23 @@ const router = createRouter({
       meta: { title: 'Series - Vumies' },
     },
     {
+      path: '/animes',
+      name: 'animes',
+      component: () => import('@/modules/catalog/views/AnimeView.vue'),
+      meta: { title: 'Animes - Vumies' },
+    },
+    {
       path: '/serie/:id',
       name: 'serie-detail',
       component: () => import('@/modules/catalog/views/SerieDetailView.vue'),
       meta: { title: 'Serie - Vumies' },
+    },
+    {
+      path: '/anime/:id',
+      name: 'anime-detail',
+      // We can reuse SerieDetailView for Anime since TMDB treats them as TV shows
+      component: () => import('@/modules/catalog/views/SerieDetailView.vue'),
+      meta: { title: 'Anime - Vumies' },
     },
     {
       path: '/player/:type/:id/:season?/:episode?',
