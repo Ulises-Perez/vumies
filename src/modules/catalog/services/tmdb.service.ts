@@ -1,4 +1,3 @@
-import axios, { type AxiosInstance } from 'axios'
 import { API_CONFIG } from '@/core/config/api.config'
 import type {
   Movie,
@@ -13,259 +12,184 @@ import type {
   TimeWindow,
 } from '../types/tmdb.types'
 
-class TMDBService {
-  private api: AxiosInstance
+type Params = Record<string, string | number | boolean | undefined>
 
-  constructor() {
-    this.api = axios.create({
-      baseURL: API_CONFIG.TMDB.BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${API_CONFIG.TMDB.BEARER_TOKEN}`,
-      },
-    })
+/**
+ * Cliente TMDB sobre fetch nativo (antes axios).
+ * Motivo: axios entraba en el chunk inicial vía App.vue -> app.store -> tmdb.service,
+ * aunque la página de anime use fetch nativo. Aquí axios solo aportaba baseURL,
+ * header Bearer, serialización de params y `.data`; todo replicable con fetch.
+ */
+class TMDBService {
+  private baseURL = API_CONFIG.TMDB.BASE_URL.replace(/\/$/, '')
+  private headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${API_CONFIG.TMDB.BEARER_TOKEN}`,
+  }
+
+  private async get<T>(path: string, params?: Params): Promise<T> {
+    const url = new URL(this.baseURL + path)
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined) url.searchParams.set(k, String(v))
+      }
+    }
+    const res = await fetch(url, { headers: this.headers })
+    if (!res.ok) throw new Error(`TMDB ${res.status} ${res.statusText} @ ${path}`)
+    return res.json() as Promise<T>
   }
 
   // Movies
-  async getTrendingMovies(timeWindow: TimeWindow = 'day', page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get(`/trending/movie/${timeWindow}`, {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getTrendingMovies(timeWindow: TimeWindow = 'day', page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get(`/trending/movie/${timeWindow}`, { page, language: 'es-MX' })
   }
 
-  async getPopularMovies(page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get('/movie/popular', {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getPopularMovies(page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get('/movie/popular', { page, language: 'es-MX' })
   }
 
-  async getNowPlayingMovies(page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get('/movie/now_playing', {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getNowPlayingMovies(page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get('/movie/now_playing', { page, language: 'es-MX' })
   }
 
-  async getUpcomingMovies(page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get('/movie/upcoming', {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getUpcomingMovies(page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get('/movie/upcoming', { page, language: 'es-MX' })
   }
 
-  async getTopRatedMovies(page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get('/movie/top_rated', {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getTopRatedMovies(page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get('/movie/top_rated', { page, language: 'es-MX' })
   }
 
-  async getMovieDetails(movieId: number): Promise<MovieDetails> {
-    const response = await this.api.get(`/movie/${movieId}`, {
-      params: { language: 'es-MX' },
-    })
-    return response.data
+  getMovieDetails(movieId: number): Promise<MovieDetails> {
+    return this.get(`/movie/${movieId}`, { language: 'es-MX' })
   }
 
-  async getMovieCredits(movieId: number): Promise<Credits> {
-    const response = await this.api.get(`/movie/${movieId}/credits`, {
-      params: { language: 'es-MX' },
-    })
-    return response.data
+  getMovieCredits(movieId: number): Promise<Credits> {
+    return this.get(`/movie/${movieId}/credits`, { language: 'es-MX' })
   }
 
-  async getMovieRecommendations(movieId: number, page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get(`/movie/${movieId}/recommendations`, {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getMovieRecommendations(movieId: number, page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get(`/movie/${movieId}/recommendations`, { page, language: 'es-MX' })
   }
 
-  async getSimilarMovies(movieId: number, page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get(`/movie/${movieId}/similar`, {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getSimilarMovies(movieId: number, page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get(`/movie/${movieId}/similar`, { page, language: 'es-MX' })
   }
 
-  async getMovieVideos(movieId: number): Promise<TMDBVideosResponse> {
-    const response = await this.api.get(`/movie/${movieId}/videos`, {
-      params: {
-        language: 'es-MX',
-        include_video_language: 'es-MX,es,en'
-      }
+  getMovieVideos(movieId: number): Promise<TMDBVideosResponse> {
+    return this.get(`/movie/${movieId}/videos`, {
+      language: 'es-MX',
+      include_video_language: 'es-MX,es,en',
     })
-    return response.data
   }
 
   // TV Shows
-  async getTrendingTVShows(timeWindow: TimeWindow = 'day', page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get(`/trending/tv/${timeWindow}`, {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getTrendingTVShows(timeWindow: TimeWindow = 'day', page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get(`/trending/tv/${timeWindow}`, { page, language: 'es-MX' })
   }
 
-  async getPopularTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get('/tv/popular', {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getPopularTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get('/tv/popular', { page, language: 'es-MX' })
   }
 
-  async getTopRatedTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get('/tv/top_rated', {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getTopRatedTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get('/tv/top_rated', { page, language: 'es-MX' })
   }
 
-  async getAiringTodayTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get('/tv/airing_today', {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getAiringTodayTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get('/tv/airing_today', { page, language: 'es-MX' })
   }
 
-  async getOnTheAirTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get('/tv/on_the_air', {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getOnTheAirTVShows(page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get('/tv/on_the_air', { page, language: 'es-MX' })
   }
 
   // Animes
-  async getPopularAnimes(page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get('/discover/tv', {
-      params: {
-        page,
-        language: 'es-MX',
-        with_genres: 16,
-        with_original_language: 'ja',
-        sort_by: 'popularity.desc',
-      },
+  getPopularAnimes(page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get('/discover/tv', {
+      page,
+      language: 'es-MX',
+      with_genres: 16,
+      with_original_language: 'ja',
+      sort_by: 'popularity.desc',
     })
-    return response.data
   }
 
-  async getTopRatedAnimes(page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get('/discover/tv', {
-      params: {
-        page,
-        language: 'es-MX',
-        with_genres: 16,
-        with_original_language: 'ja',
-        sort_by: 'vote_average.desc',
-        'vote_count.gte': 100,
-      },
+  getTopRatedAnimes(page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get('/discover/tv', {
+      page,
+      language: 'es-MX',
+      with_genres: 16,
+      with_original_language: 'ja',
+      sort_by: 'vote_average.desc',
+      'vote_count.gte': 100,
     })
-    return response.data
   }
 
-  async getTVShowDetails(tvId: number): Promise<TVShowDetails> {
-    const response = await this.api.get(`/tv/${tvId}`, {
-      params: { language: 'es-MX' },
-    })
-    return response.data
+  getTVShowDetails(tvId: number): Promise<TVShowDetails> {
+    return this.get(`/tv/${tvId}`, { language: 'es-MX' })
   }
 
-  async getTVShowCredits(tvId: number): Promise<Credits> {
-    const response = await this.api.get(`/tv/${tvId}/credits`, {
-      params: { language: 'es-MX' },
-    })
-    return response.data
+  getTVShowCredits(tvId: number): Promise<Credits> {
+    return this.get(`/tv/${tvId}/credits`, { language: 'es-MX' })
   }
 
-  async getTVShowRecommendations(tvId: number, page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get(`/tv/${tvId}/recommendations`, {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getTVShowRecommendations(tvId: number, page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get(`/tv/${tvId}/recommendations`, { page, language: 'es-MX' })
   }
 
-  async getSimilarTVShows(tvId: number, page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get(`/tv/${tvId}/similar`, {
-      params: { page, language: 'es-MX' },
-    })
-    return response.data
+  getSimilarTVShows(tvId: number, page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get(`/tv/${tvId}/similar`, { page, language: 'es-MX' })
   }
 
-  async getSeasonDetails(tvId: number, seasonNumber: number): Promise<Season> {
-    const response = await this.api.get(`/tv/${tvId}/season/${seasonNumber}`, {
-      params: { language: 'es-MX' },
-    })
-    return response.data
+  getSeasonDetails(tvId: number, seasonNumber: number): Promise<Season> {
+    return this.get(`/tv/${tvId}/season/${seasonNumber}`, { language: 'es-MX' })
   }
 
-  async getTVShowVideos(tvId: number): Promise<TMDBVideosResponse> {
-    const response = await this.api.get(`/tv/${tvId}/videos`)
-    return response.data
+  getTVShowVideos(tvId: number): Promise<TMDBVideosResponse> {
+    return this.get(`/tv/${tvId}/videos`)
   }
 
   // Genres
-  async getMovieGenres(): Promise<TMDBGenresResponse> {
-    const response = await this.api.get('/genre/movie/list', {
-      params: { language: 'es-MX' },
-    })
-    return response.data
+  getMovieGenres(): Promise<TMDBGenresResponse> {
+    return this.get('/genre/movie/list', { language: 'es-MX' })
   }
 
-  async getTVGenres(): Promise<TMDBGenresResponse> {
-    const response = await this.api.get('/genre/tv/list', {
-      params: { language: 'es-MX' },
-    })
-    return response.data
+  getTVGenres(): Promise<TMDBGenresResponse> {
+    return this.get('/genre/tv/list', { language: 'es-MX' })
   }
 
-  async discoverMoviesByGenre(genreId: number, page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get('/discover/movie', {
-      params: {
-        with_genres: genreId,
-        page,
-        language: 'es-MX',
-        sort_by: 'popularity.desc',
-      },
+  discoverMoviesByGenre(genreId: number, page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get('/discover/movie', {
+      with_genres: genreId,
+      page,
+      language: 'es-MX',
+      sort_by: 'popularity.desc',
     })
-    return response.data
   }
 
-  async discoverTVShowsByGenre(genreId: number, page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get('/discover/tv', {
-      params: {
-        with_genres: genreId,
-        page,
-        language: 'es-MX',
-        sort_by: 'popularity.desc',
-      },
+  discoverTVShowsByGenre(genreId: number, page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get('/discover/tv', {
+      with_genres: genreId,
+      page,
+      language: 'es-MX',
+      sort_by: 'popularity.desc',
     })
-    return response.data
   }
 
   // Search
-  async searchMulti(query: string, page = 1): Promise<TMDBResponse<Movie | TVShow>> {
-    const response = await this.api.get('/search/multi', {
-      params: { query, page, language: 'es-MX' },
-    })
-    return response.data
+  searchMulti(query: string, page = 1): Promise<TMDBResponse<Movie | TVShow>> {
+    return this.get('/search/multi', { query, page, language: 'es-MX' })
   }
 
-  async searchMovies(query: string, page = 1): Promise<TMDBResponse<Movie>> {
-    const response = await this.api.get('/search/movie', {
-      params: { query, page, language: 'es-MX' },
-    })
-    return response.data
+  searchMovies(query: string, page = 1): Promise<TMDBResponse<Movie>> {
+    return this.get('/search/movie', { query, page, language: 'es-MX' })
   }
 
-  async searchTVShows(query: string, page = 1): Promise<TMDBResponse<TVShow>> {
-    const response = await this.api.get('/search/tv', {
-      params: { query, page, language: 'es-MX' },
-    })
-    return response.data
+  searchTVShows(query: string, page = 1): Promise<TMDBResponse<TVShow>> {
+    return this.get('/search/tv', { query, page, language: 'es-MX' })
   }
 }
 
 export const tmdbService = new TMDBService()
 export default tmdbService
-

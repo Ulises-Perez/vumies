@@ -1,7 +1,15 @@
 <template>
-  <div class="min-h-screen bg-dark pb-20">
-    <LoadingSpinner v-if="searching" message="Buscando..." />
-    
+  <div class="min-h-screen bg-background pb-20">
+    <!-- Skeleton de resultados (hero + grid) mientras busca -->
+    <div v-if="searching">
+      <SkeletonHero height="h-[60vh]" />
+      <main class="relative z-10 -mt-10 px-4 md:px-12">
+        <div class="container-custom">
+          <SkeletonGrid :count="12" />
+        </div>
+      </main>
+    </div>
+
     <div v-else-if="heroItem">
         <!-- Hero Section (Best Match) -->
         <section class="relative h-[60vh] w-full overflow-hidden">
@@ -14,42 +22,43 @@
           </div>
 
           <div class="absolute inset-0 flex items-center">
-            <div class="container-custom">
+            <div class="px-4 md:px-12">
               <div class="max-w-3xl space-y-6">
-                <span class="inline-block px-3 py-1 bg-primary/80 backdrop-blur-md border border-primary/30 rounded-full text-white text-sm font-medium mb-2">
+                <BaseBadge variant="default" class="mb-2">
                   Mejor Resultado
-                </span>
-                <h1 class="text-4xl md:text-6xl font-bold font-poppins text-white leading-tight text-shadow-lg">
+                </BaseBadge>
+                <h1 class="text-4xl md:text-6xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
                   {{ heroItem.title || heroItem.name }}
                 </h1>
                 
-                <div class="flex items-center space-x-4 text-gray-300 text-sm md:text-base">
+                <div class="flex items-center space-x-4 text-muted-foreground text-sm md:text-base">
                    <span class="capitalize">{{ heroItem.media_type === 'movie' ? 'Película' : 'Serie' }}</span>
                    <span v-if="heroItem.vote_average" class="text-green-400 font-semibold">{{ (heroItem.vote_average * 10).toFixed(0) }}% Match</span>
                    <span v-if="heroItem.release_date || heroItem.first_air_date">{{ new Date(heroItem.release_date || heroItem.first_air_date).getFullYear() }}</span>
                 </div>
 
-                <p v-if="heroItem.overview" class="text-lg text-gray-200 line-clamp-3 text-shadow max-w-2xl leading-relaxed">
+                <p v-if="heroItem.overview" class="text-lg text-muted-foreground line-clamp-3 text-shadow max-w-2xl leading-relaxed">
                   {{ heroItem.overview }}
                 </p>
 
-                <div class="flex items-center space-x-4 pt-4">
-                  <router-link
+                <div class="flex items-center gap-4 pt-4">
+                  <BaseButton
                     :to="{ name: heroItem.media_type === 'movie' ? 'movie-detail' : 'serie-detail', params: { id: heroItem.id } }"
-                    class="bg-white text-dark hover:bg-gray-200 px-8 py-3.5 rounded-lg font-bold flex items-center space-x-3 transition-all duration-300 transform hover:scale-105"
+                    size="lg"
                   >
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
                     </svg>
                     <span>Ver Ahora</span>
-                  </router-link>
-                  <button
+                  </BaseButton>
+                  <BaseButton
+                    variant="secondary"
+                    size="lg"
                     @click="toggleHeroFavorite"
-                    class="bg-gray-600/60 backdrop-blur-md text-white px-8 py-3.5 rounded-lg font-semibold hover:bg-gray-600/80 transition-all duration-300 flex items-center space-x-3"
                   >
                     <svg
-                      class="w-6 h-6"
-                      :class="[isHeroFavorite ? 'text-red-500 fill-current' : 'text-white']"
+                      class="w-5 h-5"
+                      :class="[isHeroFavorite ? 'text-red-500 fill-current' : 'text-secondary-foreground']"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -57,7 +66,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                     </svg>
                     <span>Mi Lista</span>
-                  </button>
+                  </BaseButton>
                 </div>
               </div>
             </div>
@@ -68,8 +77,8 @@
         <main v-if="gridItems.length > 0" class="relative z-10 -mt-10 px-4 md:px-12">
             <div class="container-custom">
                 <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl md:text-3xl font-bold text-white font-poppins">Más Resultados</h2>
-                <span class="text-gray-400">{{ gridItems.length }} resultados adicionales</span>
+                <h2 class="text-2xl md:text-3xl font-bold text-foreground font-poppins">Más Resultados</h2>
+                <span class="text-muted-foreground">{{ gridItems.length }} resultados adicionales</span>
                 </div>
                 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
@@ -89,7 +98,7 @@
     <div v-else class="min-h-screen flex items-center justify-center pt-20">
       <div v-if="searchQuery" class="text-center">
          <svg
-          class="w-24 h-24 mx-auto text-gray-600 mb-4"
+          class="w-24 h-24 mx-auto text-muted-foreground mb-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -101,11 +110,11 @@
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
-        <p class="text-gray-400 text-lg">No se encontraron resultados para "{{ searchQuery }}"</p>
+        <p class="text-muted-foreground text-lg">No se encontraron resultados para "{{ searchQuery }}"</p>
       </div>
        <div v-else class="text-center">
          <svg
-          class="w-24 h-24 mx-auto text-gray-600 mb-4"
+          class="w-24 h-24 mx-auto text-muted-foreground mb-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -117,7 +126,7 @@
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
-        <p class="text-gray-400 text-lg">Escribe para buscar...</p>
+        <p class="text-muted-foreground text-lg">Escribe para buscar...</p>
       </div>
     </div>
   </div>
@@ -130,8 +139,10 @@ import { tmdbService } from '@/modules/catalog/services/tmdb.service'
 import { getBackdropUrl } from '@/core/config/api.config'
 import MovieCard from '@/modules/catalog/components/MovieCard.vue'
 import TVShowCard from '@/modules/catalog/components/TVShowCard.vue'
-import LoadingSpinner from '@/modules/ui/components/LoadingSpinner.vue'
+import SkeletonHero from '@/modules/ui/components/skeletons/SkeletonHero.vue'
+import SkeletonGrid from '@/modules/ui/components/skeletons/SkeletonGrid.vue'
 import { useUserStore } from '@/modules/user'
+import { BaseBadge, BaseButton } from '@/modules/ui/components/base'
 
 const route = useRoute()
 const userStore = useUserStore()

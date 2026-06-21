@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Cache de datasets (Fribb anime-lists, etc.)
+.cache/
+
+# Logs temporales
+*.log
+_diag*.py
+_diag_out.txt

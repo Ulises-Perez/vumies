@@ -1,16 +1,27 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="dark">
 
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Vumies - Tu plataforma favorita para ver películas y series online" />
+  <meta name="color-scheme" content="dark" />
   <title>Vumies - Películas y Series Online</title>
 
-  <!-- Google Fonts -->
+  <!-- Inter (fuente del sistema shadcn/ui). <link> en HTML para descubrirlo en el parse
+       inicial y aprovechar el preconnect. display=swap evita FOIT. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  <!-- Resource hints para los hosts de imágenes (sin crossorigin: las imágenes se piden sin CORS). -->
+  <link rel="preconnect" href="https://cdn.animeav1.com">
+  <link rel="dns-prefetch" href="https://cdn.animeav1.com">
+  <link rel="preconnect" href="https://image.tmdb.org">
+  <link rel="dns-prefetch" href="https://image.tmdb.org">
+  <link rel="dns-prefetch" href="https://api.themoviedb.org">
 </head>
 
 <body>

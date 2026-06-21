@@ -11,6 +11,10 @@ export const API_CONFIG = {
     VIEW_KEY: import.meta.env.VITE_VIMEUS_VIEW_KEY || '',
     API_KEY: import.meta.env.VITE_VIMEUS_API_KEY || '',
   },
+  ANIMEAV1: {
+    API_URL: import.meta.env.VITE_ANIMEAV1_API_URL || 'http://localhost:8000',
+    SITE_URL: 'https://animeav1.com',
+  },
 } as const
 
 export const IMAGE_SIZES = {

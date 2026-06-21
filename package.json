@@ -3,17 +3,21 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@11.2.2",
+  "engines": {
+    "pnpm": ">=11",
+    "npm": "please-use-pnpm",
+    "yarn": "please-use-pnpm"
+  },
   "scripts": {
+    "preinstall": "node -e \"if(!/pnpm/.test(process.env.npm_config_user_agent||'')){console.error('\\n\\u26d4  Este proyecto SOLO usa pnpm. Ejecuta: pnpm install\\n');process.exit(1)}\"",
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
-    "@vueuse/core": "^14.1.0",
-    "axios": "^1.13.2",
     "pinia": "^3.0.4",
-    "swiper": "^12.0.3",
     "vue": "^3.5.24",
     "vue-router": "^4.6.4"
   },

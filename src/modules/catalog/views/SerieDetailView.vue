@@ -1,7 +1,5 @@
 <template>
-  <div v-if="loading" class="min-h-screen pt-20 flex items-center justify-center">
-    <LoadingSpinner message="Cargando serie..." />
-  </div>
+  <SkeletonDetail v-if="loading" />
 
   <div v-else-if="error" class="min-h-screen pt-20">
     <div class="container-custom py-8">
@@ -19,33 +17,28 @@
       <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/60 to-transparent" />
       
       <div class="absolute inset-0 flex items-end pb-20">
-        <div class="container-custom w-full">
+        <div class="px-4 md:px-12 w-full">
           <div class="max-w-3xl space-y-6">
-            <h1 class="text-5xl md:text-7xl font-bold font-poppins text-white leading-tight text-shadow-lg">
+            <h1 class="text-5xl md:text-7xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
               {{ seriesDetails.name }}
             </h1>
-            
-            <div class="flex items-center space-x-4 text-gray-300 text-sm md:text-base">
-              <span class="flex items-center space-x-1 text-green-400 font-bold">
-                <span>{{ (seriesDetails.vote_average * 10).toFixed(0) }}% Match</span>
-              </span>
+
+            <div class="flex items-center gap-4 text-muted-foreground text-sm md:text-base">
+              <span class="text-green-400 font-bold">{{ (seriesDetails.vote_average * 10).toFixed(0) }}% Match</span>
               <span>{{ firstAirYear }}</span>
-              <span class="px-2 py-0.5 border border-gray-600 rounded text-xs">TV-MA</span>
+              <BaseBadge variant="outline">TV-MA</BaseBadge>
               <span>{{ seriesDetails.number_of_seasons }} Temporadas</span>
             </div>
 
-            <p class="text-lg text-gray-200 line-clamp-3 text-shadow max-w-2xl leading-relaxed">
+            <p class="text-lg text-muted-foreground line-clamp-3 text-shadow max-w-2xl leading-relaxed">
               {{ seriesDetails.overview }}
             </p>
-            
+
             <div class="flex items-center space-x-4 pt-4">
-               <button
-                @click="toggleFavorite"
-                class="bg-gray-600/60 backdrop-blur-md text-white px-8 py-3.5 rounded-lg font-semibold hover:bg-gray-600/80 transition-all duration-300 flex items-center space-x-3"
-              >
+               <BaseButton variant="secondary" size="lg" @click="toggleFavorite">
                 <svg
-                  class="w-6 h-6"
-                  :class="[isFavorite ? 'text-red-500 fill-current' : 'text-white']"
+                  class="w-5 h-5"
+                  :class="[isFavorite ? 'text-red-500 fill-current' : 'text-secondary-foreground']"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -53,7 +46,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
                 <span>Mi Lista</span>
-              </button>
+              </BaseButton>
             </div>
           </div>
         </div>
@@ -61,97 +54,91 @@
     </div>
 
     <!-- Content -->
-    <div class="bg-dark relative z-10 px-4 md:px-12 -mt-10">
-      
+    <div class="bg-background relative z-10 px-4 md:px-12 -mt-10">
+
       <!-- Season Selector & Episodes -->
       <div class="mb-16">
         <div class="flex items-center justify-between mb-8">
-          <h2 class="text-2xl font-bold text-white font-poppins">Episodios</h2>
-          
-          <div class="relative">
-            <select
-              v-model="selectedSeasonNumber"
-              class="appearance-none bg-gray-800 text-white px-6 py-3 pr-10 rounded-lg border border-gray-700 focus:outline-none focus:border-primary cursor-pointer font-semibold text-sm"
+          <h2 class="text-2xl font-bold text-foreground font-poppins">Episodios</h2>
+
+          <BaseSelect
+            :model-value="selectedSeasonNumber"
+            class="min-w-[12rem] font-semibold"
+            @update:model-value="selectedSeasonNumber = Number($event)"
+          >
+            <option
+              v-for="season in seriesDetails.seasons"
+              :key="season.id"
+              :value="season.season_number"
             >
-              <option 
-                v-for="season in seriesDetails.seasons" 
-                :key="season.id" 
-                :value="season.season_number"
-              >
-                {{ season.name }}
-              </option>
-            </select>
-            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
-               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </div>
-          </div>
+              {{ season.name }}
+            </option>
+          </BaseSelect>
         </div>
 
         <!-- Episode List -->
-        <div v-if="currentSeason" class="grid grid-cols-1 gap-4">
-          <div 
-            v-for="episode in currentSeason.episodes" 
-            :key="episode.id" 
-            class="group bg-gray-800/30 hover:bg-gray-800/60 rounded-xl overflow-hidden flex flex-col md:flex-row transition-all duration-300 border border-transparent hover:border-white/5"
+        <div v-if="currentSeason" class="space-y-4">
+          <button
+            v-for="episode in currentSeason.episodes"
+            :key="episode.id"
+            type="button"
+            @click="playEpisode(episode.episode_number)"
+            class="group w-full text-left bg-card hover:bg-accent rounded-xl overflow-hidden flex flex-col sm:flex-row border border-border hover:border-primary/40 transition-colors duration-200 sm:min-h-[9rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
              <!-- Thumbnail -->
-             <div class="md:w-64 h-36 md:h-auto relative flex-shrink-0">
-               <img 
-                 :src="getBackdropUrl(episode.still_path, 'w300')" 
-                 alt="Episode thumbnail" 
-                 class="w-full h-full object-cover"
+             <div class="relative w-full sm:w-56 md:w-72 flex-shrink-0 aspect-video sm:aspect-auto bg-muted">
+               <img
+                 :src="getBackdropUrl(episode.still_path, 'w300')"
+                 :alt="episode.name"
+                 class="absolute inset-0 w-full h-full object-cover"
                  loading="lazy"
                >
-               <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                 <button @click="playEpisode(episode.episode_number)" class="bg-primary/90 p-3 rounded-full text-white transform scale-90 group-hover:scale-100 transition-transform">
+               <!-- Número de episodio -->
+               <span class="absolute top-2 left-2 rounded-md bg-background/70 backdrop-blur-sm border border-border/60 px-2 py-0.5 text-xs font-bold text-foreground">
+                 E{{ episode.episode_number }}
+               </span>
+               <!-- Play overlay (afordancia visual; la card entera reproduce) -->
+               <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                 <span class="rounded-full bg-primary p-3 text-primary-foreground shadow-lg scale-90 group-hover:scale-100 transition-transform duration-200">
                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" /></svg>
-                 </button>
+                 </span>
                </div>
              </div>
 
              <!-- Info -->
-             <div class="p-6 flex-1 flex flex-col justify-center">
-               <div class="flex items-start justify-between mb-2">
-                 <div>
-                   <h3 class="text-white font-bold text-lg group-hover:text-primary transition-colors">
-                     {{ episode.episode_number }}. {{ episode.name }}
-                   </h3>
-                   <span class="text-gray-400 text-sm">{{ episode.runtime || '45' }} min</span>
-                 </div>
+             <div class="flex-1 min-w-0 p-4 sm:p-5 flex flex-col justify-center gap-2">
+               <div class="flex items-start justify-between gap-3">
+                 <h3 class="font-semibold text-base md:text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                   {{ episode.name }}
+                 </h3>
+                 <BaseBadge variant="muted" class="flex-shrink-0">{{ episode.runtime || '45' }} min</BaseBadge>
                </div>
-               <p class="text-gray-400 text-sm line-clamp-2 md:line-clamp-3 leading-relaxed">
-                 {{ episode.overview }}
+               <p class="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
+                 {{ episode.overview || 'Sin descripción disponible.' }}
                </p>
              </div>
-          </div>
+          </button>
         </div>
-        <div v-else class="text-center py-12 text-gray-500">
+        <div v-else class="text-center py-12 text-muted-foreground">
            Cargando episodios...
         </div>
       </div>
 
       <!-- Cast -->
       <div v-if="credits && credits.cast.length" class="mb-16">
-        <h3 class="text-xl font-bold text-white mb-6 font-poppins">Reparto Principal</h3>
+        <h3 class="text-xl font-bold text-foreground mb-6 font-poppins">Reparto Principal</h3>
         <div class="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
           <div v-for="actor in credits.cast.slice(0, 10)" :key="actor.id" class="flex-none w-32 text-center group">
-            <div class="w-32 h-32 rounded-full overflow-hidden mb-3 border-2 border-transparent group-hover:border-primary transition-all">
-              <img 
-               :src="getProfileUrl(actor.profile_path)" 
-               :alt="actor.name"
-               class="w-full h-full object-cover"
-               loading="lazy"
-              >
-            </div>
-            <p class="text-white font-medium text-sm truncate">{{ actor.name }}</p>
-            <p class="text-gray-400 text-xs truncate">{{ actor.character }}</p>
+            <PersonAvatar :path="actor.profile_path" :name="actor.name" class="mb-3" />
+            <p class="text-foreground font-medium text-sm truncate">{{ actor.name }}</p>
+            <p class="text-muted-foreground text-xs truncate">{{ actor.character }}</p>
           </div>
         </div>
       </div>
 
       <!-- Recommendations -->
       <div v-if="hasRecommendations">
-        <h2 class="text-2xl font-bold text-white font-poppins mb-8">Te Recomendamos</h2>
+        <h2 class="text-2xl font-bold text-foreground font-poppins mb-8">Te Recomendamos</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
           <TVShowCard
             v-for="series in recommendations.slice(0, 12)"
@@ -172,10 +159,12 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSeries } from '../composables/useSeries'
 import { useUserStore } from '@/modules/user'
-import { getBackdropUrl, getProfileUrl } from '@/core/config/api.config'
+import { getBackdropUrl } from '@/core/config/api.config'
 import TVShowCard from '../components/TVShowCard.vue'
-import LoadingSpinner from '@/modules/ui/components/LoadingSpinner.vue'
+import SkeletonDetail from '@/modules/ui/components/skeletons/SkeletonDetail.vue'
 import ErrorMessage from '@/modules/ui/components/ErrorMessage.vue'
+import PersonAvatar from '@/modules/ui/components/PersonAvatar.vue'
+import { BaseBadge, BaseButton, BaseSelect } from '@/modules/ui/components/base'
 
 const route = useRoute()
 const router = useRouter()

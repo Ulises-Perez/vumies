@@ -1,7 +1,8 @@
 <template>
-  <div class="min-h-screen bg-dark pb-20">
+  <div class="min-h-screen bg-background pb-20">
     <!-- Featured Movie (Hero) -->
     <section class="relative h-[70vh] w-full overflow-hidden">
+      <SkeletonHero v-if="!heroMovie" height="h-[70vh]" />
       <div
         v-if="heroMovie"
         class="absolute inset-0 bg-cover bg-center transition-all duration-700"
@@ -12,44 +13,45 @@
       </div>
 
       <div class="absolute inset-0 flex items-center">
-        <div class="container-custom">
+        <div class="px-4 md:px-12">
           <div class="max-w-3xl space-y-6">
-            <span v-if="heroMovie" class="inline-block px-3 py-1 bg-primary/80 backdrop-blur-md border border-primary/30 rounded-full text-white text-sm font-medium mb-2">
+            <BaseBadge v-if="heroMovie" variant="default" class="mb-2">
               Película Destacada
-            </span>
-            <h1 class="text-5xl md:text-7xl font-bold font-poppins text-white leading-tight text-shadow-lg">
+            </BaseBadge>
+            <h1 class="text-5xl md:text-7xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
               {{ heroMovie?.title || 'Vumies Movies' }}
             </h1>
-            
-            <div v-if="heroMovie" class="flex items-center space-x-4 text-gray-300 text-sm md:text-base">
+
+            <div v-if="heroMovie" class="flex items-center gap-4 text-muted-foreground text-sm md:text-base">
               <span class="text-green-400 font-semibold">{{ (heroMovie.vote_average * 10).toFixed(0) }}% Match</span>
               <span>{{ new Date(heroMovie.release_date).getFullYear() }}</span>
-              <span class="px-2 py-0.5 border border-gray-600 rounded text-xs">{{ heroMovie.adult ? '18+' : 'PG-13' }}</span>
+              <BaseBadge variant="outline">{{ heroMovie.adult ? '18+' : 'PG-13' }}</BaseBadge>
             </div>
 
-            <p v-if="heroMovie" class="text-lg md:text-xl text-gray-200 line-clamp-3 text-shadow max-w-2xl leading-relaxed">
+            <p v-if="heroMovie" class="text-lg md:text-xl text-muted-foreground line-clamp-3 text-shadow max-w-2xl leading-relaxed">
               {{ heroMovie.overview }}
             </p>
 
-            <div class="flex items-center space-x-4 pt-4">
-              <router-link
+            <div class="flex items-center gap-4 pt-4">
+              <BaseButton
                 v-if="heroMovie"
                 :to="{ name: 'movie-detail', params: { id: heroMovie.id } }"
-                class="bg-white text-dark hover:bg-gray-200 px-8 py-4 rounded-lg font-bold flex items-center space-x-3 transition-all duration-300 transform hover:scale-105"
+                size="lg"
               >
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
                 </svg>
                 <span>Ver Ahora</span>
-              </router-link>
-              <button
+              </BaseButton>
+              <BaseButton
                 v-if="heroMovie"
+                variant="secondary"
+                size="lg"
                 @click="toggleHeroFavorite"
-                class="bg-gray-600/60 backdrop-blur-md text-white px-8 py-4 rounded-lg font-semibold hover:bg-gray-600/80 transition-all duration-300 flex items-center space-x-3"
               >
                 <svg
-                  class="w-6 h-6"
-                  :class="[isHeroFavorite ? 'text-red-500 fill-current' : 'text-white']"
+                  class="w-5 h-5"
+                  :class="[isHeroFavorite ? 'text-red-500 fill-current' : 'text-secondary-foreground']"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -57,7 +59,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
                 <span>Mi Lista</span>
-              </button>
+              </BaseButton>
             </div>
           </div>
         </div>
@@ -70,41 +72,56 @@
       <!-- Popular Movies -->
       <section class="pl-4 md:pl-12">
         <HorizontalScroll title="Películas Populares">
-          <div v-for="movie in popularMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
-            <MovieCard :movie="movie" />
-          </div>
+          <template v-if="popularMovies.length">
+            <div v-for="movie in popularMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
+              <MovieCard :movie="movie" />
+            </div>
+          </template>
+          <SkeletonCardRow v-else />
         </HorizontalScroll>
       </section>
 
       <!-- Top Rated Movies -->
       <section class="pl-4 md:pl-12">
         <HorizontalScroll title="Mejor Valoradas">
-          <div v-for="movie in topRatedMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
-             <MovieCard :movie="movie" />
-          </div>
+          <template v-if="topRatedMovies.length">
+            <div v-for="movie in topRatedMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
+              <MovieCard :movie="movie" />
+            </div>
+          </template>
+          <SkeletonCardRow v-else />
         </HorizontalScroll>
       </section>
 
       <!-- Upcoming Movies -->
       <section class="pl-4 md:pl-12">
         <HorizontalScroll title="Próximamente">
-          <div v-for="movie in upcomingMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
-             <MovieCard :movie="movie" />
-          </div>
+          <template v-if="upcomingMovies.length">
+            <div v-for="movie in upcomingMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
+              <MovieCard :movie="movie" />
+            </div>
+          </template>
+          <SkeletonCardRow v-else />
         </HorizontalScroll>
       </section>
-      
+
       <!-- Explore by Genre -->
       <section class="pl-4 md:pl-12 pr-4 md:pr-12">
-         <h2 class="text-2xl md:text-3xl font-bold text-white font-poppins mb-6">Explorar por Género</h2>
+         <h2 class="text-2xl md:text-3xl font-bold text-foreground font-poppins mb-6">Explorar por Género</h2>
          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div 
-              v-for="genre in genres" 
-              :key="genre.id" 
-              class="bg-gray-800 h-24 rounded-lg flex items-center justify-center hover:bg-gray-700 transition cursor-pointer group"
-            >
-              <span class="text-lg font-bold text-gray-400 group-hover:text-white text-center px-2">{{ genre.name }}</span>
-            </div>
+            <template v-if="genres.length">
+              <BaseCard
+                v-for="genre in genres"
+                :key="genre.id"
+                interactive
+                class="h-24 flex items-center justify-center group"
+              >
+                <span class="text-lg font-semibold text-muted-foreground group-hover:text-foreground text-center px-2 transition-colors">{{ genre.name }}</span>
+              </BaseCard>
+            </template>
+            <template v-else>
+              <div v-for="n in 6" :key="n" class="h-24 rounded-xl skeleton"></div>
+            </template>
          </div>
       </section>
 
@@ -119,6 +136,9 @@ import { getBackdropUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
 import MovieCard from '../components/MovieCard.vue'
 import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue' // Added import
+import SkeletonHero from '@/modules/ui/components/skeletons/SkeletonHero.vue'
+import SkeletonCardRow from '@/modules/ui/components/skeletons/SkeletonCardRow.vue'
+import { BaseBadge, BaseButton, BaseCard } from '@/modules/ui/components/base'
 import type { Movie } from '../types/tmdb.types'
 
 const userStore = useUserStore()
