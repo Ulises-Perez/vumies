@@ -9,7 +9,7 @@
     "yarn": "please-use-pnpm"
   },
   "scripts": {
-    "preinstall": "node -e \"if(!/pnpm/.test(process.env.npm_config_user_agent||'')){console.error('\\n\\u26d4  Este proyecto SOLO usa pnpm. Ejecuta: pnpm install\\n');process.exit(1)}\"",
+    "preinstall": "node scripts/ensure-pnpm.cjs",
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"

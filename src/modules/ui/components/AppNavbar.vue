@@ -1,12 +1,15 @@
 <template>
   <header
-    class="fixed top-0 right-0 left-0 md:left-20 lg:left-64 z-40 transition-all duration-300 hidden md:block"
+    class="fixed top-0 right-0 left-0 md:left-20 z-40 transition-all duration-300 hidden md:block"
     :class="[scrolled ? 'bg-background/80 backdrop-blur-md border-b border-border py-2' : 'bg-transparent py-4']"
   >
-    <div class="px-4 md:px-12 h-16 flex items-center justify-between">
+    <div class="px-4 md:px-12 h-16 grid grid-cols-3 items-center gap-4">
 
-      <!-- Desktop Search Trigger (abre el command palette ⌘K) -->
-      <div class="flex-1 max-w-xl mr-4 hidden md:block">
+      <!-- Spacer izquierdo (mantiene la búsqueda centrada) -->
+      <div aria-hidden="true"></div>
+
+      <!-- Desktop Search Trigger, centrado (abre el command palette ⌘K) -->
+      <div class="justify-self-center w-full max-w-md">
         <button
           type="button"
           @click="open"
@@ -23,7 +26,7 @@
       </div>
 
       <!-- Right Actions -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 justify-self-end">
 
         <!-- Notifications -->
         <BaseButton variant="ghost" size="icon" class="relative text-muted-foreground">

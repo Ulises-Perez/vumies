@@ -9,10 +9,17 @@ import type {
   Credits,
   Season,
   TMDBVideosResponse,
+  TMDBImagesResponse,
   TimeWindow,
 } from '../types/tmdb.types'
 
 type Params = Record<string, string | number | boolean | undefined>
+
+/** Respuesta de /{movie|tv}/{id}/external_ids (solo usamos imdb_id para Torrentio). */
+export interface TMDBExternalIds {
+  id: number
+  imdb_id: string | null
+}
 
 /**
  * Cliente TMDB sobre fetch nativo (antes axios).
@@ -148,6 +155,24 @@ class TMDBService {
 
   getTVShowVideos(tvId: number): Promise<TMDBVideosResponse> {
     return this.get(`/tv/${tvId}/videos`)
+  }
+
+  // Images (logos del título para la portada del reproductor, etc.)
+  getMovieImages(movieId: number): Promise<TMDBImagesResponse> {
+    return this.get(`/movie/${movieId}/images`, { include_image_language: 'es,en,null' })
+  }
+
+  getTVImages(tvId: number): Promise<TMDBImagesResponse> {
+    return this.get(`/tv/${tvId}/images`, { include_image_language: 'es,en,null' })
+  }
+
+  // External IDs (IMDB, etc.) — puente para addons tipo Torrentio
+  getMovieExternalIds(movieId: number): Promise<TMDBExternalIds> {
+    return this.get(`/movie/${movieId}/external_ids`)
+  }
+
+  getTVShowExternalIds(tvId: number): Promise<TMDBExternalIds> {
+    return this.get(`/tv/${tvId}/external_ids`)
   }
 
   // Genres

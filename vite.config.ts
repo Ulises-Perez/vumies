@@ -5,6 +5,13 @@ import vue from '@vitejs/plugin-vue'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  // Tauri: no limpiar la consola (deja ver errores de Rust) y puerto fijo para que
+  // `tauri dev` siempre encuentre el dev server de Vite en la URL configurada.
+  clearScreen: false,
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
   // ===== TOGGLE ÚNICO DEL MÓDULO DE ANIME =====
   // Cambiar a `true` para REACTIVAR todo el anime (rutas, navegación, búsqueda).
   // Al ser una constante de build, con `false` Rollup elimina del bundle las vistas,

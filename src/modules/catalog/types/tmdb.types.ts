@@ -186,6 +186,7 @@ export interface TMDBImagesResponse {
 
 export interface Image {
   file_path: string
+  iso_639_1: string | null
   width: number
   height: number
   aspect_ratio: number

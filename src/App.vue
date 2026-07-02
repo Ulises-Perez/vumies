@@ -4,7 +4,7 @@
     <SideMenu />
 
     <!-- Main Content Wrapper -->
-    <div class="md:ml-20 lg:ml-64 flex flex-col min-h-screen transition-all duration-300">
+    <div class="md:ml-20 flex flex-col min-h-screen">
       <AppNavbar />
       
       <main class="flex-1">

@@ -15,6 +15,11 @@ export const API_CONFIG = {
     API_URL: import.meta.env.VITE_ANIMEAV1_API_URL || 'http://localhost:8000',
     SITE_URL: 'https://animeav1.com',
   },
+  TORRENTIO: {
+    // Base del addon Torrentio. A futuro se puede apuntar a una instancia con
+    // configuración/debrid: https://torrentio.strem.fun/<config>
+    BASE_URL: 'https://torrentio.strem.fun',
+  },
 } as const
 
 export const IMAGE_SIZES = {
