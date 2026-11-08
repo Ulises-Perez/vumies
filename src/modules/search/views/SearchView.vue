@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background pb-20">
+  <div class="min-h-screen pb-20">
     <!-- Skeleton de resultados (hero + grid) mientras busca -->
     <div v-if="searching">
       <SkeletonHero height="h-[60vh]" />
@@ -137,6 +137,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { tmdbService } from '@/modules/catalog/services/tmdb.service'
 import { getBackdropUrl } from '@/core/config/api.config'
+import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import MovieCard from '@/modules/catalog/components/MovieCard.vue'
 import TVShowCard from '@/modules/catalog/components/TVShowCard.vue'
 import SkeletonHero from '@/modules/ui/components/skeletons/SkeletonHero.vue'
@@ -222,5 +223,6 @@ onMounted(() => {
     handleSearch()
   }
 })
+useAmbienceSource(() => heroBackdrop.value)
 </script>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background pb-20">
+  <div class="min-h-screen pb-20">
     <!-- Featured History (Hero) -->
     <section class="relative h-[60vh] w-full overflow-hidden">
       <div
@@ -97,6 +97,7 @@
 import { computed } from 'vue'
 import { useUserStore } from '../stores/user.store'
 import { getPosterUrl } from '@/core/config/api.config'
+import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import { BaseBadge, BaseButton } from '@/modules/ui/components/base'
 
 const userStore = useUserStore()
@@ -119,4 +120,5 @@ function clearHistory() {
     userStore.clearHistory()
   }
 }
+useAmbienceSource(() => heroBackdrop.value)
 </script>

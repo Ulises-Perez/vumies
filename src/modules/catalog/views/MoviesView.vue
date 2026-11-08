@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background pb-20">
+  <div class="min-h-screen pb-20">
     <!-- Featured Movie (Hero) -->
     <section class="relative h-[70vh] w-full overflow-hidden">
       <SkeletonHero v-if="!heroMovie" height="h-[70vh]" />
@@ -133,6 +133,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useMovies } from '../composables/useMovies'
 import { getBackdropUrl } from '@/core/config/api.config'
+import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import { useUserStore } from '@/modules/user'
 import MovieCard from '../components/MovieCard.vue'
 import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue' // Added import
@@ -185,6 +186,7 @@ onMounted(async () => {
   upcomingMovies.value = upcomingRes.results
   genres.value = genresRes || []
 })
+useAmbienceSource(() => heroBackdrop.value)
 </script>
 
 <style scoped>

@@ -54,7 +54,7 @@
     </div>
 
     <!-- Content -->
-    <div class="bg-background relative z-10 px-4 md:px-12 -mt-10">
+    <div class="relative z-10 px-4 md:px-12 -mt-10">
 
       <!-- Season Selector & Episodes -->
       <div class="mb-16">
@@ -160,6 +160,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSeries } from '../composables/useSeries'
 import { useUserStore } from '@/modules/user'
 import { getBackdropUrl } from '@/core/config/api.config'
+import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import TVShowCard from '../components/TVShowCard.vue'
 import SkeletonDetail from '@/modules/ui/components/skeletons/SkeletonDetail.vue'
 import ErrorMessage from '@/modules/ui/components/ErrorMessage.vue'
@@ -254,6 +255,7 @@ watch(
 watch(selectedSeasonNumber, async (newVal) => {
   await loadSeason(newVal)
 })
+useAmbienceSource(() => backdropUrl.value)
 </script>
 
 <style scoped>

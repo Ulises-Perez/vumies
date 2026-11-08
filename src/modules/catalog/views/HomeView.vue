@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background pb-20">
+  <div class="min-h-screen pb-20">
     <!-- Hero Section (solo imagen: sin video para máximo rendimiento/LCP) -->
     <section class="relative h-[85vh] w-full overflow-hidden">
 
@@ -118,6 +118,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useMovies } from '../composables/useMovies'
 import { useSeries } from '../composables/useSeries'
 import { getBackdropUrl } from '@/core/config/api.config'
+import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 
 import MovieCard from '../components/MovieCard.vue'
 import TVShowCard from '../components/TVShowCard.vue'
@@ -164,6 +165,7 @@ onMounted(async () => {
 
   await fetchPopularSeries()
 })
+useAmbienceSource(() => featuredBackdrop.value)
 </script>
 
 <style scoped>

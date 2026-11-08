@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background pb-20">
+  <div class="min-h-screen pb-20">
     <!-- Featured Series (Hero) -->
     <section class="relative h-[70vh] w-full overflow-hidden">
       <SkeletonHero v-if="!heroSeries" height="h-[70vh]" />
@@ -96,6 +96,7 @@ import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue'
 import SkeletonHero from '@/modules/ui/components/skeletons/SkeletonHero.vue'
 import SkeletonCardRow from '@/modules/ui/components/skeletons/SkeletonCardRow.vue'
 import { getBackdropUrl } from '@/core/config/api.config'
+import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import { BaseBadge, BaseButton, BaseCard } from '@/modules/ui/components/base'
 
 // NOTE: We might need to implement useSeries composable if it does not have topRated
@@ -130,6 +131,7 @@ onMounted(async () => {
   const topRatedRes = await fetchTopRatedSeries()
   topRatedSeries.value = topRatedRes.results
 })
+useAmbienceSource(() => heroBackdrop.value)
 </script>
 
 <style scoped>

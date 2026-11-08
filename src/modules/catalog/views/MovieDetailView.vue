@@ -67,7 +67,7 @@
     </div>
 
     <!-- Details Content -->
-    <div class="bg-background relative z-10 px-4 md:px-12 -mt-10">
+    <div class="relative z-10 px-4 md:px-12 -mt-10">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
         
         <!-- Left Column: Overview and Metadata -->
@@ -183,6 +183,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMovies } from '../composables/useMovies'
 import { useUserStore } from '@/modules/user'
 import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
+import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import SkeletonDetail from '@/modules/ui/components/skeletons/SkeletonDetail.vue'
 import ErrorMessage from '@/modules/ui/components/ErrorMessage.vue'
 import PersonAvatar from '@/modules/ui/components/PersonAvatar.vue'
@@ -274,6 +275,7 @@ watch(
     }
   }
 )
+useAmbienceSource(() => backdropUrl.value)
 </script>
 
 <style scoped>
