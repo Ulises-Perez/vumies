@@ -71,7 +71,7 @@ export interface VimeusPagination {
 /** Endpoints de listado documentados por Vimeus. */
 export type VimeusListingKind = 'movies' | 'series' | 'animes' | 'episodes'
 
-/** Parámetros aceptados por la API de listado (viajan al comando nativo en camelCase). */
+/** Parameters accepted by the listing API (sent to the same-origin Deno proxy as snake_case query params). */
 export interface VimeusListingQuery {
   /** Página a recuperar (50 resultados por página). */
   page?: number

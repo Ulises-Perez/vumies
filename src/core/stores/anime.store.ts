@@ -9,8 +9,8 @@ import type { VimeusAnime } from '@/modules/player/types/vimeus.types'
  * anime. Así las series catalogadas como anime se enrutan a `/e/anime` en lugar
  * de `/e/serie`.
  *
- * La petición la firma el backend Rust (`vimeus_listing`): la API Key no viaja
- * al cliente en ningún momento.
+ * The request goes through the Deno server proxy (`/api/vimeus/listing/*`):
+ * the API Key never reaches the client.
  */
 
 /** Tope defensivo de páginas: evita un bucle infinito si la API miente en `total_pages`. */

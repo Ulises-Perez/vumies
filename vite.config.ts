@@ -5,8 +5,7 @@ import vue from '@vitejs/plugin-vue'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  // Tauri: no limpiar la consola (deja ver errores de Rust) y puerto fijo para que
-  // `tauri dev` siempre encuentre el dev server de Vite en la URL configurada.
+  // Keep the console output and use a fixed port for the Vite dev server.
   clearScreen: false,
   server: {
     port: 5173,
@@ -30,7 +29,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Aísla el framework (vue + router + pinia) en un chunk estable: cambiar código
-        // de la app no invalida su caché entre versiones (~43 kB gzip que el usuario
+        // de la app no invalida su caché between deploys (~43 kB gzip que el usuario
         // recurrente no vuelve a descargar). Forma de FUNCIÓN para respetar el orden de
         // init de Vue/Pinia (Rollup normaliza los ids a forward-slash en cualquier SO).
         // El resto de node_modules (heroicons, minúsculo y en el shell) se deja en su

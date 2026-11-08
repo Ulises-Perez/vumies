@@ -1,63 +1,59 @@
 // ============================================================================
-// Abstracción multi-fuente (Fase 1)
+// Multi-source abstraction.
 // ----------------------------------------------------------------------------
-// Unifica Vimeus (iframe), Torrentio (torrent) y futuras fuentes detrás de una
-// sola interfaz. El reproductor pregunta "¿quién tiene este contenido?" y
-// muestra una lista "Ver con…" — así el usuario tiene más probabilidades de
-// reproducir algo. Cada Stream lleva un `kind` que decide qué componente lo abre.
+// Unifies the playable web sources behind a single interface. The player asks
+// "who has this content?" and shows a "Watch with…" list. Each Stream carries
+// a `kind` that decides which component opens it. Web-only: there is no
+// native torrent engine or native video driver in a browser.
 // ============================================================================
 
-/** Tipo de contenido, agnóstico a la fuente. */
+/** Content type, agnostic to the source. */
 export type MediaType = 'movie' | 'tv' | 'anime'
 
-/** Qué se quiere reproducir. */
+/** What to play. */
 export interface Media {
   type: MediaType
   tmdbId: number
-  /** id de IMDB (`tt…`), necesario para addons tipo Torrentio. Se rellena en Fase 2. */
+  /** IMDB id (`tt…`), needed by title-based sources. */
   imdbId?: string
-  /** Solo tv/anime. */
+  /** TV/anime only. */
   season?: number
   episode?: number
-  /** Para mostrar/buscar en fuentes que van por título. */
+  /** For display/search in title-based sources. */
   title?: string
 }
 
-/** Cómo se reproduce un stream → decide el componente del reproductor. */
+/** How a stream plays → decides the player component. */
 export type StreamKind =
-  | 'iframe' // embed de terceros (Vimeus) → <iframe>
-  | 'direct' // URL directa mp4/hls → <video>
-  | 'torrent' // infoHash → motor local (librqbit) + mpv (Fases 3-4)
+  | 'iframe' // third-party embed (Vimeus) → <iframe>
+  | 'direct' // direct mp4/hls URL → <video>
 
-/** Un stream concreto que el reproductor puede intentar abrir. */
+/** A concrete stream the player can try to open. */
 export interface Stream {
-  /** id de la fuente que lo produjo: 'vimeus' | 'torrentio' | … */
+  /** Id of the source that produced it: 'vimeus' | … */
   sourceId: string
-  /** Etiqueta legible para la lista "Ver con…". */
+  /** Human-readable label for the "Watch with…" list. */
   label: string
   kind: StreamKind
-  /** Para iframe/direct. */
+  /** For iframe/direct. */
   url?: string
-  /** Para torrent (Fases 3-4). */
-  infoHash?: string
-  fileIdx?: number
-  /** Metadatos para ordenar/filtrar. */
+  /** Metadata for sorting/filtering. */
   quality?: '4K' | '1080p' | '720p' | 'SD' | (string & {})
   codec?: string
-  /** Códigos de país ISO (es, mx, gb…) detectados del nombre, para banderas. */
+  /** ISO country codes (es, mx, gb…) detected from the name, for flags. */
   languages?: string[]
-  /** ¿el reproductor actual puede con este códec sin transcodificar? */
+  /** Can the current player handle this codec without transcoding? */
   playable?: boolean
-  /** Mayor = se prioriza antes en la lista y en el auto-play. */
+  /** Higher = prioritized earlier in the list and in auto-play. */
   weight?: number
 }
 
-/** Una fuente de streams (Vimeus, Torrentio, AnimeAV1…). */
+/** A stream source (Vimeus, …). */
 export interface StreamSource {
   id: string
   label: string
-  /** ¿Activa? Puede mirar settings o el entorno (p.ej. si hay motor local). */
+  /** Active? May look at settings or the environment. */
   isEnabled(): boolean
-  /** Streams disponibles para este contenido. Devuelve [] si no tiene nada. */
+  /** Streams available for this content. Returns [] when it has nothing. */
   getStreams(media: Media): Promise<Stream[]>
 }

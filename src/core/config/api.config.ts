@@ -13,18 +13,13 @@ export const API_CONFIG = {
     // view_key: viaja en la URL del embed y el reproductor la valida contra el
     // dominio de referencia, así que vive en el cliente a propósito.
     VIEW_KEY: import.meta.env.VITE_VIMEUS_VIEW_KEY || '',
-    // api_key: NO se lee en el cliente. La usa sólo el backend Rust a través del
-    // comando `vimeus_listing`, porque la documentación exige que la API Key
-    // nunca se exponga al frontend.
+    // api_key: never read on the client. Only the Deno server proxy
+    // (`server.ts` -> `/api/vimeus/listing/*`) uses it, because the docs require
+    // the API Key to never be exposed to the frontend.
   },
   ANIMEAV1: {
     API_URL: import.meta.env.VITE_ANIMEAV1_API_URL || 'http://localhost:8000',
     SITE_URL: 'https://animeav1.com',
-  },
-  TORRENTIO: {
-    // Base del addon Torrentio. A futuro se puede apuntar a una instancia con
-    // configuración/debrid: https://torrentio.strem.fun/<config>
-    BASE_URL: 'https://torrentio.strem.fun',
   },
 } as const
 

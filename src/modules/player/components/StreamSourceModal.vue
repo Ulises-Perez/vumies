@@ -106,7 +106,7 @@ defineEmits<{
 const groups = computed(() => props.results.filter((r) => r.streams.length > 0))
 
 function kindLabel(kind: StreamKind): string {
-  return kind === 'iframe' ? 'Embed' : kind === 'direct' ? 'Directo' : 'Torrent'
+  return kind === 'iframe' ? 'Embed' : 'Directo'
 }
 
 function kindBadgeClass(kind: StreamKind): string {

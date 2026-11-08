@@ -1,27 +1,27 @@
-// Registro central de fuentes + agregador. Aquí se enchufarán Torrentio (Fase 2)
-// y el motor torrent local (Fase 3) añadiendo más StreamSource a la lista.
+// Central stream-source registry and aggregator.
+//
+// Web-only build: the Vimeus iframe is the single playable source. Native
+// sources (local torrent engine, native video driver) cannot run in a browser, so no
+// other source is registered here.
 import type { Media, Stream, StreamSource } from './types'
 import { vimeusSource } from './vimeus.source'
-import { torrentioSource } from './torrentio.source'
 
-/** Orden de preferencia base de las fuentes (se afina con `weight` por stream). */
+/** Base preference order of the sources (refined with `weight` per stream). */
 export const STREAM_SOURCES: StreamSource[] = [
   vimeusSource,
-  torrentioSource,
-  // animeav1Source,    ← futuro
 ]
 
 export interface SourceResult {
   sourceId: string
   label: string
   streams: Stream[]
-  /** Mensaje si la fuente falló (no tumba al resto). */
+  /** Message when the source failed (does not take down the rest). */
   error?: string
 }
 
 /**
- * Consulta TODAS las fuentes activas en paralelo. Una fuente que falla o tarda
- * no impide que las demás devuelvan resultados (Promise.allSettled).
+ * Queries ALL active sources in parallel. A source that fails or is slow
+ * does not prevent the others from returning results (Promise.allSettled).
  */
 export async function fetchAllStreams(media: Media): Promise<SourceResult[]> {
   const active = STREAM_SOURCES.filter((s) => s.isEnabled())
@@ -38,12 +38,12 @@ export async function fetchAllStreams(media: Media): Promise<SourceResult[]> {
 
   return settled.map((r, i): SourceResult => {
     if (r.status === 'fulfilled') return r.value
-    const src = active[i]! // i siempre válido: settled tiene la misma longitud que active
+    const src = active[i]! // i is always valid: settled has the same length as active
     return { sourceId: src.id, label: src.label, streams: [], error: String(r.reason) }
   })
 }
 
-/** Lista plana de todos los streams, ordenada por `weight` (mejor primero). */
+/** Flat list of all streams, ordered by `weight` (best first). */
 export async function fetchStreams(media: Media): Promise<Stream[]> {
   const results = await fetchAllStreams(media)
   return results

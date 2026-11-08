@@ -15,7 +15,7 @@ import type {
 
 type Params = Record<string, string | number | boolean | undefined>
 
-/** Respuesta de /{movie|tv}/{id}/external_ids (solo usamos imdb_id para Torrentio). */
+/** Response of /{movie|tv}/{id}/external_ids (we only use imdb_id). */
 export interface TMDBExternalIds {
   id: number
   imdb_id: string | null
@@ -166,7 +166,7 @@ class TMDBService {
     return this.get(`/tv/${tvId}/images`, { include_image_language: 'es,en,null' })
   }
 
-  // External IDs (IMDB, etc.) — puente para addons tipo Torrentio
+  // External IDs (IMDB, etc.)
   getMovieExternalIds(movieId: number): Promise<TMDBExternalIds> {
     return this.get(`/movie/${movieId}/external_ids`)
   }

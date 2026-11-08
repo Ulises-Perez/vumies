@@ -1,12 +1,12 @@
-// Acceso a la API de listado de Vimeus.
+// Access to the Vimeus listing API through the Deno server proxy.
 //
-// La API Key NUNCA vive en el cliente: la documentación de Vimeus exige que se
-// use sólo en el backend. Por eso este módulo delega la petición al comando
-// nativo `vimeus_listing`, que firma la request con el header `X-API-Key` desde
-// Rust y devuelve el JSON ya decodificado.
-//
-// No existe fallback a `fetch` desde el frontend a propósito: hacerlo volvería a
-// exponer la clave en el bundle del webview.
+// The API key NEVER lives in the client: the Vimeus docs require it to be
+// used server-side only. The Deno entry module (`server.ts` at the repo root)
+// serves the built static app and proxies `/api/vimeus/listing/*` to
+// `vimeus.net` with the `X-API-Key` header, reading the key from the Deno
+// environment. The browser only ever calls the same-origin proxy, so the key
+// never reaches the bundle. There is intentionally no direct `fetch` to
+// `vimeus.net` from the frontend: that would expose the key.
 
 import type {
   VimeusListingKind,
@@ -14,46 +14,36 @@ import type {
   VimeusListResponse,
 } from '../types/vimeus.types'
 
-/** Error de disponibilidad: se usa fuera del runtime de Tauri (p. ej. en un navegador). */
-export class VimeusApiUnavailableError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'VimeusApiUnavailableError'
-  }
-}
-
 /**
- * ¿Estamos dentro del webview de Tauri? (en un navegador no hay comandos nativos).
- */
-export function isTauriRuntime(): boolean {
-  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
-}
-
-/**
- * Consulta un endpoint de listado (`/api/listing/*`) a través del backend Rust.
+ * Queries a listing endpoint (`/api/listing/*`) through the same-origin Deno proxy.
  *
- * @throws {VimeusApiUnavailableError} fuera del runtime de Tauri.
- * @throws {Error} si el backend no encuentra la API Key o si Vimeus responde error.
+ * @throws {Error} when the proxy has no API key configured (HTTP 503) or when
+ * Vimeus answers with an error (the provider `message` is carried on the Error).
  */
 export async function fetchVimeusListing<T>(
   kind: VimeusListingKind,
   query: VimeusListingQuery = {}
 ): Promise<VimeusListResponse<T>> {
-  if (!isTauriRuntime()) {
-    throw new VimeusApiUnavailableError(
-      'La API de listado de Vimeus requiere el runtime de Tauri: la API Key vive en el backend nativo.'
+  const params = new URLSearchParams()
+  if (query.page !== undefined) params.set('page', String(query.page))
+  if (query.tmdbId !== undefined) params.set('tmdb_id', String(query.tmdbId))
+  if (query.season !== undefined) params.set('season', String(query.season))
+  if (query.withCf !== undefined) params.set('with_cf', String(query.withCf))
+
+  const qs = params.toString()
+  const res = await fetch(`/api/vimeus/listing/${kind}${qs ? `?${qs}` : ''}`, {
+    headers: { Accept: 'application/json' },
+  })
+
+  const body = (await res.json()) as VimeusListResponse<T> & { message?: string }
+
+  if (!res.ok) {
+    throw new Error(
+      typeof body?.message === 'string' && body.message
+        ? body.message
+        : `Vimeus listing request failed with status ${res.status}`
     )
   }
 
-  const { invoke } = await import('@tauri-apps/api/core')
-
-  return invoke<VimeusListResponse<T>>('vimeus_listing', {
-    request: {
-      kind,
-      page: query.page,
-      tmdbId: query.tmdbId,
-      season: query.season,
-      withCf: query.withCf,
-    },
-  })
+  return body
 }
