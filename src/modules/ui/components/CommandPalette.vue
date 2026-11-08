@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <Transition name="command">
+    <Transition name="command" :duration="{ enter: 160, leave: 140 }">
       <div v-if="isOpen" class="fixed inset-0 z-[100]">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="close" />
@@ -8,10 +8,12 @@
         <!-- Dialog (centrado horizontalmente, anclado un poco arriba como ⌘K de shadcn) -->
         <div class="relative z-10 flex min-h-full items-start justify-center p-4 pt-[12vh] sm:pt-[14vh]">
           <div
+            ref="panelRef"
             class="command-panel w-full max-w-xl bg-popover text-popover-foreground border border-border rounded-xl shadow-2xl overflow-hidden"
             role="dialog"
             aria-modal="true"
-            aria-label="Buscar"
+            aria-label="Buscar en el catálogo"
+            tabindex="-1"
             @click.stop
           >
             <!-- Input -->
@@ -23,6 +25,8 @@
                 ref="inputRef"
                 v-model="query"
                 type="text"
+                aria-label="Buscar películas, series y personas"
+                autocomplete="off"
                 placeholder="Buscar películas, series..."
                 class="flex h-12 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 @keydown="onKeydown"
@@ -132,6 +136,9 @@ const query = ref('')
 const activeIndex = ref(0)
 const inputRef = ref<HTMLInputElement | null>(null)
 const listRef = ref<HTMLElement | null>(null)
+const panelRef = ref<HTMLElement | null>(null)
+/** Elemento que tenía el foco antes de abrir, para devolvérselo al cerrar. */
+let restoreFocusTo: HTMLElement | null = null
 const suggestions = ref<any[]>([])
 let searchTimeout: number | null = null
 
@@ -250,21 +257,69 @@ function onKeydown(e: KeyboardEvent) {
     e.preventDefault()
     const item = flatItems.value[activeIndex.value]
     if (item) run(item)
-  } else if (e.key === 'Escape') {
+  }
+  // Escape NO se maneja acá: lo resuelve `onGlobalKeydown` a nivel de ventana para
+  // que funcione aunque el foco esté en la lista, en el panel o en el body.
+}
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/** Mantiene el foco dentro del diálogo mientras está abierto. */
+function trapTab(e: KeyboardEvent) {
+  const panel = panelRef.value
+  if (!panel) return
+  const nodes = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+    (el) => el.offsetParent !== null,
+  )
+  if (!nodes.length) return
+  const first = nodes[0]
+  const last = nodes[nodes.length - 1]
+  if (!first || !last) return
+  const active = document.activeElement as HTMLElement | null
+  const outside = !active || !panel.contains(active)
+  if (e.shiftKey) {
+    if (outside || active === first) {
+      e.preventDefault()
+      last.focus()
+    }
+  } else if (outside || active === last) {
     e.preventDefault()
-    close()
+    first.focus()
+  }
+}
+
+/**
+ * Bloquea el scroll del documento compensando el ancho de la barra para que el
+ * layout no se desplace al abrir y cerrar (evita el salto horizontal del shell).
+ */
+function lockScroll(lock: boolean) {
+  const { body, documentElement } = document
+  if (lock) {
+    const gutter = window.innerWidth - documentElement.clientWidth
+    body.style.overflow = 'hidden'
+    if (gutter > 0) body.style.paddingRight = `${gutter}px`
+  } else {
+    body.style.overflow = ''
+    body.style.paddingRight = ''
   }
 }
 
 watch(isOpen, (val) => {
   if (val) {
+    restoreFocusTo = document.activeElement as HTMLElement | null
     query.value = ''
     suggestions.value = []
     activeIndex.value = 0
-    document.body.style.overflow = 'hidden'
+    lockScroll(true)
     nextTick(() => inputRef.value?.focus())
   } else {
-    document.body.style.overflow = ''
+    lockScroll(false)
+    // Devolver el foco al disparador (barra, menú inferior) sin robar el foco
+    // cuando el cierre viene de navegar a otra ruta.
+    const target = restoreFocusTo
+    restoreFocusTo = null
+    if (target && document.contains(target)) target.focus({ preventScroll: true })
   }
 })
 
@@ -272,13 +327,24 @@ function onGlobalKeydown(e: KeyboardEvent) {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault()
     isOpen.value ? close() : open()
+    return
   }
+  if (!isOpen.value) return
+
+  // Escape cierra desde cualquier foco: input, resultado, cuerpo del panel o body.
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    e.stopPropagation()
+    close()
+    return
+  }
+  if (e.key === 'Tab') trapTab(e)
 }
 
-onMounted(() => window.addEventListener('keydown', onGlobalKeydown))
+onMounted(() => window.addEventListener('keydown', onGlobalKeydown, true))
 onUnmounted(() => {
-  window.removeEventListener('keydown', onGlobalKeydown)
-  document.body.style.overflow = ''
+  window.removeEventListener('keydown', onGlobalKeydown, true)
+  lockScroll(false)
 })
 </script>
 
