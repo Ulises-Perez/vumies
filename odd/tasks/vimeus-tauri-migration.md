@@ -18,7 +18,7 @@ S6. Player personalization stays appended as query parameters on the embed URL (
 
 S7. The Vimeus API key is still server-side only, now served by the Deno deployment: a Deno entry module serves the built static app and proxies the listing endpoints with the `X-API-Key` header, reading the key from the Deno environment. The browser only ever calls the same-origin proxy, never `vimeus.net` directly.
 
-S8. No credential may be readable by the end user. The TMDB bearer therefore moves behind a same-origin proxy (`/api/tmdb/*`) served by `server.ts` in Deno Deploy and by a Vite dev proxy locally, reading `TMDB_BEARER_TOKEN` (no `VITE_` prefix) in Node/Deno only. The built bundle must contain zero occurrences of the TMDB token, the Vimeus API key, any `Bearer` header or `X-API-Key` header, and the browser must not issue any request to `api.themoviedb.org`. The single unavoidable exception is `VITE_VIMEUS_VIEW_KEY`: the provider requires `view_key` as a query parameter of every embed URL, so it is visible in the iframe `src` by design and cannot be hidden. Git history must contain no credential either.
+S8. ~~No credential may be readable by the end user. The TMDB bearer therefore moves behind a same-origin proxy (`/api/tmdb/*`)...~~ **Reversed in L17.** The Vimeus API key stays server-side only (S3, S7). The TMDB bearer is accepted client-side by explicit decision of the human: the catalog calls `api.themoviedb.org` directly from the browser and the token is expected in the bundle. Git history must still contain no credential. The Vimeus view key is visible in the iframe `src` by provider design (S1).
 
 ## Tasks
 
@@ -201,3 +201,19 @@ Evidence, all measured:
 | Deno with no `TMDB_BEARER_TOKEN` / no `VIMEUS_API_KEY` | `503` with a descriptive body for both |
 
 **Still required from the human**, because the agent cannot write `.env`: rename `VITE_TMDB_BEARER_TOKEN` to `TMDB_BEARER_TOKEN` in the local `.env`, and add `TMDB_BEARER_TOKEN` to the Deno Deploy environment. The Vite dev proxy keeps a temporary fallback to the old `VITE_`-prefixed name so local development does not break in the meantime; `server.ts` accepts only the canonical name.
+
+**L17** — Requirement change, verbatim:
+
+> Si hazlo, y tranqui no me importan las credenciales de tmdb la verdad
+
+The human accepts the TMDB credential exposure and chooses, when offered the three options, "Volvé TMDB al cliente y mergeá". S8 is reversed for TMDB: the bearer returns to the client bundle and the catalog calls `api.themoviedb.org` directly.
+
+**Why the reversal is the right call here.** The proxy (L16) turned `server.ts` from optional into mandatory. Before it, the whole app ran client-side — TMDB from the browser, Vimeus in an iframe — so a static deployment was sufficient. Investigation of the live deployment confirmed it is static-only on both URLs: `GET /healthz` and `GET /api/tmdb/*` return `index.html` through the SPA fallback instead of `ok` and JSON. Requiring a Deno entry point for a catalog that the human does not consider secret buys no protection he values, at the cost of a deployment configuration that currently does not exist. Reverted.
+
+Reverted to the state of `c77ae36^`: `api.config.ts`, `tmdb.service.ts`, `vite.config.ts`, `server.ts`, `index.html`, `README.md`. The ODD document keeps S8/L16 as history rather than pretending the proxy never existed.
+
+One deliberate deviation from a pure revert: `VITE_TMDB_API_KEY` (v3) is no longer read in `api.config.ts`. No endpoint ever used it, so keeping it only baked a dead credential into a public bundle.
+
+**Live exposure recorded, accepted by the human.** `https://vumies.devk.deno.net/assets/index-BVdb_F7a.js` served the pre-change bundle containing one full 240-byte TMDB v4 JWT and one 32-hex v3 key. Rotation was recommended and explicitly declined ("no me importan las credenciales de tmdb"). Both are read-only catalog credentials scoped to the public TMDB catalog; the accepted consequence is quota consumption and possible rate limiting under that account.
+
+**Required environment variable for the reverted code:** the Vite build reads `VITE_TMDB_BEARER_TOKEN` (with the `VITE_` prefix) again, so that name — not `TMDB_BEARER_TOKEN` — must hold the token in Deno Deploy. `TMDB_BEARER_TOKEN` becomes unused. `VITE_VIMEUS_VIEW_KEY` is unchanged. `VIMEUS_API_KEY` remains the server-only name for the listing proxy, which is inert while the deployment stays static and the anime module stays disabled.
