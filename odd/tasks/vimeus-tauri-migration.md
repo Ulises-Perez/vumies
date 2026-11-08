@@ -145,3 +145,18 @@ Commits: `refactor(player)` (native stack removed), `feat(deno)` (server + proxy
 2. **TMDB credentials were never supplied.** `VITE_TMDB_API_KEY` / `VITE_TMDB_BEARER_TOKEN` must come from the user's own TMDB account. They were not invented and not recovered from git history (see L8).
 
 On Deno Deploy the server-side variable is `VIMEUS_API_KEY`; a pre-existing `VITE_VIMEUS_API_KEY` entry in the dashboard must be renamed, since it is the old client-exposed name that this change deliberately removed.
+
+**L15** — End-to-end verification with the real credentials in place (human created `.env`; the agent cannot read or name that path, so every check below is outcome-based). Real browser: ego lite (project policy), dev server `vite v7.3.5` on `:5173`.
+
+| Check | Evidence |
+| --- | --- |
+| Build with the real env | `pnpm build` exit 0, `✓ built in 2.80s`, `dist/assets/index-anSurMRy.js` |
+| Bearer actually baked | `grep -c 'eyJhbGciOiJIUzI1NiJ9' dist/assets/index-*.js` → `1` (count only; the value was never printed or read back) |
+| Home renders live catalog | title `Vumies - Películas y Series Online`, real trending content ("La Odisea 2026 8.0" with its Spanish synopsis), 6 `api.themoviedb.org` resource entries (`/genre/movie/list`, `/genre/tv/list`, `/trending/movie/day`) → TMDB auth works |
+| Movies list | `/movies` → **60** cards (`a[href*="/movie/"]`), **0** error elements |
+| Movie player | `/player/movie/155` → source modal → click Vimeus → iframe `https://vimeus.net/e/movie?tmdb=155&view_key=…&title=Vumies&theme=minimal&font=v3&overlay=v5&epanel=v3&splash=v3`, `referrerpolicy="origin"`, cross-origin document loaded, rendered 1478×1294, modal closed |
+| Series player (`se`/`ep`) | `/player/serie/1399/1/3` → iframe `https://vimeus.net/e/serie?tmdb=1399&se=1&ep=3&view_key=…&title=Vumies&…`, same `referrerpolicy`, 1478×1294 |
+
+Correction to L14: `VIMEUS_API_KEY` on Deno Deploy is **not** needed for the current build. `fetchVimeusListing` has exactly one consumer, `anime.store.ts:46`, and `App.vue` calls it only behind the anime-module guard; with `__ANIME_ENABLED__: false` the module is tree-shaken out of the build (no `AnimeView`/`AnimeDetailView` chunks in `dist/`). The variable becomes necessary only when anime is re-enabled. The three `VITE_*` values are the ones that must exist at **build** time, because Vite inlines them.
+
+Not verified: `server.ts` itself. Deno is not installed on this machine (`deno --version` → not found), so `/healthz` and `/api/vimeus/listing/*` were never executed locally; their behaviour is unchanged by this change and remains covered structurally per L11.
