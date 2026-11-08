@@ -17,6 +17,11 @@
     --popover-foreground: 0.205 0 0;
     --primary: 0.55 0.22 285;
     --primary-foreground: 0.985 0 0;
+    /* Violeta profundo para superficies sólidas con texto blanco: --primary es
+       demasiado claro para llevar #fafafa encima (3.7:1). --primary se queda
+       como acento de texto sobre fondos oscuros. */
+    --primary-strong: 0.5 0.21 285;
+    --primary-strong-foreground: 1 0 0;
     --secondary: 0.97 0 0;
     --secondary-foreground: 0.205 0 0;
     --muted: 0.97 0 0;
@@ -29,6 +34,13 @@
     --input: oklch(0.92 0 0);
     --ring: 0.55 0.22 285;
     --radius: 0.75rem;
+
+    --dur-fast: 140ms;
+    --dur-base: 200ms;
+    --dur-slow: 280ms;
+    --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+    --lift: -2px;
 
     --sidebar: 0.985 0 0;
     --sidebar-foreground: 0.205 0 0;
@@ -51,8 +63,10 @@
     --card-foreground: 0.985 0 0;
     --popover: 0.165 0.005 285;
     --popover-foreground: 0.985 0 0;
-    --primary: 0.62 0.19 285;
+    --primary: 0.66 0.185 285;
     --primary-foreground: 0.985 0 0;
+    --primary-strong: 0.52 0.2 285;
+    --primary-strong-foreground: 1 0 0;
     --secondary: 0.245 0.006 285;
     --secondary-foreground: 0.985 0 0;
     --muted: 0.245 0.006 285;
@@ -90,6 +104,11 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Evita palabras huérfanas en la última línea de los párrafos. */
+  p {
+    text-wrap: pretty;
   }
 
   /* Scrollbar personalizado */
@@ -169,6 +188,33 @@
   .container-custom {
     @apply container mx-auto px-4 xl:px-0;
   }
+
+  .motion-card {
+    transition:
+      transform var(--dur-base) var(--ease-out-quint),
+      box-shadow var(--dur-base) var(--ease-out-quint),
+      background-color var(--dur-base) var(--ease-soft);
+  }
+  .motion-card:hover { transform: translateY(var(--lift)); }
+  .motion-card:active { transform: translateY(0); }
+
+  .motion-media { transition: transform var(--dur-slow) var(--ease-out-quint); }
+  .motion-lift:hover .motion-media { transform: scale(1.03); }
+
+  .motion-press { transition: transform var(--dur-fast) var(--ease-out-quint); }
+  .motion-press:hover { transform: translateY(-1px); }
+  .motion-press:active { transform: translateY(0) scale(0.985); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .motion-card, .motion-media, .motion-press { transition: none; }
+    .motion-card:hover, .motion-card:active,
+    .motion-lift:hover .motion-media,
+    .motion-press:hover, .motion-press:active { transform: none; }
+  }
+  html.reduce-motion .motion-card, html.reduce-motion .motion-media, html.reduce-motion .motion-press { transition: none; }
+  html.reduce-motion .motion-card:hover, html.reduce-motion .motion-card:active,
+  html.reduce-motion .motion-lift:hover .motion-media,
+  html.reduce-motion .motion-press:hover, html.reduce-motion .motion-press:active { transform: none; }
 }
 
 @layer utilities {

@@ -17,6 +17,9 @@ export default {
         primary: {
           DEFAULT: 'oklch(var(--primary) / <alpha-value>)',
           foreground: 'oklch(var(--primary-foreground) / <alpha-value>)',
+          // Superficie sólida (botones, badges) que lleva texto blanco encima.
+          strong: 'oklch(var(--primary-strong) / <alpha-value>)',
+          'strong-foreground': 'oklch(var(--primary-strong-foreground) / <alpha-value>)',
         },
         secondary: {
           DEFAULT: 'oklch(var(--secondary) / <alpha-value>)',

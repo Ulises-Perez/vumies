@@ -47,7 +47,7 @@ const base =
   'disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0'
 
 const variants: Record<Variant, string> = {
-  default: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
+  default: 'bg-primary-strong text-primary-strong-foreground hover:bg-primary-strong/90 shadow-sm',
   secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
   outline: 'border border-input bg-transparent hover:bg-accent hover:text-accent-foreground',
   ghost: 'hover:bg-accent hover:text-accent-foreground',
@@ -62,5 +62,10 @@ const sizes: Record<Size, string> = {
   icon: 'h-9 w-9',
 }
 
-const classes = computed(() => [base, variants[props.variant], sizes[props.size]])
+const classes = computed(() => [
+  base,
+  variants[props.variant],
+  sizes[props.size],
+  props.disabled ? '' : 'motion-press',
+])
 </script>
