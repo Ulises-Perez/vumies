@@ -4,7 +4,7 @@ Migrate the Vimeus player integration to the new `vimeus.net` API with fresh cre
 
 ## Specs
 
-S1. New Vimeus credentials are the ones supplied by the user: API key `<VIMEUS_API_KEY>` and view key `<VITE_VIMEUS_VIEW_KEY>`. They must be configured so the player works, and the real values must never be committed to the repository.
+S1. New Vimeus credentials are the ones supplied by the user: API key `<VIMEUS_API_KEY>` and view key `<VITE_VIMEUS_VIEW_KEY>`. They must be configured so the player works, and the real values must never be committed to the repository. Real values live only in the gitignored `.env` (local/build) and in the Deno environment (`VIMEUS_API_KEY`, server-side).
 
 S2. The base domain for both embeddings and listings is `https://vimeus.net` (the code still points at `vimeus.com`). Embed endpoints are `https://vimeus.net/e/movie`, `https://vimeus.net/e/serie`, `https://vimeus.net/e/anime`; listing endpoints are `https://vimeus.net/api/listing/movies`, `/api/listing/series`, `/api/listing/animes`, `/api/listing/episodes`. Valid embed parameters: `imdb` or `tmdb` (required), `se` + `ep` (optional, series/anime), `view_key` (required).
 
@@ -36,6 +36,8 @@ S7. The Vimeus API key is still server-side only, now served by the Deno deploym
 > Revisa este proyecto para que lo configuremos con nuevas credenciales del reproductor vimeos.
 >
 > aca la apikey <VIMEUS_API_KEY>, la viewkey <VITE_VIMEUS_VIEW_KEY>
+>
+> (Los valores literales se redactaron en L12: eran secretos commiteados. El texto original está en la transcripción de la sesión, no en el repo.)
 >
 > y la documentacion
 >
@@ -126,3 +128,20 @@ Worker outcomes verified by the parent after landing:
 - Dashboard-contract note (user): on Deno Deploy the canonical runtime variable is `VIMEUS_API_KEY`; a pre-existing `VITE_VIMEUS_API_KEY` entry in the user's dashboard must be renamed (it is the old client-side name that this change deliberately removed).
 
 Commits: `refactor(player)` (native stack removed), `feat(deno)` (server + proxy bridge), `chore(deno)` (`.npmrc`, README), plus a harness-generated `.atl/` refresh.
+
+**L12** — Verification pass after L11 (web-only / Deno Deploy target). Evidence gathered directly:
+
+- **Tauri is fully gone.** `test -d src-tauri` → absent. `grep -in 'tauri\|@tauri' package.json pnpm-lock.yaml` → 0 matches. `grep -rin 'tauri|src-tauri|cargo.toml|mpv|torrentio|librqbit'` across `*.ts`, `*.vue`, `*.json`, `*.js`, `*.md`, `*.cjs`, `*.html` (excluding `node_modules`, `dist`, `.git`, `odd`) → 0 matches. The only remaining mention of Tauri in the tree is this historical document.
+- **Deno Deploy is the only deployment target.** `server.ts`, `deno.json` and the README deploy section are present; `dist/` is served with an SPA fallback and `/api/vimeus/listing/*` proxies upstream with `X-API-Key`.
+- **Build is green.** `pnpm build` (includes `vue-tsc -b`) → exit 0, `✓ built in 6.36s`. `PlayerView` chunk 16.92 kB, `vendor-vue` 113.94 kB.
+- **The view key works.** `curl https://vimeus.net/e/movie?tmdb=550&view_key=…` → `HTTP 200`; `curl https://vimeus.net/e/serie?tmdb=1399&se=1&ep=1&view_key=…` → `HTTP 200`.
+- **The listing API is alive and gated.** `curl https://vimeus.net/api/listing/movies` without a key → `HTTP 401`, exactly as documented.
+
+**L13** — Security finding, fixed: the real Vimeus API key and view key were committed in this document (`S1` and `L1`, introduced by `8edfd61`) and are therefore in git history. That directly contradicts `S1` itself and the provider rule "No expongas tu API Key en el código del lado del cliente." Both literals were replaced with `<VIMEUS_API_KEY>` / `<VITE_VIMEUS_VIEW_KEY>` placeholders. History is unchanged, so the API key remains readable in `8edfd61` and should be rotated from the Vimeus dashboard if this repository is public or shared.
+
+**L14** — Open blockers for local/runtime configuration, both requiring the human:
+
+1. **`.env` cannot be written by the agent.** The Gentle AI safety guard rejects the sensitive path (`C:/Users/ulise/OneDrive/Documentos/proyectos/vumies/.env`), same as in L5. Without it `VITE_VIMEUS_VIEW_KEY` and both TMDB variables are empty at build time: `vimeusService.isConfigured()` stays `false` (the player source is disabled) and every TMDB call fails hard at `tmdb.service.ts:45` (`throw new Error(\`TMDB ${res.status} …\`)` — no fallback), so Home, Movies, Series, Search and the detail views cannot render.
+2. **TMDB credentials were never supplied.** `VITE_TMDB_API_KEY` / `VITE_TMDB_BEARER_TOKEN` must come from the user's own TMDB account. They were not invented and not recovered from git history (see L8).
+
+On Deno Deploy the server-side variable is `VIMEUS_API_KEY`; a pre-existing `VITE_VIMEUS_API_KEY` entry in the dashboard must be renamed, since it is the old client-exposed name that this change deliberately removed.
