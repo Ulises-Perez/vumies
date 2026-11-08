@@ -1,6 +1,6 @@
 <template>
   <footer class="border-t border-border bg-card/30">
-    <div class="container-custom py-10">
+    <div class="container-custom py-10 max-md:pb-28">
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
         <!-- Logo & Info -->
         <div class="col-span-1 md:col-span-3 lg:col-span-1">

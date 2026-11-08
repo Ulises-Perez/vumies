@@ -1,12 +1,16 @@
 <template>
-  <div id="app" class="min-h-screen bg-background">
-    <!-- Desktop Side Menu -->
+  <div class="relative min-h-screen bg-background">
+    <!-- Luz ambiente de la pestaña actual. Va debajo del contenido (z-0). -->
+    <AmbienceStage />
+
+    <!-- Barra superior flotante: su único control de menú pliega el sidebar. -->
+    <AppTopBar />
+
+    <!-- Sidebar flotante: overlay, no reserva espacio en el layout. -->
     <SideMenu />
 
-    <!-- Main Content Wrapper -->
-    <div class="md:ml-20 flex flex-col min-h-screen">
-      <AppNavbar />
-      
+    <!-- Contenido por encima del ambilight. -->
+    <div class="relative z-10 flex min-h-screen flex-col">
       <main class="flex-1">
         <router-view v-slot="{ Component }">
           <transition name="page" mode="out-in">
@@ -17,7 +21,7 @@
 
       <AppFooter />
     </div>
-    
+
     <!-- Mobile Bottom Menu -->
     <BottomMenu class="md:hidden" />
 
@@ -31,7 +35,8 @@ import { onMounted } from 'vue'
 import { useAppStore } from '@/core/stores/app.store'
 import { useAnimeStore } from '@/core/stores/anime.store'
 import { FEATURES } from '@/core/config/features'
-import AppNavbar from '@/modules/ui/components/AppNavbar.vue'
+import AmbienceStage from '@/modules/ui/components/AmbienceStage.vue'
+import AppTopBar from '@/modules/ui/components/AppTopBar.vue'
 import AppFooter from '@/modules/ui/components/AppFooter.vue'
 import BottomMenu from '@/modules/ui/components/BottomMenu.vue'
 import SideMenu from '@/modules/ui/components/SideMenu.vue'
@@ -64,13 +69,40 @@ onMounted(() => {
 </script>
 
 <style>
+/* Transición de ruta: entrada desde un estado ya visible, sin orquestar la página. */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.3s ease;
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.page-enter-from,
+.page-enter-from {
+  opacity: 0;
+  transform: translate3d(0, 6px, 0);
+}
+
 .page-leave-to {
   opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
+  }
+
+  .page-enter-from {
+    transform: none;
+  }
+}
+
+html.reduce-motion .page-enter-active,
+html.reduce-motion .page-leave-active {
+  transition: none;
+}
+
+html.reduce-motion .page-enter-from {
+  transform: none;
 }
 </style>

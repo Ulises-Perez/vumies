@@ -9,7 +9,7 @@
         <div class="hidden md:flex items-center space-x-2">
           <button
             @click="scroll('left')"
-            class="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-border"
+            class="motion-press w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-border"
             :disabled="!showLeftArrow"
             aria-label="Scroll Left"
           >
@@ -19,7 +19,7 @@
           </button>
           <button
             @click="scroll('right')"
-            class="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-border"
+            class="motion-press w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-border"
             :disabled="!showRightArrow"
             aria-label="Scroll Right"
           >

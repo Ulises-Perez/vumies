@@ -47,16 +47,16 @@
         <span class="nav-label">Anime</span>
       </router-link>
 
-      <button
+      <router-link
+        to="/favorites"
         class="nav-item"
-        :class="{ active: isActive('/search') || isOpen }"
-        @click="open"
+        :class="{ active: isActive('/favorites') }"
       >
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
         </svg>
-        <span class="nav-label">Buscar</span>
-      </button>
+        <span class="nav-label">Favoritos</span>
+      </router-link>
     </div>
   </nav>
 </template>
@@ -65,12 +65,15 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { FEATURES } from '@/core/config/features'
-import { useCommandPalette } from '@/modules/ui/composables/useCommandPalette'
 
 const route = useRoute()
-const { isOpen, open } = useCommandPalette()
 
-const isPlayerRoute = computed(() => route.name === 'player' || route.path.startsWith('/player'))
+const isPlayerRoute = computed(
+  () =>
+    route.name === 'player' ||
+    route.name === 'episode-player' ||
+    route.path.startsWith('/player'),
+)
 
 function isActive(path: string): boolean {
   if (path === '/') return route.path === '/'
@@ -94,8 +97,8 @@ function isActive(path: string): boolean {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
-  padding: 14px 28px;
+  gap: 0.5rem;
+  padding: 8px 10px;
   background: oklch(var(--popover) / 0.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -103,26 +106,48 @@ function isActive(path: string): boolean {
   border: 1px solid var(--border);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.2);
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 oklch(1 0 0 / 5%);
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  /* Blanco táctil mínimo de 44px en ambos ejes. */
+  min-width: 56px;
+  min-height: 48px;
+  padding: 4px 6px;
+  border-radius: 14px;
   color: oklch(var(--muted-foreground));
-  transition: color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.15s ease;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
   text-decoration: none;
 }
 
-.nav-item:hover,
+.nav-item:hover {
+  color: oklch(var(--foreground));
+}
+
+.nav-item:active {
+  transform: scale(0.96);
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid oklch(var(--ring));
+  outline-offset: 2px;
+}
+
 .nav-item.active {
   color: oklch(var(--primary));
+  background: oklch(var(--primary) / 0.1);
 }
 
 .nav-item.active .nav-icon {
@@ -130,8 +155,8 @@ function isActive(path: string): boolean {
 }
 
 .nav-icon {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   transition: filter 0.2s ease;
 }
 
@@ -139,5 +164,19 @@ function isActive(path: string): boolean {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-item {
+    transition: none;
+  }
+
+  .nav-item:active {
+    transform: none;
+  }
+}
+
+:global(html.reduce-motion) .nav-item {
+  transition: none;
 }
 </style>

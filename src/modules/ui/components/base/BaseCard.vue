@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
 const classes = computed(() => [
   'rounded-xl border border-border bg-card text-card-foreground shadow-sm',
   props.interactive
-    ? 'transition-colors hover:bg-accent hover:border-primary/40 cursor-pointer'
+    ? 'motion-card transition-colors hover:bg-accent hover:border-primary/40 cursor-pointer'
     : '',
 ])
 </script>
