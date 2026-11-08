@@ -17,6 +17,26 @@ listing endpoints with the `X-API-Key` header.
 - 🔐 **Keys kept server-side**: the Vimeus API key lives only in the Deno environment
 - 📱 **Responsive**: adapts from mobile to desktop
 
+## 🧭 Shell
+
+The application chrome is floating and never reserves layout space:
+
+- **`AppTopBar`** — a floating capsule with a single menu control that folds/unfolds the
+  sidebar, the wordmark and the search trigger. It carries no navigation list and it hides on
+  player routes so it never covers the video.
+- **`SideMenu`** — an overlay panel that starts **closed** on every load, closes on its toggle,
+  on `Escape`, on a click outside and on every route change. It does not push or offset the
+  content; the content keeps the full viewport width.
+- **`AmbienceStage`** — the ambilight layer. Each view publishes the art it is already showing
+  (`useAmbienceSource`), and the stage renders it as soft light bleeding from the screen edges,
+  below the content (`z-0`) and above the page background. It reuses the same image URL, so it
+  adds no network weight, and it cross-fades when the tab changes.
+- **`BottomMenu`** — the floating mobile pill with the primary destinations.
+
+UI state lives in two module-level singletons next to the components:
+`useSidebar()` (shell panel) and `useCommandPalette()` (`⌘K` / `Ctrl K`). All shell motion is
+behind `prefers-reduced-motion` and the app's own `html.reduce-motion` toggle.
+
 ## 🛠️ Requirements
 
 - **Node.js 20+** and **pnpm 10+** (the project is pnpm-only: `npm`/`yarn` fail by `engine-strict`)
