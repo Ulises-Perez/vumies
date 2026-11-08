@@ -74,13 +74,13 @@
         <div class="lg:col-span-2 space-y-10">
            <!-- Overview -->
            <div>
-              <h3 class="text-xl font-bold text-foreground mb-3 font-poppins">Sinopsis</h3>
-              <p class="text-muted-foreground text-lg leading-relaxed">{{ movieDetails.overview }}</p>
+              <h2 class="text-xl font-bold text-foreground mb-3 font-poppins">Sinopsis</h2>
+              <p class="max-w-[60ch] text-muted-foreground text-lg leading-relaxed">{{ movieDetails.overview }}</p>
            </div>
 
            <!-- Cast -->
            <div v-if="credits && credits.cast.length">
-             <h3 class="text-xl font-bold text-foreground mb-4 font-poppins">Reparto Principal</h3>
+             <h2 class="text-xl font-bold text-foreground mb-4 font-poppins">Reparto Principal</h2>
              <div class="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
                <div v-for="actor in credits.cast.slice(0, 10)" :key="actor.id" class="flex-none w-32 text-center group">
                  <PersonAvatar :path="actor.profile_path" :name="actor.name" class="mb-3" />
@@ -92,7 +92,7 @@
 
            <!-- Awards (Mock) -->
            <div>
-             <h3 class="text-xl font-bold text-foreground mb-4 font-poppins">Premios</h3>
+             <h2 class="text-xl font-bold text-foreground mb-4 font-poppins">Premios</h2>
              <div class="flex flex-wrap gap-4">
                 <BaseCard class="flex items-center gap-3 p-3">
                   <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500">
@@ -119,7 +119,7 @@
         <!-- Right Column: Info & Recommendations -->
         <div class="space-y-8">
            <BaseCard class="p-6">
-             <h3 class="text-lg font-bold text-foreground mb-4">Información</h3>
+             <h2 class="text-lg font-bold text-foreground mb-4">Información</h2>
              <div class="space-y-4">
                <div v-if="directors.length">
                  <p class="text-muted-foreground text-sm">Director</p>
