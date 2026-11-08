@@ -3,7 +3,10 @@
        En las rutas de reproducción desaparece para no tapar el video. -->
   <header
     v-show="!isPlayerRoute"
-    class="pointer-events-none fixed inset-x-0 top-0 z-50 px-2.5 pt-2.5 sm:px-4 sm:pt-3"
+    class="topbar-shell pointer-events-none fixed inset-x-0 top-0 z-50 px-2.5 pt-2.5 sm:px-4 sm:pt-3"
+    :class="{ 'is-hidden': isHidden }"
+    :aria-hidden="isHidden ? 'true' : undefined"
+    :inert="isHidden ? true : undefined"
   >
     <div
       class="pointer-events-auto mx-auto flex h-12 max-w-[110rem] items-center gap-1 rounded-2xl border border-border/60 bg-popover/70 px-1.5 backdrop-blur-xl sm:h-14 sm:gap-1.5 sm:px-2"
@@ -56,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Bars3Icon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useSidebar } from '../composables/useSidebar'
@@ -64,7 +67,42 @@ import { useCommandPalette } from '../composables/useCommandPalette'
 
 const route = useRoute()
 const { isOpen, toggle } = useSidebar()
-const { open } = useCommandPalette()
+const { isOpen: isPaletteOpen, open } = useCommandPalette()
+const scrollingDown = ref(false)
+let lastScrollY = 0
+let ticking = false
+
+// Hide chrome when reading down the page; reveal it on scroll-up or when at top.
+function updateScrollDirection() {
+  const nextScrollY = window.scrollY
+  if (nextScrollY < 80) scrollingDown.value = false
+  else if (nextScrollY - lastScrollY > 6) {
+    const shell = document.querySelector<HTMLElement>('.topbar-shell')
+    if (!shell?.contains(document.activeElement)) scrollingDown.value = true
+  } else if (lastScrollY - nextScrollY > 4) scrollingDown.value = false
+  lastScrollY = nextScrollY
+  ticking = false
+}
+
+function onScroll() {
+  if (ticking) return
+  ticking = true
+  window.requestAnimationFrame(updateScrollDirection)
+}
+
+onMounted(() => {
+  lastScrollY = window.scrollY
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
+
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+watch(() => route.fullPath, () => {
+  scrollingDown.value = false
+  lastScrollY = 0
+})
+
+const isHidden = computed(() => scrollingDown.value && !isOpen.value && !isPaletteOpen.value)
 
 const isPlayerRoute = computed(
   () =>
@@ -77,3 +115,29 @@ const shortcutLabel = computed(() =>
   /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K',
 )
 </script>
+
+<style scoped>
+.topbar-shell {
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms linear;
+}
+
+.topbar-shell.is-hidden {
+  transform: translateY(calc(-100% - 1rem));
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar-shell {
+    transition: none;
+  }
+}
+
+:global(html.reduce-motion) .topbar-shell {
+  transition: none;
+}
+</style>

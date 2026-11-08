@@ -10,7 +10,7 @@
     inferior, enmascarado para que se disuelva antes de tocar el contenido. Sin
     manchas laterales ni bandas: la luz no compite con lo que se lee.
   -->
-  <div class="ambience" aria-hidden="true">
+  <div class="ambience" :class="{ 'is-scrolled': isScrolled }" aria-hidden="true">
     <!-- Piso de marca: mantiene profundidad cuando la ruta todavía no tiene arte. -->
     <div class="ambience__brand" :class="{ 'is-muted': !!source }" />
 
@@ -27,10 +27,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useAmbience } from '../composables/useAmbience'
 
 const { source } = useAmbience()
+const isScrolled = ref(false)
+
+/** Keep image-derived light with the hero, then clear it before long-form copy. */
+function updateScrollZone() {
+  const fadeThreshold = window.innerHeight * 0.4
+  const next = window.scrollY > fadeThreshold
+  if (next !== isScrolled.value) isScrolled.value = next
+}
+
+onMounted(() => {
+  updateScrollZone()
+  window.addEventListener('scroll', updateScrollZone, { passive: true })
+  window.addEventListener('resize', updateScrollZone, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateScrollZone)
+  window.removeEventListener('resize', updateScrollZone)
+})
 
 const artStyle = computed(() =>
   source.value ? { backgroundImage: `url("${source.value}")` } : undefined,
@@ -66,6 +85,13 @@ const artStyle = computed(() =>
 .ambience__art {
   position: absolute;
   inset: 0;
+  transition: opacity 320ms ease;
+}
+
+/* Image-derived light belongs to the hero, not to the synopsis/read viewport. */
+.ambience.is-scrolled .ambience__art,
+.ambience.is-scrolled .ambience__brand {
+  opacity: 0;
 }
 
 /* Tinta de cuerpo entero: el arte estirado y desenfocado a muy baja opacidad.
@@ -130,6 +156,7 @@ const artStyle = computed(() =>
 @media (prefers-reduced-motion: reduce) {
   .ambience-fade-enter-active,
   .ambience-fade-leave-active,
+  .ambience__art,
   .ambience__brand {
     transition: none;
   }
@@ -137,6 +164,7 @@ const artStyle = computed(() =>
 
 html.reduce-motion .ambience-fade-enter-active,
 html.reduce-motion .ambience-fade-leave-active,
+html.reduce-motion .ambience__art,
 html.reduce-motion .ambience__brand {
   transition: none;
 }
