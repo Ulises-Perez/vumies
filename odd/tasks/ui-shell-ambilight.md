@@ -29,6 +29,7 @@ S7. No design or functional regression, plus real performance work. Exact words:
 - **T5** — Unify motion tokens and micro-interactions across the shell, cards and buttons, with reduced-motion coverage. `Spec: S4` · route: worker (`gentle-ai-worker`, reviewed inline) + inline · commit: `ab48796` (tokens + primary surface) + `6da7f4d` (cards)
 - **T6** — Verify: `vue-tsc`, `vite build`, real-browser check of every route at 1440/1024/820/390, Escape repro, Impeccable detector, and a scroll/repaint sanity pass. `Spec: S3, S5, S6, S7` · route: inline · commit: (verification only)
 - **T7** — Document the new shell in the README. `Spec: S1, S2, S3` · route: inline · commit: `docs(readme): describe the floating shell and ambilight`
+- **T8** — Follow-up from the human: the ambilight separated from the content and made the description area look bad, and the drawer felt empty. Turn the ambience into a subordinate tint and size the drawer to its content. `Spec: S3, S4` · route: inline · commit: `fix(shell): tint the ambience and size the drawer to its content`
 
 ## Log
 
@@ -57,3 +58,15 @@ S7. No design or functional regression, plus real performance work. Exact words:
 **L10** — A vision-enabled reviewer reported duplicate `useAmbienceSource` imports in 13 views and a stray sky-blue gradient chip inside the sidebar. Both are false positives and are recorded as such: `grep -c` shows exactly one import plus one call per view, `vue-tsc` and `vite build` both pass (a duplicate import is a syntax error), and a DOM scan of every element with a gradient background overlapping the panel returns only the hero gradients and the nav indicator. No change was made on that basis.
 
 **L11** — History note: the first commit series was reset and rebuilt once, because staging the component directory carried the `AppNavbar` deletion into the token commit and left that commit unable to compile. Nothing was pushed, so the branch now carries six commits that each compile.
+
+**L12** — User's follow-up request, verbatim:
+
+> Hay un error el cual C:\Users\ulise\AppData\Local\Temp\orca-paste-1794175493976-c77907f2-bef0-4097-97c7-d47d03b16a35.png, para analizar las imagenes tira un subagente que las vea, el problema es que el ambilight separa mucho cuando ves el contenido como la descripcion y hace que se vea fatal.
+>
+> En caso de ser necesario tira un subagente que vea todas las imagenes.
+>
+> Tambien quiero que distribuyas mucho mejor el sidebar para que no sea tan vacio. con /taste y audita siempre con impeccable
+
+**L13** — No subagent in this runtime can see images: the parent and every agent share a model without vision, and the verifier reported the omission instead of inventing findings. The defect was therefore diagnosed by measuring the render: with the ambience visible versus hidden, the old floor glow lifted the bottom 80px of the viewport from ~17 to ~108 luminance — six times the page background, in a band with hard edges — which is exactly the separation the human reported. A separate bright band at scroll 700 survived with the ambience hidden and is page content, not the ambilight.
+
+**L14** — Fix and evidence. The stage now paints a full-bleed 19% tint plus one bottom spill at 30% masked with a radial fade, under a linear veil that carries the bottom edge back to the page colour; the two side glows and the radial veil are gone. Per-row contribution measured against the layer hidden is now a smooth cast (mean +4 to +6 luminance, max +16.7, largest row-to-row step 6.7 out of 255) instead of a band. The drawer was also mis-sized: 876px tall with 409px of dead space under the last row. It now hugs its content (496px, 9px of trailing padding) with 44px rows, three labelled groups, a search entry with its shortcut, and the active-row indicator still tracks the correct row.

@@ -2,8 +2,13 @@
   <!--
     Ambilight: luz ambiente derivada del arte que la pestaña actual está mostrando.
     Vive por debajo del contenido (`z-0`, el contenido va en `z-10`), nunca intercepta
-    punteros y se reutiliza la misma URL de imagen que ya carga la vista, así que no
-    suma peso de red: solo un decodificado pequeño por capa.
+    punteros y reutiliza la misma URL de imagen que la vista ya cargó, así que no
+    suma peso de red.
+
+    Diseño: dos capas que no forman objeto propio. Una tinta de cuerpo entero muy
+    baja (da color a la pestaña sin dibujar una forma) y un derrame suave en el borde
+    inferior, enmascarado para que se disuelva antes de tocar el contenido. Sin
+    manchas laterales ni bandas: la luz no compite con lo que se lee.
   -->
   <div class="ambience" aria-hidden="true">
     <!-- Piso de marca: mantiene profundidad cuando la ruta todavía no tiene arte. -->
@@ -11,13 +16,12 @@
 
     <Transition name="ambience-fade">
       <div v-if="source" :key="source" class="ambience__art">
-        <span class="ambience__glow ambience__glow--left" :style="artStyle" />
-        <span class="ambience__glow ambience__glow--right" :style="artStyle" />
-        <span class="ambience__glow ambience__glow--floor" :style="artStyle" />
+        <span class="ambience__tint" :style="artStyle" />
+        <span class="ambience__spill" :style="artStyle" />
       </div>
     </Transition>
 
-    <!-- Velo central: protege el contraste del texto sin apagar la luz de los bordes. -->
+    <!-- Velo: unifica el tono y baja la luz donde vive el texto. -->
     <div class="ambience__veil" />
   </div>
 </template>
@@ -64,51 +68,50 @@ const artStyle = computed(() =>
   inset: 0;
 }
 
-.ambience__glow {
+/* Tinta de cuerpo entero: el arte estirado y desenfocado a muy baja opacidad.
+   No dibuja una forma reconocible, solo tiñe la pestaña. */
+.ambience__tint {
   position: absolute;
+  inset: -12%;
   display: block;
-  width: clamp(16rem, 34vw, 30rem);
-  height: clamp(16rem, 34vw, 30rem);
+  background-size: cover;
+  background-position: 50% 22%;
+  background-repeat: no-repeat;
+  filter: blur(80px) saturate(1.5);
+  opacity: 0.19;
+}
+
+/* Derrame del borde inferior: el único acento, y se disuelve en todas direcciones
+   antes de llegar a la columna de contenido. */
+.ambience__spill {
+  position: absolute;
+  left: 50%;
+  bottom: -6rem;
+  display: block;
+  width: min(72rem, 130vw);
+  height: clamp(9rem, 24vh, 17rem);
+  transform: translateX(-50%);
   border-radius: 50%;
   background-size: cover;
+  background-position: 50% 88%;
   background-repeat: no-repeat;
-  /* El desenfoque es el efecto: se calcula una sola vez por capa y no se anima,
-     así que no se re-rasteriza mientras el usuario hace scroll. */
-  filter: blur(58px) saturate(1.75);
-  opacity: 0.4;
+  filter: blur(64px) saturate(1.45);
+  opacity: 0.3;
+  -webkit-mask-image: radial-gradient(closest-side, #000 18%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 18%, transparent 100%);
 }
 
-.ambience__glow--left {
-  left: -8rem;
-  top: 26%;
-  background-position: 8% 26%;
-}
-
-.ambience__glow--right {
-  right: -8rem;
-  top: 40%;
-  background-position: 92% 36%;
-}
-
-.ambience__glow--floor {
-  left: 50%;
-  bottom: -11rem;
-  width: clamp(20rem, 60vw, 58rem);
-  height: clamp(12rem, 26vh, 22rem);
-  margin-left: calc(clamp(20rem, 60vw, 58rem) / -2);
-  background-position: 50% 92%;
-  filter: blur(64px) saturate(1.6);
-  opacity: 0.46;
-}
-
+/* Velo: lleva el borde inferior hacia el color de página para que la luz no
+   termine en una banda con borde propio. */
 .ambience__veil {
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    125% 85% at 50% 42%,
-    oklch(var(--background) / 0.55) 0%,
-    oklch(var(--background) / 0.3) 52%,
-    transparent 100%
+  background: linear-gradient(
+    to bottom,
+    oklch(var(--background) / 0.08) 0%,
+    oklch(var(--background) / 0.22) 42%,
+    oklch(var(--background) / 0.42) 78%,
+    oklch(var(--background) / 0.58) 100%
   );
 }
 

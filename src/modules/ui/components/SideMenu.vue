@@ -15,7 +15,7 @@
     <aside
       id="app-sidebar"
       ref="panelRef"
-      class="sidebar-panel fixed inset-y-3 left-3 z-[70] flex w-[17.5rem] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar/90 text-sidebar-foreground backdrop-blur-2xl"
+      class="sidebar-panel fixed left-3 top-3 z-[70] flex max-h-[calc(100dvh-1.5rem)] w-[17.5rem] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar/90 text-sidebar-foreground backdrop-blur-2xl"
       :class="isOpen ? 'is-open' : 'is-closed'"
       :inert="isOpen ? undefined : true"
       :aria-hidden="isOpen ? undefined : 'true'"
@@ -23,7 +23,7 @@
       tabindex="-1"
     >
       <!-- Cabecera: marca + cerrar -->
-      <div class="flex items-center gap-2 px-3 pb-1 pt-3">
+      <div class="flex items-center gap-2 px-3 pb-2 pt-3">
         <router-link
           to="/"
           class="group flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl px-2 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
@@ -49,10 +49,25 @@
         </button>
       </div>
 
-      <!-- Navegación -->
+      <!-- Buscador: la entrada más usada del menú, con su atajo a la vista -->
+      <div class="px-3 pb-1">
+        <button
+          type="button"
+          class="flex h-11 w-full items-center gap-2.5 rounded-2xl border border-sidebar-border/70 bg-sidebar-accent/35 px-3 text-sm text-muted-foreground transition-colors duration-200 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          @click="openSearch"
+        >
+          <MagnifyingGlassIcon class="h-4 w-4 shrink-0" />
+          <span class="flex-1 truncate text-left">Buscar</span>
+          <kbd
+            class="select-none rounded border border-border bg-background/50 px-1.5 py-0.5 font-mono text-[10px] font-medium"
+          >{{ shortcutLabel }}</kbd>
+        </button>
+      </div>
+
+      <!-- Navegación: grupos con etiqueta, no una lista suelta -->
       <nav
         ref="listRef"
-        class="custom-scrollbar relative flex-1 overflow-y-auto overflow-x-hidden px-2 py-2"
+        class="custom-scrollbar relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2"
         aria-label="Secciones"
       >
         <!-- Indicador del ítem activo: se desliza entre filas (estado, no decoración). -->
@@ -63,32 +78,50 @@
           aria-hidden="true"
         />
 
-        <router-link
-          v-for="(item, index) in items"
-          :key="item.path"
-          :to="item.path"
-          :data-nav-index="index"
-          class="nav-row group relative z-10 flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-          :class="isActive(item.path) ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
-          :aria-current="isActive(item.path) ? 'page' : undefined"
-          @click="close"
-        >
-          <component
-            :is="item.icon"
-            class="h-5 w-5 shrink-0 transition-colors duration-200"
-            :class="isActive(item.path) ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'"
-          />
-          <span class="truncate">{{ item.name }}</span>
-        </router-link>
-      </nav>
+        <template v-for="group in groups" :key="group.label">
+          <p class="nav-group-label">{{ group.label }}</p>
+          <router-link
+            v-for="item in group.items"
+            :key="item.path"
+            :to="item.path"
+            :data-nav-index="indexOf(item.path)"
+            class="nav-row group relative z-10 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            :class="isActive(item.path) ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
+            :aria-current="isActive(item.path) ? 'page' : undefined"
+            @click="close"
+          >
+            <component
+              :is="item.icon"
+              class="h-5 w-5 shrink-0 transition-colors duration-200"
+              :class="isActive(item.path) ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'"
+            />
+            <span class="truncate">{{ item.name }}</span>
+          </router-link>
+        </template>
 
-      <!-- Pie: pista de teclado, no un control nuevo -->
-      <p class="border-t border-sidebar-border/60 px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
-        <kbd
-          class="rounded border border-border bg-muted px-1 font-mono text-[10px] text-muted-foreground"
-        >⌘K</kbd>
-        abre la búsqueda
-      </p>
+        <!-- Preferencias: cierre del menú, separadas por un divisor. El panel mide
+             lo que mide su contenido, así que no queda hueco muerto abajo. -->
+        <div class="mt-2 border-t border-sidebar-border/60 pt-1">
+          <p class="nav-group-label">{{ pinnedGroup.label }}</p>
+          <router-link
+            v-for="item in pinnedGroup.items"
+            :key="item.path"
+            :to="item.path"
+            :data-nav-index="indexOf(item.path)"
+            class="nav-row group relative z-10 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            :class="isActive(item.path) ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
+            :aria-current="isActive(item.path) ? 'page' : undefined"
+            @click="close"
+          >
+            <component
+              :is="item.icon"
+              class="h-5 w-5 shrink-0 transition-colors duration-200"
+              :class="isActive(item.path) ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'"
+            />
+            <span class="truncate">{{ item.name }}</span>
+          </router-link>
+        </div>
+      </nav>
     </aside>
   </Teleport>
 </template>
@@ -104,6 +137,7 @@ import {
   ClockIcon,
   Cog6ToothIcon,
   SparklesIcon,
+  MagnifyingGlassIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { FEATURES } from '@/core/config/features'
@@ -112,7 +146,7 @@ import { useCommandPalette } from '../composables/useCommandPalette'
 
 const route = useRoute()
 const { isOpen, close } = useSidebar()
-const { isOpen: isPaletteOpen } = useCommandPalette()
+const { isOpen: isPaletteOpen, open: openPalette } = useCommandPalette()
 
 const panelRef = ref<HTMLElement | null>(null)
 const listRef = ref<HTMLElement | null>(null)
@@ -121,23 +155,54 @@ const indicator = reactive({ top: 0, height: 0, visible: false })
 /** Elemento que tenía el foco al abrir, para devolvérselo al cerrar. */
 let restoreFocusTo: HTMLElement | null = null
 
-const items = [
-  { name: 'Inicio', path: '/', icon: HomeIcon },
-  { name: 'Películas', path: '/movies', icon: FilmIcon },
-  { name: 'Series', path: '/series', icon: TvIcon },
-  // Anime gateado tras FEATURES.anime (reversible)
-  ...(FEATURES.anime ? [{ name: 'Anime', path: '/animes', icon: SparklesIcon }] : []),
-  { name: 'Favoritos', path: '/favorites', icon: HeartIcon },
-  { name: 'Recientes', path: '/recent', icon: ClockIcon },
-  { name: 'Ajustes', path: '/settings', icon: Cog6ToothIcon },
+const groups = [
+  {
+    label: 'Catálogo',
+    items: [
+      { name: 'Inicio', path: '/', icon: HomeIcon },
+      { name: 'Películas', path: '/movies', icon: FilmIcon },
+      { name: 'Series', path: '/series', icon: TvIcon },
+      // Anime gateado tras FEATURES.anime (reversible)
+      ...(FEATURES.anime ? [{ name: 'Anime', path: '/animes', icon: SparklesIcon }] : []),
+    ],
+  },
+  {
+    label: 'Tu biblioteca',
+    items: [
+      { name: 'Favoritos', path: '/favorites', icon: HeartIcon },
+      { name: 'Recientes', path: '/recent', icon: ClockIcon },
+    ],
+  },
 ]
+
+/** Grupo anclado al pie del panel. */
+const pinnedGroup = {
+  label: 'Preferencias',
+  items: [{ name: 'Ajustes', path: '/settings', icon: Cog6ToothIcon }],
+}
+
+/** Orden plano de todas las filas, para el índice del indicador. */
+const flatItems = [...groups.flatMap((group) => group.items), ...pinnedGroup.items]
+
+function indexOf(path: string) {
+  return flatItems.findIndex((item) => item.path === path)
+}
 
 function isActive(path: string) {
   if (path === '/') return route.path === '/'
   return route.path.startsWith(path)
 }
 
-const activeIndex = computed(() => items.findIndex((item) => isActive(item.path)))
+const activeIndex = computed(() => flatItems.findIndex((item) => isActive(item.path)))
+
+const shortcutLabel = computed(() =>
+  /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K',
+)
+
+function openSearch() {
+  close()
+  openPalette()
+}
 
 /**
  * Mide la fila activa en coordenadas del `nav` (mismo sistema que usa el indicador
@@ -229,6 +294,16 @@ onUnmounted(() => {
   opacity: 1;
 }
 
+/* ===== Etiquetas de grupo ===== */
+.nav-group-label {
+  padding: 0.75rem 0.75rem 0.25rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: oklch(var(--muted-foreground) / 0.75);
+}
+
 /* ===== Indicador del ítem activo ===== */
 .nav-indicator {
   position: absolute;
@@ -238,8 +313,8 @@ onUnmounted(() => {
   border-radius: 1rem;
   background: linear-gradient(
     90deg,
-    oklch(var(--sidebar-primary) / 0.16),
-    oklch(var(--sidebar-primary) / 0.05)
+    oklch(var(--primary) / 0.16),
+    oklch(var(--primary) / 0.05)
   );
   box-shadow: inset 0 1px 0 oklch(1 0 0 / 5%);
   transition:
