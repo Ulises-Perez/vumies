@@ -1,6 +1,7 @@
 // build: vumies player (uosc + mouse-forward via webview)
 mod mpv;
 mod torrent;
+mod vimeus;
 
 use tauri::Manager;
 
@@ -40,6 +41,7 @@ pub fn run() {
       mpv::mpv_set_geometry,
       mpv::mpv_command,
       mpv::mpv_stop,
+      vimeus::vimeus_listing,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

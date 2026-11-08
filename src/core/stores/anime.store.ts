@@ -1,13 +1,21 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { API_CONFIG } from '@/core/config/api.config'
+import { fetchVimeusListing } from '@/modules/player/services/vimeus.api'
+import type { VimeusAnime } from '@/modules/player/types/vimeus.types'
 
 /**
- * Store that fetches all anime TMDB IDs from the Vimeus API
- * and provides a lookup method to check if a TMDB ID is an anime.
- * This ensures that TV shows cataloged as anime in Vimeus are
- * correctly routed to /e/anime instead of /e/serie.
+ * Store que obtiene los TMDB IDs de todo el catálogo de anime de Vimeus
+ * (`GET /api/listing/animes`) y permite saber si un ID de TMDB corresponde a un
+ * anime. Así las series catalogadas como anime se enrutan a `/e/anime` en lugar
+ * de `/e/serie`.
+ *
+ * La petición la firma el backend Rust (`vimeus_listing`): la API Key no viaja
+ * al cliente en ningún momento.
  */
+
+/** Tope defensivo de páginas: evita un bucle infinito si la API miente en `total_pages`. */
+const MAX_PAGES = 200
+
 export const useAnimeStore = defineStore('anime', () => {
     const animeTmdbIds = ref<Set<number>>(new Set())
     const loaded = ref(false)
@@ -16,14 +24,14 @@ export const useAnimeStore = defineStore('anime', () => {
     const isLoaded = computed(() => loaded.value)
 
     /**
-     * Check if a TMDB ID belongs to an anime according to Vimeus catalog
+     * ¿Este TMDB ID pertenece al catálogo de anime de Vimeus?
      */
     function isAnime(tmdbId: number): boolean {
         return animeTmdbIds.value.has(tmdbId)
     }
 
     /**
-     * Fetch all anime TMDB IDs from Vimeus API (paginated)
+     * Descarga el catálogo completo de anime (paginado, 50 por página).
      */
     async function fetchAnimeIds() {
         if (loaded.value || loading.value) return
@@ -34,36 +42,26 @@ export const useAnimeStore = defineStore('anime', () => {
         let totalPages = 1
 
         try {
-            while (currentPage <= totalPages) {
-                const response = await fetch(
-                    `${API_CONFIG.VIMEUS.BASE_URL}/api/listing/animes?page=${currentPage}`,
-                    {
-                        headers: {
-                            'X-API-Key': API_CONFIG.VIMEUS.API_KEY,
-                            'Accept': 'application/json',
-                        },
-                    }
-                )
+            while (currentPage <= totalPages && currentPage <= MAX_PAGES) {
+                const response = await fetchVimeusListing<VimeusAnime>('animes', {
+                    page: currentPage,
+                })
 
-                if (!response.ok) {
-                    console.warn(`Vimeus anime listing failed at page ${currentPage}:`, response.status)
+                if (response.error) {
+                    console.warn(`Vimeus anime listing failed at page ${currentPage}: ${response.message}`)
                     break
                 }
 
-                const data = await response.json()
-
-                if (data.error || !data.data?.result) {
-                    break
-                }
-
-                for (const anime of data.data.result) {
+                for (const anime of response.data?.animes ?? []) {
                     if (anime.tmdb_id) {
                         ids.add(anime.tmdb_id)
                     }
                 }
 
-                // data.pages is the total number of pages (a number)
-                totalPages = typeof data.data.pages === 'number' ? data.data.pages : 1
+                const reportedPages = response.data?.pagination?.total_pages
+                totalPages = typeof reportedPages === 'number' && reportedPages > 0
+                    ? Math.min(reportedPages, MAX_PAGES)
+                    : 1
                 currentPage++
             }
 

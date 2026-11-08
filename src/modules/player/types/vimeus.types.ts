@@ -68,6 +68,21 @@ export interface VimeusPagination {
   has_prev: boolean
 }
 
+/** Endpoints de listado documentados por Vimeus. */
+export type VimeusListingKind = 'movies' | 'series' | 'animes' | 'episodes'
+
+/** Parámetros aceptados por la API de listado (viajan al comando nativo en camelCase). */
+export interface VimeusListingQuery {
+  /** Página a recuperar (50 resultados por página). */
+  page?: number
+  /** Filtra episodios por ID de TMDB. */
+  tmdbId?: number
+  /** Filtra episodios por temporada; requiere `tmdbId`. */
+  season?: number
+  /** Restringe a contenido con al menos un embed compatible con CF token. */
+  withCf?: boolean
+}
+
 export interface VimeusListResponse<T> {
   error: boolean
   message: string

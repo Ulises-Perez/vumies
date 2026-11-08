@@ -6,10 +6,16 @@ export const API_CONFIG = {
     BEARER_TOKEN: import.meta.env.VITE_TMDB_BEARER_TOKEN || '',
   },
   VIMEUS: {
-    BASE_URL: 'https://vimeus.com',
-    EMBED_URL: 'https://vimeus.com/e',
+    // vimeus.net es el único dominio válido para inserciones (embeds) y para
+    // la API de listado. vimeus.com queda descartado.
+    BASE_URL: 'https://vimeus.net',
+    EMBED_URL: 'https://vimeus.net/e',
+    // view_key: viaja en la URL del embed y el reproductor la valida contra el
+    // dominio de referencia, así que vive en el cliente a propósito.
     VIEW_KEY: import.meta.env.VITE_VIMEUS_VIEW_KEY || '',
-    API_KEY: import.meta.env.VITE_VIMEUS_API_KEY || '',
+    // api_key: NO se lee en el cliente. La usa sólo el backend Rust a través del
+    // comando `vimeus_listing`, porque la documentación exige que la API Key
+    // nunca se exponga al frontend.
   },
   ANIMEAV1: {
     API_URL: import.meta.env.VITE_ANIMEAV1_API_URL || 'http://localhost:8000',
