@@ -1,11 +1,18 @@
 // Deno Deploy entry point: serves the built static app and proxies the
-// Vimeus listing API with the server-side API key.
+// upstream APIs whose credentials must stay server-side.
 //
 // - `GET /api/vimeus/listing/:kind` forwards `page`, `tmdb_id`, `season` and
 //   `with_cf` to `https://vimeus.net/api/listing/<kind>` with the `X-API-Key`
 //   header read from the `VIMEUS_API_KEY` environment variable, and returns
-//   the upstream status and JSON body unchanged. The key never reaches the
-//   browser bundle: the frontend only calls this same-origin proxy.
+//   the upstream status and JSON body unchanged.
+// - `GET /api/tmdb/<resource>/...` forwards to
+//   `https://api.themoviedb.org/3/<resource>/...` with
+//   `Authorization: Bearer <TMDB_BEARER_TOKEN>`, passing every query parameter
+//   through. `<resource>` is validated against an allowlist so the deployment
+//   never becomes an open proxy for the TMDB account.
+//
+// Neither key is ever serialized to the browser bundle: the frontend only ever
+// calls these same-origin proxies.
 // - Every other request serves the static file from `./dist` (`/` maps to
 //   `index.html`; a path without a file extension that does not exist falls
 //   back to `index.html` so the SPA router works).
@@ -14,6 +21,22 @@
 const DIST_DIR = './dist'
 const UPSTREAM_BASE = 'https://vimeus.net/api/listing'
 const LISTING_KINDS = new Set(['movies', 'series', 'animes', 'episodes'])
+const TMDB_BASE = 'https://api.themoviedb.org/3'
+// Only these TMDB top-level resources are proxied. Anything else is refused so
+// the endpoint cannot be used as a generic forwarder for the account token.
+const TMDB_RESOURCES = new Set([
+  'movie',
+  'tv',
+  'person',
+  'trending',
+  'discover',
+  'search',
+  'genre',
+  'find',
+  'collection',
+  'network',
+  'keyword',
+])
 
 const CONTENT_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -82,6 +105,42 @@ async function handleListing(req: Request, kind: string): Promise<Response> {
   })
 }
 
+async function handleTmdb(req: Request, pathname: string): Promise<Response> {
+  const rest = pathname.slice('/api/tmdb'.length)
+  const segments = rest.split('/').filter(Boolean)
+
+  if (segments.length === 0) {
+    return Response.json({ error: true, message: 'Missing TMDB resource' }, { status: 400 })
+  }
+  if (segments.some((segment) => segment === '.' || segment === '..')) {
+    return new Response('Not found', { status: 404 })
+  }
+  if (!TMDB_RESOURCES.has(segments[0]!)) {
+    return Response.json({ error: true, message: 'Unsupported TMDB resource' }, { status: 400 })
+  }
+
+  const token = Deno.env.get('TMDB_BEARER_TOKEN')
+  if (!token) {
+    return Response.json(
+      { error: true, message: 'TMDB_BEARER_TOKEN is not configured' },
+      { status: 503 }
+    )
+  }
+
+  const url = new URL(req.url)
+  const upstream = new URL(`${TMDB_BASE}${rest}`)
+  for (const [key, value] of url.searchParams) upstream.searchParams.set(key, value)
+
+  const res = await fetch(upstream, {
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+  })
+  const body = await res.text()
+  return new Response(body, {
+    status: res.status,
+    headers: { 'content-type': 'application/json; charset=utf-8' },
+  })
+}
+
 async function handleStatic(pathname: string): Promise<Response> {
   // Defense in depth: `new URL` already normalizes dot segments, but a
   // misbehaving upstream proxy could rewrite the path with `..` — never
@@ -106,6 +165,9 @@ Deno.serve((req: Request): Promise<Response> => {
   const listing = /^\/api\/vimeus\/listing\/([^/]+)$/.exec(url.pathname)
   if (listing) {
     return handleListing(req, listing[1]!)
+  }
+  if (url.pathname === '/api/tmdb' || url.pathname.startsWith('/api/tmdb/')) {
+    return handleTmdb(req, url.pathname)
   }
   return handleStatic(url.pathname)
 });

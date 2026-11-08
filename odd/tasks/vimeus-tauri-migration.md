@@ -18,6 +18,8 @@ S6. Player personalization stays appended as query parameters on the embed URL (
 
 S7. The Vimeus API key is still server-side only, now served by the Deno deployment: a Deno entry module serves the built static app and proxies the listing endpoints with the `X-API-Key` header, reading the key from the Deno environment. The browser only ever calls the same-origin proxy, never `vimeus.net` directly.
 
+S8. No credential may be readable by the end user. The TMDB bearer therefore moves behind a same-origin proxy (`/api/tmdb/*`) served by `server.ts` in Deno Deploy and by a Vite dev proxy locally, reading `TMDB_BEARER_TOKEN` (no `VITE_` prefix) in Node/Deno only. The built bundle must contain zero occurrences of the TMDB token, the Vimeus API key, any `Bearer` header or `X-API-Key` header, and the browser must not issue any request to `api.themoviedb.org`. The single unavoidable exception is `VITE_VIMEUS_VIEW_KEY`: the provider requires `view_key` as a query parameter of every embed URL, so it is visible in the iframe `src` by design and cannot be hidden. Git history must contain no credential either.
+
 ## Tasks
 
 - **T1** — Point Vimeus config at `vimeus.net` and load the new credentials from environment files (real values in gitignored `.env`, placeholders in `.env.example`), removing the API key from the client-exposed config. `Spec: S1, S2, S3` · route: inline · commit: `feat(vimeus): point player at vimeus.net`
@@ -160,3 +162,42 @@ On Deno Deploy the server-side variable is `VIMEUS_API_KEY`; a pre-existing `VIT
 Correction to L14: `VIMEUS_API_KEY` on Deno Deploy is **not** needed for the current build. `fetchVimeusListing` has exactly one consumer, `anime.store.ts:46`, and `App.vue` calls it only behind the anime-module guard; with `__ANIME_ENABLED__: false` the module is tree-shaken out of the build (no `AnimeView`/`AnimeDetailView` chunks in `dist/`). The variable becomes necessary only when anime is re-enabled. The three `VITE_*` values are the ones that must exist at **build** time, because Vite inlines them.
 
 Not verified: `server.ts` itself. Deno is not installed on this machine (`deno --version` → not found), so `/healthz` and `/api/vimeus/listing/*` were never executed locally; their behaviour is unchanged by this change and remains covered structurally per L11.
+
+**L16** — Requirement change, verbatim:
+
+> Si hazlo, lo otro es que ninguna clave se vea todo quede oculto y nada sea visible para el usuario.
+
+This authorizes the history purge (L13) and adds S8: no credential may be readable by the end user. It also authorizes destructive history rewriting, which was explicitly offered and not executed until this message.
+
+**History purge.** The key lived in one commit (`8edfd61`) on a branch that had never been pushed: `git ls-remote --heads origin` returned only `refs/heads/main` at `c55a347`, and `8edfd61` was not an ancestor of `origin/main`. The remote is **public** (`"private": false`), so pushing the branch as it was would have published the key permanently. Method, in order, with the obstacles found:
+
+1. `git filter-branch --tree-filter` with an inline `sed` reported "Ref was rewritten" but produced identical hashes; a second attempt with a script that logged on every commit proved the filter ran 11 times and still ended in "Ref is unchanged". filter-branch does not commit the filtered tree in this environment (missing `/tmp` breaks it), so it was abandoned rather than trusted.
+2. `git filter-repo` is not installed.
+3. Deterministic fallback used instead: `git format-patch origin/main..HEAD` → 11 patches → redacted with `perl -pi -e 's/ak_[A-Za-z0-9]{20,}/<VIMEUS_API_KEY>/g; s/BkVVLIFF[A-Za-z0-9_-]{10,}/<VITE_VIMEUS_VIEW_KEY>/g'` (regex by shape, so the literal secret was never retyped into a command) → verified 0 matches → `git checkout -B` onto `origin/main` → `git am`. Result: 11 commits replayed, new tip `e5ff590`.
+4. The old objects stayed alive after `reflog expire` + `gc --prune=now`. Root cause: two stale linked worktrees left by the blocked native review of L9 — `.git/gentle-ai/candidate-views/74d5daaf…` (detached at `e94afdf`) and `.git/gentle-ai/candidate-views/84044e41…` (detached at `9ea7f37`) — pinned the old commits (`git rev-list --all` was 32 instead of 23, every one of them `undefined` in `git name-rev`). `git worktree remove --force` failed on Windows with `Permission denied`, but it removed the administrative metadata, so `git worktree prune` unlinked them; the objects then became unreachable and were pruned.
+
+Final state: `git rev-list --all` = **23** (12 from `main` + 11 replayed), `8edfd61` no longer exists in the object database, and **0** occurrences of either credential across the whole history (`git log --all -p`). Nothing was force-pushed and `origin/main` was never touched.
+
+**Keyless bundle (S8).** `TMDB.BASE_URL` is now the relative `/api/tmdb`, `tmdb.service.ts` sends no `Authorization` header, and both environments serve the same path: `server.ts` for Deno Deploy, `vite.config.ts` for local development. Both add `Authorization: Bearer <TMDB_BEARER_TOKEN>`, read from the environment in Node/Deno. `vite.config.ts` reads it with `loadEnv(mode, cwd, '')` — empty prefix, so the non-`VITE_` variable is available to the dev proxy and still never reaches the client. The `dns-prefetch` for `api.themoviedb.org` was removed from `index.html` because the browser no longer contacts it.
+
+Defect caught by real verification: the first build passed `vue-tsc` and the proxy itself answered `200`, yet the app rendered nothing. `tmdb.service.ts` built its URL with `new URL(this.baseURL + path)`, which throws `TypeError` for a relative base; every catalog call failed synchronously. Fixed by assembling the query with `URLSearchParams` and passing the relative path to `fetch`. This is exactly the class of regression a green build does not catch.
+
+Evidence, all measured:
+
+| Check | Result |
+| --- | --- |
+| `pnpm build` / `pnpm type-check` | exit 0 / exit 0 |
+| `deno check server.ts` | exit 0 (first time this was possible: Deno 2.9.6 installed) |
+| Bundle sweep: JWT, `ak_…`, `Bearer`, `api.themoviedb.org`, `X-API-Key` | **0 / 0 / 0 / 0 / 0** |
+| Browser home | 6 calls to `/api/tmdb/*`, **0** to `api.themoviedb.org`, 7 images from `image.tmdb.org`, real content ("La Odisea 2026 8.0") |
+| Browser `/movies` | 60 cards |
+| Browser player `/player/movie/155` | iframe `https://vimeus.net/e/movie?tmdb=155&view_key=…`, `referrerpolicy="origin"`, 1478×1294, 0 direct TMDB calls |
+| Deno `GET /healthz` | `200 ok` |
+| Deno `GET /` and `/movies` (SPA fallback) | `200`, `200` |
+| Deno `GET /api/tmdb/movie/155` with a deliberately invalid token | `401 {"status_code":7,"status_message":"Invalid API key…"}` — proves routing, query passthrough and header injection reach TMDB |
+| Deno `GET /api/tmdb/configuration` (resource outside the allowlist) | `400 Unsupported TMDB resource` |
+| Deno `GET /api/tmdb/` (no resource) | `400 Missing TMDB resource` |
+| Deno `GET /api/tmdb/movie/../genre` (`--path-as-is`) | `401`, no traversal escape |
+| Deno with no `TMDB_BEARER_TOKEN` / no `VIMEUS_API_KEY` | `503` with a descriptive body for both |
+
+**Still required from the human**, because the agent cannot write `.env`: rename `VITE_TMDB_BEARER_TOKEN` to `TMDB_BEARER_TOKEN` in the local `.env`, and add `TMDB_BEARER_TOKEN` to the Deno Deploy environment. The Vite dev proxy keeps a temporary fallback to the old `VITE_`-prefixed name so local development does not break in the meantime; `server.ts` accepts only the canonical name.

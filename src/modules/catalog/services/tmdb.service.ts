@@ -22,26 +22,32 @@ export interface TMDBExternalIds {
 }
 
 /**
- * Cliente TMDB sobre fetch nativo (antes axios).
- * Motivo: axios entraba en el chunk inicial vía App.vue -> app.store -> tmdb.service,
- * aunque la página de anime use fetch nativo. Aquí axios solo aportaba baseURL,
- * header Bearer, serialización de params y `.data`; todo replicable con fetch.
+ * Cliente TMDB sobre fetch nativo.
+ *
+ * Las peticiones van al proxy same-origin `/api/tmdb/*` (ver `server.ts` y el
+ * dev proxy de `vite.config.ts`). El token Bearer de TMDB es server-side: el
+ * navegador nunca lo ve, y por eso acá no hay header `Authorization`.
  */
 class TMDBService {
   private baseURL = API_CONFIG.TMDB.BASE_URL.replace(/\/$/, '')
   private headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${API_CONFIG.TMDB.BEARER_TOKEN}`,
+    Accept: 'application/json',
   }
 
   private async get<T>(path: string, params?: Params): Promise<T> {
-    const url = new URL(this.baseURL + path)
+    // `this.baseURL` es relativo (`/api/tmdb`): construir un `new URL()` sin base
+    // lanza TypeError, así que la query se arma con URLSearchParams y `fetch`
+    // recibe la ruta relativa, que resuelve contra el origen actual.
+    const search = new URLSearchParams()
     if (params) {
       for (const [k, v] of Object.entries(params)) {
-        if (v !== undefined) url.searchParams.set(k, String(v))
+        if (v !== undefined) search.set(k, String(v))
       }
     }
-    const res = await fetch(url, { headers: this.headers })
+    const qs = search.toString()
+    const res = await fetch(`${this.baseURL}${path}${qs ? `?${qs}` : ''}`, {
+      headers: this.headers,
+    })
     if (!res.ok) throw new Error(`TMDB ${res.status} ${res.statusText} @ ${path}`)
     return res.json() as Promise<T>
   }

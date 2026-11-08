@@ -27,20 +27,19 @@ listing endpoints with the `X-API-Key` header.
 Build-time variables (read by Vite, reach the client by design):
 
 ```bash
-# ---- TMDB (required: catalog, images and search) ----
-# https://www.themoviedb.org/settings/api
-VITE_TMDB_API_KEY=
-VITE_TMDB_BEARER_TOKEN=
-
 # ---- Vimeus (player) ----
 # https://vimeus.net/settings/general
 VITE_VIMEUS_VIEW_KEY=
 ```
 
-Server-only variable (read only by `server.ts`, never in the bundle):
+Server-only variables (never in the bundle):
 
 ```bash
-# Set as a Deno environment variable, not in any committed file.
+# Read by the Vite dev proxy and by `server.ts`. No `VITE_` prefix on purpose.
+# https://www.themoviedb.org/settings/api -> API Read Access Token (v4 auth)
+TMDB_BEARER_TOKEN=
+
+# Read only by `server.ts` on Deno Deploy.
 VIMEUS_API_KEY=
 ```
 
@@ -48,14 +47,15 @@ What each one is for:
 
 | Variable | Read by | Reaches the client? | Purpose |
 | --- | --- | --- | --- |
-| `VITE_TMDB_BEARER_TOKEN` | Vite (build) | Yes | Authorizes calls to the TMDB API |
-| `VITE_TMDB_API_KEY` | Vite (build) | Yes | Reserved for v3 endpoints that use `api_key` |
 | `VITE_VIMEUS_VIEW_KEY` | Vite (build) | Yes, by design | Required parameter of every embed URL; the player validates it by referrer |
+| `TMDB_BEARER_TOKEN` | Vite dev proxy + Deno server | **No** | Authorizes `/api/tmdb/*`, which both proxies forward as `Authorization: Bearer` |
 | `VIMEUS_API_KEY` | Deno server | **No** | Authenticates `/api/listing/*` with the `X-API-Key` header |
 
-Vite only injects variables with the `VITE_` prefix into the bundle.
-`VIMEUS_API_KEY` intentionally has no such prefix: it is read from the Deno
-environment by `server.ts` and never serialized to the frontend.
+No credential other than the Vimeus view key ever enters the bundle. The view
+key is unavoidable: the provider requires it as a query parameter of the embed
+URL, so it is visible in the iframe `src` by design. The TMDB token and the
+Vimeus API key stay in the server and are reached only through same-origin
+proxies (`/api/tmdb/*`, `/api/vimeus/listing/*`).
 
 ## 🧑‍💻 Development
 
@@ -80,16 +80,17 @@ pnpm build
 deployctl deploy --project=<name> server.ts
 ```
 
-Set `VIMEUS_API_KEY` as an environment variable of the deployment project.
-The server serves the static files from `./dist` and proxies
-`/api/vimeus/listing/*` to `vimeus.net` with the `X-API-Key` header.
+Set `VIMEUS_API_KEY` and `TMDB_BEARER_TOKEN` as environment variables of the
+deployment project. The server serves the static files from `./dist`, proxies
+`/api/vimeus/listing/*` to `vimeus.net` with the `X-API-Key` header, and
+proxies `/api/tmdb/*` to `api.themoviedb.org/3` with the TMDB bearer.
 `GET /healthz` returns `ok` for health checks.
 
 ## 🗂️ Project structure
 
 ```
 Vumies/
-├── server.ts                # Deno entry: serves dist/ + proxies /api/vimeus/listing/*
+├── server.ts                # Deno entry: serves dist/ + proxies /api/vimeus/listing/* and /api/tmdb/*
 ├── deno.json                # Deno tasks (dev, start)
 ├── src/                     # Vue 3 frontend
 │   ├── core/                # config, router, stores and shared utilities
@@ -110,6 +111,10 @@ Vumies/
 ### TMDB
 
 - Movie and series metadata, images, search and recommendations
+- Requests go through the same-origin `/api/tmdb/*` proxy, which adds the
+  bearer server-side; the browser never holds the token
+- Poster and backdrop images come straight from the public `image.tmdb.org`
+  CDN, which needs no credential
 - [TMDB documentation](https://developer.themoviedb.org/docs)
 
 ### Vimeus (`vimeus.net`)
@@ -140,10 +145,10 @@ the `__ANIME_ENABLED__` flag in `vite.config.ts`.
 ## 📝 Scripts
 
 ```bash
-pnpm dev            # Vite dev server (browser only)
+pnpm dev            # Vite dev server (browser only, dev proxy adds the TMDB bearer)
 pnpm build          # vue-tsc + production build to dist/
 pnpm type-check     # Type checking without emitting
-deno task start     # Serve dist/ + the Vimeus API proxy (requires pnpm build first)
+deno task start     # Serve dist/ + both API proxies (requires pnpm build first)
 deno task dev       # Same with --watch for server.ts
 ```
 

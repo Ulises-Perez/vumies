@@ -1,9 +1,12 @@
 export const API_CONFIG = {
   TMDB: {
-    BASE_URL: 'https://api.themoviedb.org/3',
+    // Las llamadas pasan por el proxy same-origin (`/api/tmdb/*`), servido por
+    // `server.ts` en Deno Deploy y por el dev proxy de Vite en local. El token
+    // Bearer vive SOLO en el servidor (variable `TMDB_BEARER_TOKEN`): nunca se
+    // lee en el cliente ni se serializa al bundle.
+    BASE_URL: '/api/tmdb',
+    // image.tmdb.org es un CDN público sin autenticación: no requiere token.
     IMAGE_BASE_URL: 'https://image.tmdb.org/t/p',
-    API_KEY: import.meta.env.VITE_TMDB_API_KEY || '',
-    BEARER_TOKEN: import.meta.env.VITE_TMDB_BEARER_TOKEN || '',
   },
   VIMEUS: {
     // vimeus.net es el único dominio válido para inserciones (embeds) y para
