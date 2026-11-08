@@ -1,179 +1,158 @@
-# Vumies — Aplicación de escritorio de streaming (Windows + Tauri)
+# Vumies — Web streaming app (Deno Deploy)
 
-Vumies es un reproductor de películas, series y anime para **Windows**, empaquetado con **Tauri 2**.
-Combina el catálogo de **TMDB** (metadatos, imágenes, búsqueda) con el reproductor **Vimeus**
-(`vimeus.net`) y un motor propio de torrents + `mpv` para las fuentes que no son embeds.
+Vumies is a web app for watching movies, series and anime, deployed on
+**Deno Deploy**. It combines the **TMDB** catalog (metadata, images, search)
+with the **Vimeus** player (`vimeus.net`) embedded in an iframe.
 
-No hay despliegue web: la app se ejecuta dentro del webview de Tauri y se distribuye como
-instalador de Windows.
+There is no desktop build: the app runs entirely in the browser. The Vimeus
+API key never reaches the client — the Deno server (`server.ts`) proxies the
+listing endpoints with the `X-API-Key` header.
 
-## 🚀 Características
+## 🚀 Features
 
-- ✨ **Interfaz moderna**: Vue 3 + TypeScript + Tailwind CSS, con glassmorphism
-- 🎬 **Catálogo completo**: películas, series y anime vía TMDB
-- 📺 **Reproductor integrado**: embeds de Vimeus (`/e/movie`, `/e/serie`, `/e/anime`)
-- 🧲 **Fuentes torrent**: motor `librqbit` embebido, streaming local por HTTP con Range
-- 🎥 **mpv embebido**: reproducción nativa dentro de la ventana, con controles propios (uosc)
-- 🔍 **Búsqueda en tiempo real** y ❤️ **favoritos** locales
-- 🔐 **Claves fuera del webview**: la API Key de Vimeus vive sólo en el backend Rust
-- 📱 **Responsive**: la ventana se adapta desde 800×600
+- ✨ **Modern UI**: Vue 3 + TypeScript + Tailwind CSS, with glassmorphism
+- 🎬 **Full catalog**: movies, series and anime via TMDB
+- 📺 **Integrated player**: Vimeus embeds (`/e/movie`, `/e/serie`, `/e/anime`) in an iframe
+- 🔍 **Realtime search** and ❤️ local favorites
+- 🔐 **Keys kept server-side**: the Vimeus API key lives only in the Deno environment
+- 📱 **Responsive**: adapts from mobile to desktop
 
-## 📦 Tecnologías
+## 🛠️ Requirements
 
-| Capa | Stack |
-| --- | --- |
-| Frontend | Vue 3 · TypeScript · Vite 7 · Vue Router · Pinia · Tailwind CSS |
-| Backend | Rust · Tauri 2 · `reqwest` · `librqbit` · `axum` |
-| Reproductor | `mpv` (sidecar con IPC por named pipe en Windows) |
-| Datos | TMDB (catálogo) · Vimeus (streaming y listados) |
+- **Node.js 20+** and **pnpm 10+** (the project is pnpm-only: `npm`/`yarn` fail by `engine-strict`)
+- **Deno 2** (to run the server locally and to deploy)
 
-## 🛠️ Requisitos
+## 🔑 Environment variables
 
-- **Windows 10/11** con **WebView2** (viene preinstalado en Windows 11)
-- **Node.js 20+** y **pnpm 10+** (el proyecto es pnpm-only: `npm`/`yarn` fallan por `engine-strict`)
-- **Rust toolchain** estable (`rustup`), con el target MSVC
-- **mpv** instalado y en alguna de estas rutas: `C:\Program Files\MPV Player\mpv.exe`,
-  `C:\Program Files\mpv\mpv.exe` o `%LOCALAPPDATA%\Microsoft\WinGet\Links\mpv.exe`
+Build-time variables (read by Vite, reach the client by design):
 
-## 🔑 Variables de entorno
-
-Creá un archivo **`.env` en la raíz** (está en `.gitignore`, no se commitea):
-
-```env
-# ---- TMDB (obligatorio: catálogo, imágenes y búsqueda) ----
+```bash
+# ---- TMDB (required: catalog, images and search) ----
 # https://www.themoviedb.org/settings/api
 VITE_TMDB_API_KEY=
 VITE_TMDB_BEARER_TOKEN=
 
-# ---- Vimeus (reproductor) ----
+# ---- Vimeus (player) ----
 # https://vimeus.net/settings/general
 VITE_VIMEUS_VIEW_KEY=
+```
+
+Server-only variable (read only by `server.ts`, never in the bundle):
+
+```bash
+# Set as a Deno environment variable, not in any committed file.
 VIMEUS_API_KEY=
 ```
 
-Qué expone cada una:
+What each one is for:
 
-| Variable | Quién la lee | ¿Llega al cliente? | Para qué |
+| Variable | Read by | Reaches the client? | Purpose |
 | --- | --- | --- | --- |
-| `VITE_TMDB_BEARER_TOKEN` | Vite (build) | Sí | Autoriza las llamadas a la API de TMDB |
-| `VITE_TMDB_API_KEY` | Vite (build) | Sí | Reserva para endpoints v3 que usen `api_key` |
-| `VITE_VIMEUS_VIEW_KEY` | Vite (build) | Sí, por diseño | Parámetro obligatorio de toda URL de embed; el reproductor la valida por referrer |
-| `VIMEUS_API_KEY` | Backend Rust | **No** | Autentica `/api/listing/*` con el header `X-API-Key` |
+| `VITE_TMDB_BEARER_TOKEN` | Vite (build) | Yes | Authorizes calls to the TMDB API |
+| `VITE_TMDB_API_KEY` | Vite (build) | Yes | Reserved for v3 endpoints that use `api_key` |
+| `VITE_VIMEUS_VIEW_KEY` | Vite (build) | Yes, by design | Required parameter of every embed URL; the player validates it by referrer |
+| `VIMEUS_API_KEY` | Deno server | **No** | Authenticates `/api/listing/*` with the `X-API-Key` header |
 
-Vite sólo inyecta en el bundle las variables con prefijo `VITE_`. `VIMEUS_API_KEY` no lo lleva
-a propósito: la lee el backend Rust y nunca se serializa al webview.
+Vite only injects variables with the `VITE_` prefix into the bundle.
+`VIMEUS_API_KEY` intentionally has no such prefix: it is read from the Deno
+environment by `server.ts` and never serialized to the frontend.
 
-### Cómo resuelve el backend la API Key de Vimeus
-
-El comando nativo `vimeus_listing` busca la clave, en este orden:
-
-1. Variable de entorno del proceso `VIMEUS_API_KEY`
-2. Archivo `.env` junto al ejecutable (build empaquetado)
-3. Archivo `.env` en el directorio de configuración de la app
-4. Archivo `.env` en la raíz del repositorio (sólo en builds de desarrollo)
-
-Si no la encuentra, la llamada falla con un mensaje explícito y el resto de la app sigue
-funcionando. En un build empaquetado, la opción más simple es definirla a nivel de usuario:
-
-```powershell
-setx VIMEUS_API_KEY "tu_api_key"
-```
-
-y volver a abrir la aplicación.
-
-## 🧑‍💻 Desarrollo
+## 🧑‍💻 Development
 
 ```bash
 pnpm install
 
-# App de escritorio completa (Vite + Tauri, hot reload del frontend)
-pnpm tauri:dev
-
-# Sólo el frontend en el navegador (sin comandos nativos: sin mpv, torrents ni listados)
+# Frontend only (Vite dev server)
 pnpm dev
+
+# Full stack: build + serve through the Deno server (includes the /api proxy)
+pnpm build
+deno task start
 ```
 
-## 📦 Build y distribución
+## 📦 Deploy
+
+Publish from the Deno Deploy dashboard or with the CLI:
 
 ```bash
-pnpm tauri:build
+pnpm install
+pnpm build
+deployctl deploy --project=<name> server.ts
 ```
 
-Genera el instalador **NSIS** en `src-tauri/target/release/bundle/nsis/`.
-El target de bundle está fijado a Windows en `src-tauri/tauri.conf.json` (`bundle.targets: ["nsis"]`).
+Set `VIMEUS_API_KEY` as an environment variable of the deployment project.
+The server serves the static files from `./dist` and proxies
+`/api/vimeus/listing/*` to `vimeus.net` with the `X-API-Key` header.
+`GET /healthz` returns `ok` for health checks.
 
-## 🗂️ Estructura del proyecto
+## 🗂️ Project structure
 
 ```
 Vumies/
-├── src/                     # Frontend Vue 3
-│   ├── core/                # config, router, stores y utilidades transversales
+├── server.ts                # Deno entry: serves dist/ + proxies /api/vimeus/listing/*
+├── deno.json                # Deno tasks (dev, start)
+├── src/                     # Vue 3 frontend
+│   ├── core/                # config, router, stores and shared utilities
 │   │   ├── config/          # API_CONFIG (TMDB, Vimeus, features)
 │   │   └── stores/          # Pinia (app, settings, anime)
 │   └── modules/
-│       ├── catalog/         # catálogo TMDB (películas, series, anime)
-│       ├── player/          # reproductor: fuentes, embeds, motor torrent
-│       │   ├── services/    # vimeus.service (embeds) · vimeus.api (listados)
-│       │   └── sources/     # registry de StreamSource (vimeus, torrentio)
+│       ├── catalog/         # TMDB catalog (movies, series, anime)
+│       ├── player/          # player: Vimeus embed + listing proxy client
+│       │   ├── services/    # vimeus.service (embeds) · vimeus.api (same-origin proxy client)
+│       │   └── sources/     # StreamSource registry (vimeus iframe source)
 │       └── ...
-├── src-tauri/               # Backend Rust
-│   ├── src/lib.rs           # builder de Tauri y registro de comandos
-│   ├── src/vimeus.rs        # proxy de la API de listado (X-API-Key server-side)
-│   ├── src/torrent.rs       # motor librqbit + servidor HTTP local con Range
-│   ├── src/mpv.rs           # driver de mpv (IPC por named pipe)
-│   └── mpv/                 # configuración y scripts de mpv (uosc)
-├── api/                     # API FastAPI opcional para el módulo de anime (desactivado)
-└── odd/tasks/               # documentos de trabajo (specs y tareas)
+├── api/                     # Unused FastAPI module for the anime section (disabled)
+└── odd/tasks/               # work documents (specs and tasks)
 ```
 
-## 🎯 APIs utilizadas
+## 🎯 APIs used
 
 ### TMDB
 
-- Metadatos de películas y series, imágenes, búsqueda y recomendaciones
-- [Documentación TMDB](https://developer.themoviedb.org/docs)
+- Movie and series metadata, images, search and recommendations
+- [TMDB documentation](https://developer.themoviedb.org/docs)
 
 ### Vimeus (`vimeus.net`)
 
-- **Embeds** (`view_key` obligatoria): `https://vimeus.net/e/movie`, `/e/serie`, `/e/anime`
-  con `imdb` o `tmdb`, más `se`/`ep` opcionales en series y anime
-- **Listados** (requieren `X-API-Key`, 50 resultados por página):
+- **Embeds** (`view_key` required): `https://vimeus.net/e/movie`, `/e/serie`, `/e/anime`
+  with `imdb` or `tmdb`, plus optional `se`/`ep` for series and anime
+- **Listings** (require `X-API-Key`, 50 results per page):
   `https://vimeus.net/api/listing/movies`, `/series`, `/animes`, `/episodes`
-- Las URLs de `poster`/`backdrop` son rutas relativas de TMDB: concatenar con
+- `poster`/`backdrop` URLs are relative TMDB paths: concatenate with
   `https://image.tmdb.org/t/p/original`
-- Los iframes se insertan siempre con `referrerpolicy="origin"`
+- Iframes are always inserted with `referrerpolicy="origin"`
 
-`vimeus.com` no es un dominio válido para inserciones: la app usa exclusivamente `vimeus.net`.
+`vimeus.com` is not a valid embed domain: the app exclusively uses `vimeus.net`.
 
-## 🌐 Rutas principales
+## 🌐 Main routes
 
-- `/` — Inicio
-- `/movies` · `/movie/:id` — Películas
+- `/` — Home
+- `/movies` · `/movie/:id` — Movies
 - `/series` · `/serie/:id` — Series
-- `/player/:type/:id/:season?/:episode?` — Reproductor
-- `/search` — Búsqueda
-- `/favorites` · `/recent` — Favoritos y vistos recientemente
-- `/settings` — Ajustes
+- `/player/:type/:id/:season?/:episode?` — Player
+- `/search` — Search
+- `/favorites` · `/recent` — Favorites and recently watched
+- `/settings` — Settings
 
-El módulo de anime (`/animes`, `/anime/:slug`, `/ver-anime/:slug/:episode`) está desactivado por
-el flag `__ANIME_ENABLED__` de `vite.config.ts`.
+The anime module (`/animes`, `/anime/:slug`, `/ver-anime/:slug/:episode`) is disabled by
+the `__ANIME_ENABLED__` flag in `vite.config.ts`.
 
 ## 📝 Scripts
 
 ```bash
-pnpm dev            # Vite dev server (sólo navegador)
-pnpm build          # vue-tsc + build de producción a dist/
-pnpm type-check     # Chequeo de tipos sin emitir
-pnpm tauri:dev      # App de escritorio en modo desarrollo
-pnpm tauri:build    # Instalador NSIS de Windows
+pnpm dev            # Vite dev server (browser only)
+pnpm build          # vue-tsc + production build to dist/
+pnpm type-check     # Type checking without emitting
+deno task start     # Serve dist/ + the Vimeus API proxy (requires pnpm build first)
+deno task dev       # Same with --watch for server.ts
 ```
 
-## 🎨 Paleta de colores
+## 🎨 Color palette
 
-- **Primary**: `#EE5E53` (rojo coral)
+- **Primary**: `#EE5E53` (coral red)
 - **Dark**: `#1D1D1D`
-- **Accent**: variaciones de gris y transparencias
+- **Accent**: gray variations and transparencies
 
-## 📄 Licencia
+## 📄 License
 
 MIT.

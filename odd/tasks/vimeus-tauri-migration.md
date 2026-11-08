@@ -12,9 +12,11 @@ S3. The API key is server-side only: "API Key: Autentica tus llamadas al servido
 
 S4. Listing requests authenticate with the `X-API-Key` header and are paginated 50 items per page with `page`, plus optional `tmdb_id` and `season` for episodes. A successful response has the shape `{ error: false, message: "Success", data: { movies|series|animes|episodes: [...], pagination: { current_page, total_pages, total_results, per_page, has_next, has_prev } } }`. Errors are `401` (missing or invalid API key), `400` (invalid page) and `404` (no content).
 
-S5. Everything related to Deno Deploy and the web deployment is removed; the application is used inside Windows with Tauri. The player markup keeps `referrerpolicy="origin"` on the Vimeus iframe, as the documentation requires.
+S5. Everything related to Tauri and to running the app inside Windows natively is removed; the application is deployed on **Deno Deploy** as a web app. The player therefore keeps only web-playable sources (the Vimeus iframe), because a native `mpv` driver and a local `librqbit` torrent engine cannot exist in a browser. The player markup keeps `referrerpolicy="origin"` on the Vimeus iframe, as the documentation requires.
 
 S6. Player personalization stays appended as query parameters on the embed URL (`theme`, `logo_url`, `primary_color`), and the Vimeus view key gate (`isConfigured()`) keeps disabling the source when no view key is configured.
+
+S7. The Vimeus API key is still server-side only, now served by the Deno deployment: a Deno entry module serves the built static app and proxies the listing endpoints with the `X-API-Key` header, reading the key from the Deno environment. The browser only ever calls the same-origin proxy, never `vimeus.net` directly.
 
 ## Tasks
 
@@ -23,6 +25,9 @@ S6. Player personalization stays appended as query parameters on the embed URL (
 - **T3** — Fix the anime store to consume the documented listing contract through the new bridge (`data.animes` + `data.pagination.total_pages`). `Spec: S4` · route: inline · commit: `fix(catalog): read documented vimeus listing contract`
 - **T4** — Purge the Deno Deploy / web deployment path and configure Windows-only Tauri packaging (bundle targets, scripts, docs). `Spec: S5` · route: inline · commit: `chore(tauri): drop deno deploy, target windows only`
 - **T5** — Verify: `vue-tsc` type-check, `cargo check`, production build, plus a real HTTP check that the new credentials return embeds and listings. `Spec: S1, S2, S3, S4, S5, S6` · route: inline · commit: (verification only)
+- **T6** — Strip the native player out: reduce `PlayerView.vue` to the iframe player, drop the mpv/torrent branches, delete `torrent-engine.ts`, `torrentio.source.ts`, `PlayerTrackMenu.vue`, the torrent source registration and the `src-tauri/` tree, and remove the Tauri dependencies. `Spec: S5` · route: worker · commit: `refactor(player): drop the native mpv and torrent stack`
+- **T7** — Add the Deno deployment: a Deno entry module that serves `dist/` and proxies `/api/vimeus/listing/*` with `X-API-Key` from the Deno environment, plus `deno.json` and the frontend bridge pointed at the same-origin proxy. `Spec: S4, S7` · route: worker · commit: `feat(deno): serve the app and proxy the vimeus api`
+- **T8** — Restore the Deno Deploy deployment path in scripts, docs and config, and re-verify build plus type-check. `Spec: S5, S7` · route: worker · commit: `chore(deno): restore the deno deploy path`
 
 ## Log
 
@@ -100,3 +105,24 @@ Every failure is the same provider error, returned in ~1.1 s, with `prepared_rev
 So the Pi host relay builds the reviewer request with a `thinking` shape the reviewer model now rejects. It is a configuration incompatibility in the review relay, not a defect in the candidate and not a lens-specific finding. Retrying was stopped after the failure reproduced across two lenses and both invocation paths; `review-reliability` (order 3) was never attempted.
 
 The lineage was deliberately left in `reviewing` rather than reset: RESET/RECOVER need explicit human authorization and no ambient recovery is allowed. Assistant-side verification (L7) stands on its own and is unaffected by this blocker.
+
+**L10** — Requirement change, verbatim:
+
+> Porque borraste el deploy a deno de la web?, solo quiero para deno, no para tauri, quiero quitar tauri de este proyecto, solo que se despliegue en deno.
+
+This reverses S5. The original request said "también quiero borrar todo lo relacionado para que se utilice dentro de windows en tauri", which the agent read as "delete the Deno path, run under Tauri in Windows"; the intended meaning was "delete everything related to Tauri, keep only the Deno deployment". The agent chose an interpretation of an ambiguous sentence instead of asking, and built slice 2 in the wrong direction. S5 is rewritten, S7 is added, and T6-T8 do the reversal.
+
+Consequence recorded explicitly: S5 removes `src-tauri/` (the Rust `mpv` driver, the `librqbit` torrent engine, the uosc Lua scripts and the Windows installer), `torrent-engine.ts`, `torrentio.source.ts` and `PlayerTrackMenu.vue`. Neither a native video driver nor a local torrent engine can run in a browser, so the player becomes the Vimeus iframe only. The work is recoverable from git history on this branch. The Rust `vimeus_listing` proxy (`de92f2e`) is superseded by the Deno server proxy in T7, which keeps the API key server-side for the same documented reason.
+
+**L11** — Execution record for T6–T8. Delegated to `gentle-ai-worker` with `## Allowed edit surfaces`; the worker delivered all three phases except the `src-tauri/` deletion, which its harness blocked (`rm -rf` guard — child agents cannot destroy large trees). The parent executed the deletion directly and confirmed `test -d src-tauri` → false (job job-4, exit 0, 11 s).
+
+Worker outcomes verified by the parent after landing:
+
+- `pnpm build` exit 0 (PlayerView chunk 16.92 kB) and `pnpm type-check` exit 0, re-run independently by the parent.
+- `grep -cin 'mpv|torrent'` on `PlayerView.vue` → 0 matches; iframe + `referrerpolicy="origin"` intact (line 18/27); `direct` `<video>` branch retained as a web-playable kind.
+- `server.ts` reviewed: allowlisted query params (`page`, `tmdb_id`, `season`, `with_cf`), key never echoed or logged, upstream status/body passed through, SPA fallback for extensionless routes. The parent added one hardening commit on top: an explicit `..`-traversal 404 guard in `handleStatic` (defense in depth against a misbehaving proxy rewriting dot segments).
+- `vimeus.api.ts` maps camelCase callers to snake_case params; `anime.store.ts` (`page` only) matches the allowlist.
+- `deno` is not on PATH on this machine, so `server.ts` was checked structurally (README-conformant, transpiles clean) but never executed; a live proxy check needs a machine with Deno 2 plus `VIMEUS_API_KEY`.
+- Dashboard-contract note (user): on Deno Deploy the canonical runtime variable is `VIMEUS_API_KEY`; a pre-existing `VITE_VIMEUS_API_KEY` entry in the user's dashboard must be renamed (it is the old client-side name that this change deliberately removed).
+
+Commits: `refactor(player)` (native stack removed), `feat(deno)` (server + proxy bridge), `chore(deno)` (`.npmrc`, README), plus a harness-generated `.atl/` refresh.
