@@ -1,14 +1,14 @@
 <template>
   <router-link
     :to="{ name: 'anime-av1-detail', params: { slug: anime.slug } }"
-    class="group cursor-pointer relative block"
+    class="group motion-lift motion-card cursor-pointer relative block"
   >
     <figure class="relative aspect-poster rounded-lg overflow-hidden bg-muted ring-1 ring-border transition-[transform,box-shadow] duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-primary/40 will-change-transform">
       <img
         v-if="anime.image"
         :src="anime.image"
         :alt="anime.title"
-        class="w-full h-full object-cover"
+        class="motion-media w-full h-full object-cover"
         loading="lazy"
         decoding="async"
       />

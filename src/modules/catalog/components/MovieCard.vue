@@ -1,5 +1,5 @@
 <template>
-  <div class="group cursor-pointer relative" @click="handleClick">
+  <div class="group motion-lift motion-card cursor-pointer relative" @click="handleClick">
     <router-link
       :to="movieLink"
       class="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -13,7 +13,7 @@
           v-if="movie.poster_path"
           :src="posterUrl"
           :alt="movie.title"
-          class="w-full h-full object-cover"
+          class="motion-media w-full h-full object-cover"
         />
         <div
           v-else
