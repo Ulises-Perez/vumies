@@ -82,3 +82,21 @@ Both slices live on `feature/vimeus-tauri-migration`; slice 2 is chained on slic
 **L7** — Verification evidence: `pnpm build` (includes `vue-tsc -b`) exit 0; `pnpm type-check` exit 0; `cargo check --all-targets` exit 0 (only a pre-existing `function_casts_as_integer` warning in `mpv.rs:208`); `cargo test --lib vimeus` 2 passed; `curl https://vimeus.net/api/listing/movies` → `HTTP 401` (endpoint and auth gate live, no secret used); `curl https://vimeus.net/e/movie?tmdb=550` → `HTTP 200`. Still unproven end-to-end: an authenticated listing call and a real embed render, which need the credentials the guard prevented writing.
 
 **L8** — Note for the human: `VITE_TMDB_BEARER_TOKEN` / `VITE_TMDB_API_KEY` were also empty before this change (no `.env` existed), so the catalog needs those values too, from the user's own TMDB account. They were not invented or recovered from git history.
+
+**L9** — Native review blocked by a harness defect (not a code finding). Lineage `review-859cbadecd60595c` (target `sha256:6dd7e1cc…793b1`, tier medium, 4 lenses) is stuck in state `reviewing` with **1 of 4** lens artifacts captured:
+
+| Attempt | Path | Lens | Result |
+| --- | --- | --- | --- |
+| 1 | capture-group (4 slots) | review-resilience | `pi-host-relay-transport-failure` |
+| 2 | capture single slot | review-risk | **captured** (`rart1_0795fdb0…ec73a3`) |
+| 3 | capture-group (3 slots) | review-resilience | `pi-host-relay-transport-failure` |
+| 4 | capture single slot | review-resilience | `pi-host-relay-transport-failure` |
+| 5 | capture single slot | review-readability | `pi-host-relay-transport-failure` |
+
+Every failure is the same provider error, returned in ~1.1 s, with `prepared_reviewers: 0`, `submitted_reviewers: 0`, `mutation_performed: none`:
+
+> 400 invalid_request_error: `"thinking.type.enabled" is not supported for this model. Use "thinking.type.adaptive" and "output_config.effort" to control thinking behavior.`
+
+So the Pi host relay builds the reviewer request with a `thinking` shape the reviewer model now rejects. It is a configuration incompatibility in the review relay, not a defect in the candidate and not a lens-specific finding. Retrying was stopped after the failure reproduced across two lenses and both invocation paths; `review-reliability` (order 3) was never attempted.
+
+The lineage was deliberately left in `reviewing` rather than reset: RESET/RECOVER need explicit human authorization and no ambient recovery is allowed. Assistant-side verification (L7) stands on its own and is unaffected by this blocker.
