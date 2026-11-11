@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <!-- Catcher de clics: cierra el panel al tocar fuera.
-         En ≥md es transparente para no ensuciar el ambilight; en móvil oscurece
+         En ≥md es transparente para no ensuciar el fondo de la página; en móvil oscurece
          porque el panel ocupa casi toda la pantalla. -->
     <Transition name="sidebar-scrim">
       <div
@@ -11,63 +11,23 @@
       />
     </Transition>
 
-    <!-- Panel flotante: no reserva espacio en el layout, se desliza sobre el contenido. -->
+    <!-- Panel flotante a lo largo de toda la pantalla: arranca justo debajo de la
+         barra superior (que es la única cabecera del sistema: marca + toggle +
+         buscador viven ahí) y baja hasta el pie. No duplica marca ni buscador. -->
     <aside
       id="app-sidebar"
       ref="panelRef"
-      class="sidebar-panel fixed left-3 top-3 z-[70] flex max-h-[calc(100dvh-1.5rem)] w-[17.5rem] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar/90 text-sidebar-foreground backdrop-blur-2xl"
+      class="sidebar-panel fixed bottom-2.5 left-2.5 top-[var(--chrome-top)] z-[70] flex w-[17.5rem] max-w-[calc(100vw-1.25rem)] flex-col overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar/90 text-sidebar-foreground backdrop-blur-2xl sm:bottom-3 sm:left-4"
       :class="isOpen ? 'is-open' : 'is-closed'"
       :inert="isOpen ? undefined : true"
       :aria-hidden="isOpen ? undefined : 'true'"
       aria-label="Menú principal"
       tabindex="-1"
     >
-      <!-- Cabecera: marca + cerrar -->
-      <div class="flex items-center gap-2 px-3 pb-2 pt-3">
-        <router-link
-          to="/"
-          class="group flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl px-2 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-          aria-label="Vumies — Inicio"
-          @click="close"
-        >
-          <span
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-[15px] font-bold text-foreground transition-colors duration-200 group-hover:bg-primary-strong group-hover:text-primary-strong-foreground"
-            aria-hidden="true"
-          >
-            V
-          </span>
-          <span class="truncate text-[15px] font-semibold tracking-tight">Vumies</span>
-        </router-link>
-
-        <button
-          type="button"
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-          aria-label="Cerrar menú"
-          @click="close"
-        >
-          <XMarkIcon class="h-5 w-5" />
-        </button>
-      </div>
-
-      <!-- Buscador: la entrada más usada del menú, con su atajo a la vista -->
-      <div class="px-3 pb-1">
-        <button
-          type="button"
-          class="flex h-11 w-full items-center gap-2.5 rounded-2xl border border-sidebar-border/70 bg-sidebar-accent/35 px-3 text-sm text-muted-foreground transition-colors duration-200 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-          @click="openSearch"
-        >
-          <MagnifyingGlassIcon class="h-4 w-4 shrink-0" />
-          <span class="flex-1 truncate text-left">Buscar</span>
-          <kbd
-            class="select-none rounded border border-border bg-background/50 px-1.5 py-0.5 font-mono text-[10px] font-medium"
-          >{{ shortcutLabel }}</kbd>
-        </button>
-      </div>
-
-      <!-- Navegación: grupos con etiqueta, no una lista suelta -->
+      <!-- Navegación: grupos con etiqueta; el resto del largo es suyo. -->
       <nav
         ref="listRef"
-        class="custom-scrollbar relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2"
+        class="custom-scrollbar relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2 pt-2"
         aria-label="Secciones"
       >
         <!-- Indicador del ítem activo: se desliza entre filas (estado, no decoración). -->
@@ -98,30 +58,44 @@
             <span class="truncate">{{ item.name }}</span>
           </router-link>
         </template>
-
-        <!-- Preferencias: cierre del menú, separadas por un divisor. El panel mide
-             lo que mide su contenido, así que no queda hueco muerto abajo. -->
-        <div class="mt-2 border-t border-sidebar-border/60 pt-1">
-          <p class="nav-group-label">{{ pinnedGroup.label }}</p>
-          <router-link
-            v-for="item in pinnedGroup.items"
-            :key="item.path"
-            :to="item.path"
-            :data-nav-index="indexOf(item.path)"
-            class="nav-row group relative z-10 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-            :class="isActive(item.path) ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
-            :aria-current="isActive(item.path) ? 'page' : undefined"
-            @click="close"
-          >
-            <component
-              :is="item.icon"
-              class="h-5 w-5 shrink-0 transition-colors duration-200"
-              :class="isActive(item.path) ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'"
-            />
-            <span class="truncate">{{ item.name }}</span>
-          </router-link>
-        </div>
       </nav>
+
+      <!-- Pie anclado: preferencias siempre a la vista al fondo del panel,
+           independientemente de lo largo que sea el listado de secciones. -->
+      <div class="shrink-0 border-t border-sidebar-border/60 bg-sidebar/70 px-2 pb-2 pt-1">
+        <p class="nav-group-label">{{ pinnedGroup.label }}</p>
+
+        <!-- Tema de la app: claro / oscuro / sistema, un toque cicla. -->
+        <button
+          type="button"
+          class="group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-colors duration-200 hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          aria-label="Cambiar tema"
+          @click="cycleTheme"
+        >
+          <component
+            :is="themeIcon"
+            class="h-5 w-5 shrink-0 transition-colors duration-200 group-hover:text-foreground"
+          />
+          <span class="truncate">Tema: {{ themeLabel }}</span>
+        </button>
+
+        <router-link
+          v-for="item in pinnedGroup.items"
+          :key="item.path"
+          :to="item.path"
+          class="group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          :class="isActive(item.path) ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
+          :aria-current="isActive(item.path) ? 'page' : undefined"
+          @click="close"
+        >
+          <component
+            :is="item.icon"
+            class="h-5 w-5 shrink-0 transition-colors duration-200"
+            :class="isActive(item.path) ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'"
+          />
+          <span class="truncate">{{ item.name }}</span>
+        </router-link>
+      </div>
     </aside>
   </Teleport>
 </template>
@@ -137,16 +111,19 @@ import {
   ClockIcon,
   Cog6ToothIcon,
   SparklesIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon,
+  SunIcon,
+  MoonIcon,
+  ComputerDesktopIcon,
 } from '@heroicons/vue/24/outline'
 import { FEATURES } from '@/core/config/features'
+import { useSettingsStore, type Theme } from '@/core/stores/settings.store'
 import { useSidebar } from '../composables/useSidebar'
 import { useCommandPalette } from '../composables/useCommandPalette'
 
 const route = useRoute()
 const { isOpen, close } = useSidebar()
-const { isOpen: isPaletteOpen, open: openPalette } = useCommandPalette()
+const { isOpen: isPaletteOpen } = useCommandPalette()
+const settings = useSettingsStore()
 
 const panelRef = ref<HTMLElement | null>(null)
 const listRef = ref<HTMLElement | null>(null)
@@ -175,14 +152,14 @@ const groups = [
   },
 ]
 
-/** Grupo anclado al pie del panel. */
+/** Grupo anclado al pie del panel, fuera del scroll de secciones. */
 const pinnedGroup = {
   label: 'Preferencias',
   items: [{ name: 'Ajustes', path: '/settings', icon: Cog6ToothIcon }],
 }
 
-/** Orden plano de todas las filas, para el índice del indicador. */
-const flatItems = [...groups.flatMap((group) => group.items), ...pinnedGroup.items]
+/** Orden plano de las filas navegables, para el índice del indicador. */
+const flatItems = groups.flatMap((group) => group.items)
 
 function indexOf(path: string) {
   return flatItems.findIndex((item) => item.path === path)
@@ -195,13 +172,28 @@ function isActive(path: string) {
 
 const activeIndex = computed(() => flatItems.findIndex((item) => isActive(item.path)))
 
-const shortcutLabel = computed(() =>
-  /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K',
-)
+const themeIcons: Record<Theme, typeof SunIcon> = {
+  light: SunIcon,
+  dark: MoonIcon,
+  system: ComputerDesktopIcon,
+}
 
-function openSearch() {
-  close()
-  openPalette()
+const themeLabels: Record<Theme, string> = {
+  light: 'Claro',
+  dark: 'Oscuro',
+  system: 'Sistema',
+}
+
+const themeIcon = computed(() => themeIcons[settings.theme])
+const themeLabel = computed(() => themeLabels[settings.theme])
+
+function cycleTheme() {
+  const nextTheme: Record<Theme, Theme> = {
+    dark: 'light',
+    light: 'system',
+    system: 'dark',
+  }
+  settings.setTheme(nextTheme[settings.theme])
 }
 
 /**

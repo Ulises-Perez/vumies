@@ -1,7 +1,7 @@
 <template>
   <div class="relative group/scroll">
     <!-- Section Header -->
-    <div v-if="title" class="flex items-center justify-between mb-4 pr-4 md:pr-12">
+    <div v-if="title" class="flex items-center justify-between mb-4">
       <h2 class="text-2xl md:text-3xl font-bold text-foreground font-poppins">{{ title }}</h2>
       
       <div class="flex items-center space-x-4">
@@ -9,7 +9,7 @@
         <div class="hidden md:flex items-center space-x-2">
           <button
             @click="scroll('left')"
-            class="motion-press w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-border"
+            class="motion-press h-9 w-9 md:h-8 md:w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-border"
             :disabled="!showLeftArrow"
             aria-label="Scroll Left"
           >
@@ -19,7 +19,7 @@
           </button>
           <button
             @click="scroll('right')"
-            class="motion-press w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-border"
+            class="motion-press h-9 w-9 md:h-8 md:w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-border"
             :disabled="!showRightArrow"
             aria-label="Scroll Right"
           >
@@ -43,7 +43,7 @@
     <!-- Scroll Container -->
     <div
       ref="scrollContainer"
-      class="flex space-x-4 overflow-x-auto pb-8 pt-6 scrollbar-hide px-4 -ml-4 md:px-12 md:-ml-12 scroll-smooth"
+      class="rail scroll-smooth"
       @scroll="handleScroll"
     >
       <slot />
@@ -148,13 +148,3 @@ onUnmounted(() => {
 
 defineExpose({ checkScroll })
 </script>
-
-<style scoped>
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-</style>

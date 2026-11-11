@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "03-mosaico.html",
+  "handoffs": {
+    "03-mosaico.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-11T19:16:08.727Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/ui-astryx-shell.md"
+    }
+  }
+}

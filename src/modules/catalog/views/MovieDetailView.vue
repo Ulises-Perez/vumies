@@ -2,7 +2,7 @@
   <SkeletonDetail v-if="loading" />
 
   <div v-else-if="error" class="min-h-screen pt-20">
-    <div class="container-custom py-8">
+    <div class="container-app py-8">
       <ErrorMessage :message="error" title="Error al cargar película" />
     </div>
   </div>
@@ -10,21 +10,21 @@
   <div v-else-if="movieDetails" class="min-h-screen pb-20">
     <!-- Backdrop Hero -->
     <div
-      class="relative h-[85vh] w-full bg-cover bg-center"
+      class="relative h-[var(--hero-lg)] w-full bg-cover bg-center"
       :style="{ backgroundImage: `url(${backdropUrl})` }"
     >
-      <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent" />
+      <div class="absolute inset-0 scrim-b" />
       <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/60 to-transparent" />
       
       <div class="absolute inset-0 flex items-end pb-20">
-        <div class="px-4 md:px-12 w-full">
+        <div class="container-app w-full">
           <div class="max-w-3xl space-y-6">
             <h1 class="text-5xl md:text-7xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
               {{ movieDetails.title }}
             </h1>
 
             <div class="flex items-center gap-4 text-muted-foreground text-sm md:text-base">
-              <span class="text-green-400 font-bold">{{ (movieDetails.vote_average * 10).toFixed(0) }}% Match</span>
+              <span class="text-primary font-bold">{{ (movieDetails.vote_average * 10).toFixed(0) }}% Match</span>
               <span>{{ releaseYear }}</span>
               <BaseBadge variant="outline">{{ movieDetails.adult ? '18+' : 'PG-13' }}</BaseBadge>
               <span>{{ formatRuntime(movieDetails.runtime) }}</span>
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Details Content -->
-    <div class="relative z-10 px-4 md:px-12 -mt-10">
+  <div class="container-app relative z-10 -mt-10 space-y-12">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
         
         <!-- Left Column: Overview and Metadata -->
@@ -141,9 +141,9 @@
       </div>
 
       <!-- Relacionados (bento grid, a lo ancho — como las recomendaciones de series) -->
-      <section v-if="hasRecommendations" class="mt-12 md:mt-16">
+      <section v-if="hasRecommendations">
         <h2 class="text-2xl md:text-3xl font-bold text-foreground font-poppins mb-8">Relacionados</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 auto-rows-[120px] sm:auto-rows-[140px] lg:auto-rows-[150px] gap-3 md:gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 auto-rows-[120px] sm:auto-rows-[140px] lg:auto-rows-[150px] gap-[var(--grid-gap)]">
           <router-link
             v-for="(movie, i) in recommendations.slice(0, 7)"
             :key="movie.id"
@@ -183,7 +183,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMovies } from '../composables/useMovies'
 import { useUserStore } from '@/modules/user'
 import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
-import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import SkeletonDetail from '@/modules/ui/components/skeletons/SkeletonDetail.vue'
 import ErrorMessage from '@/modules/ui/components/ErrorMessage.vue'
 import PersonAvatar from '@/modules/ui/components/PersonAvatar.vue'
@@ -275,7 +274,6 @@ watch(
     }
   }
 )
-useAmbienceSource(() => backdropUrl.value)
 </script>
 
 <style scoped>

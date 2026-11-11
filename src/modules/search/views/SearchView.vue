@@ -2,38 +2,33 @@
   <div class="min-h-screen pb-20">
     <!-- Skeleton de resultados (hero + grid) mientras busca -->
     <div v-if="searching">
-      <SkeletonHero height="h-[60vh]" />
-      <main class="relative z-10 -mt-10 px-4 md:px-12">
-        <div class="container-custom">
-          <SkeletonGrid :count="12" />
-        </div>
-      </main>
+      <SkeletonHero height="h-[var(--hero-sm)]" />
+      <BaseContainer as="main" class="relative z-10 -mt-10">
+        <SkeletonGrid :count="12" />
+      </BaseContainer>
     </div>
 
     <div v-else-if="heroItem">
         <!-- Hero Section (Best Match) -->
-        <section class="relative h-[60vh] w-full overflow-hidden">
+        <section class="relative h-[var(--hero-sm)] w-full overflow-hidden">
           <div
             class="absolute inset-0 bg-cover bg-center transition-all duration-700"
             :style="{ backgroundImage: `url(${heroBackdrop})` }"
           >
-            <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent" />
-            <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/40 to-transparent" />
+            <div class="absolute inset-0 scrim-b" />
+            <div class="absolute inset-0 scrim-r" />
           </div>
 
           <div class="absolute inset-0 flex items-center">
-            <div class="px-4 md:px-12">
+            <div class="container-app w-full">
               <div class="max-w-3xl space-y-6">
-                <BaseBadge variant="default" class="mb-2">
-                  Mejor Resultado
-                </BaseBadge>
                 <h1 class="text-4xl md:text-6xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
                   {{ heroItem.title || heroItem.name }}
                 </h1>
                 
                 <div class="flex items-center space-x-4 text-muted-foreground text-sm md:text-base">
                    <span class="capitalize">{{ heroItem.media_type === 'movie' ? 'Película' : 'Serie' }}</span>
-                   <span v-if="heroItem.vote_average" class="text-green-400 font-semibold">{{ (heroItem.vote_average * 10).toFixed(0) }}% Match</span>
+                   <span v-if="heroItem.vote_average" class="text-primary font-semibold">{{ (heroItem.vote_average * 10).toFixed(0) }}% Match</span>
                    <span v-if="heroItem.release_date || heroItem.first_air_date">{{ new Date(heroItem.release_date || heroItem.first_air_date).getFullYear() }}</span>
                 </div>
 
@@ -74,14 +69,13 @@
         </section>
 
         <!-- More Results Grid -->
-        <main v-if="gridItems.length > 0" class="relative z-10 -mt-10 px-4 md:px-12">
-            <div class="container-custom">
+        <BaseContainer v-if="gridItems.length > 0" as="main" class="relative z-10 -mt-10">
                 <div class="flex items-center justify-between mb-8">
                 <h2 class="text-2xl md:text-3xl font-bold text-foreground font-poppins">Más Resultados</h2>
                 <span class="text-muted-foreground">{{ gridItems.length }} resultados adicionales</span>
                 </div>
                 
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                <div class="grid-posters">
                  <component
                     v-for="item in gridItems"
                     :key="`${item.id}-${item.media_type}`"
@@ -90,8 +84,7 @@
                     :series="item.media_type === 'tv' ? item : undefined"
                 />
                 </div>
-            </div>
-        </main>
+        </BaseContainer>
     </div>
 
     <!-- Empty State -->
@@ -110,7 +103,7 @@
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
-        <p class="text-muted-foreground text-lg">No se encontraron resultados para "{{ searchQuery }}"</p>
+        <h1 class="text-muted-foreground text-lg">No se encontraron resultados para "{{ searchQuery }}"</h1>
       </div>
        <div v-else class="text-center">
          <svg
@@ -137,13 +130,12 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { tmdbService } from '@/modules/catalog/services/tmdb.service'
 import { getBackdropUrl } from '@/core/config/api.config'
-import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import MovieCard from '@/modules/catalog/components/MovieCard.vue'
 import TVShowCard from '@/modules/catalog/components/TVShowCard.vue'
 import SkeletonHero from '@/modules/ui/components/skeletons/SkeletonHero.vue'
 import SkeletonGrid from '@/modules/ui/components/skeletons/SkeletonGrid.vue'
 import { useUserStore } from '@/modules/user'
-import { BaseBadge, BaseButton } from '@/modules/ui/components/base'
+import { BaseButton, BaseContainer } from '@/modules/ui/components/base'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -223,6 +215,5 @@ onMounted(() => {
     handleSearch()
   }
 })
-useAmbienceSource(() => heroBackdrop.value)
 </script>
 

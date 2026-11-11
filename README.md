@@ -21,23 +21,50 @@ listing endpoints with the `X-API-Key` header.
 
 The application chrome is floating and never reserves layout space:
 
-- **`AppTopBar`** — a floating capsule with a single menu control that folds/unfolds the
-  sidebar, the wordmark and the search trigger. It carries no navigation list, hides while you
-  scroll down (and returns when you scroll up), and stays available while the sidebar or search
-  is open. It also hides on player routes so it never covers the video.
-- **`SideMenu`** — an overlay panel that starts **closed** on every load, closes on its toggle,
-  on `Escape`, on a click outside and on every route change. It does not push or offset the
-  content; the content keeps the full viewport width.
-- **`AmbienceStage`** — the ambilight layer. Each view publishes the art it is already showing
-  (`useAmbienceSource`), and the stage renders it as soft light around the hero, below the content
-  (`z-0`) and above the page background. It reuses the same image URL, so it adds no network
-  weight, cross-fades when the tab changes, and fades away after 40% of the viewport has been
-  scrolled so long-form copy stays on the neutral page surface.
+- **`AppTopBar`** — a zero-chrome 48px strip. It has no plate, border, shadow or blur at rest: two
+  32px control clusters sit flush to the container edges and the span between them is fully
+  transparent, so the artwork behind reads through the middle of the bar. The left cluster is the
+  sidebar toggle plus the wordmark (text only); the right one is the search trigger plus the `⌘K`
+  keycap. A control only shows a surface on hover and focus. It carries no navigation list, hides
+  while you scroll down (and returns when you scroll up), and stays available while the sidebar or
+  search is open. It also hides on player routes so it never covers the video.
+- **`SideMenu`** — an overlay panel that runs from just under the top bar to the bottom of the
+  viewport. It starts **closed** on every load, closes on its toggle, on `Escape`, on a click
+  outside and on every route change. It does not push or offset the content; the content keeps the
+  full viewport width. It is the only place the theme control lives.
 - **`BottomMenu`** — the floating mobile pill with the primary destinations.
 
 UI state lives in two module-level singletons next to the components:
 `useSidebar()` (shell panel) and `useCommandPalette()` (`⌘K` / `Ctrl K`). All shell motion is
 behind `prefers-reduced-motion` and the app's own `html.reduce-motion` toggle.
+
+## 📐 Layout contract
+
+One layout vocabulary for the whole app; no view defines its own.
+
+| Primitive | Purpose |
+| --- | --- |
+| `.container-app` / `BaseContainer` | The **only** container: `--container-max` (1440px) plus `--gutter` (16px, 48px from `md`). |
+| `.grid-posters` | Poster grid that reflows from `--poster-min`, with no breakpoint ladder. |
+| `.rail` | The horizontal scroller: cancels the gutter, scroll-snap, hides the scrollbar. |
+| `--hero-sm/md/lg` | The only hero heights (320/384/480px), chosen by view kind — not by viewport height. |
+| `--bar-height`, `--bar-offset`, `--chrome-top` | Where the bar sits and where the sidebar and page content start under it. |
+| `BaseStack` | Flex stack with the Astryx spacing steps (`gap={2}` is 8px). |
+
+`MoviesView` and `SeriesView` open with a **mosaic**: a 6-column grid with explicit spans (a wide
+lead tile carrying the title and the primary action, two tall poster tiles, a wide support tile),
+then exactly one rail, then the uniform poster grid. The mosaic uses `auto-rows-[minmax(0,auto)]`
+and per-tile aspect ratios, never a fixed row height with taller min-heights: that combination let
+tiles overflow their rows and paint over each other on narrow screens.
+
+### Scales ported from Astryx
+
+[Astryx](https://astryx.atmeta.com/docs/getting-started) is React 19 + StyleX only, so it is not a
+dependency here. Its token contract is plain CSS custom properties, and those were ported into
+`src/style.css`: the spacing steps, `--radius-inner/element/container/page`, the 14px base with a
+1.2 ratio and the `--text-3xs..5xl` variables behind the `.type-*` semantic classes, and
+`--size-element-sm/md/lg` (28/32/36px). `tailwind.config.js` exposes the new radius and control-height
+names alongside the existing ones. `design/system.md` documents every token with its source file.
 
 ## 🛠️ Requirements
 

@@ -54,6 +54,69 @@
     /* Legacy back-compat (BottomMenu/AppFooter usan estas vars) */
     --color-primary: oklch(0.55 0.22 285);
     --color-dark: oklch(1 0 0);
+
+    /* ===== Astryx port (aditivo, no cambia lo que ya renderiza) =====
+       Fuente: build theme-neutral publicado de Astryx. Solo agrega variables;
+       ningun token existente cambia. --radius-container (0.75rem) equivale al
+       --radius actual, asi que nada se mueve. Los --spacing-* replican la escala
+       numerica por defecto de Tailwind (gap-2 = 8px en ambos sistemas). Los
+       --text-* son custom properties nuevas para las clases .type-* y la doc;
+       no colisionan con las utilidades text-xs/text-sm/etc de Tailwind, que
+       conservan sus valores actuales en pixeles. */
+    --radius-inner: 0.375rem;
+    --radius-element: 0.625rem;
+    --radius-container: 0.75rem;
+    --radius-page: 1.75rem;
+    --radius-full: 9999px;
+    --size-element-sm: 28px;
+    --size-element-md: 32px;
+    --size-element-lg: 36px;
+    --spacing-0: 0rem;
+    --spacing-0-5: 0.125rem;
+    --spacing-1: 0.25rem;
+    --spacing-1-5: 0.375rem;
+    --spacing-2: 0.5rem;
+    --spacing-3: 0.75rem;
+    --spacing-4: 1rem;
+    --spacing-5: 1.25rem;
+    --spacing-6: 1.5rem;
+    --spacing-8: 2rem;
+    --spacing-10: 2.5rem;
+    --spacing-12: 3rem;
+    --text-3xs: 0.4375rem;
+    --text-2xs: 0.5rem;
+    --text-xs: 0.625rem;
+    --text-sm: 0.75rem;
+    --text-base: 0.875rem;
+    --text-lg: 1.0625rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.8125rem;
+    --text-4xl: 2.1875rem;
+    --text-5xl: 2.625rem;
+
+    /* ===== Contrato de layout (una sola receta) =====
+       Reemplaza las 5 recetas de contenedor, las 5 alturas de hero y las 4
+       recetas de grilla que convivian en las vistas. Todo valor de layout que
+       una vista necesite sale de aca; ninguna vista define el suyo. */
+    --container-max: 90rem; /* 1440px */
+    --gutter: 1rem; /* 16px en movil */
+    --bar-height: 3rem; /* 48px: franja del top bar */
+    --bar-offset: 0.75rem; /* 12px desde el borde superior */
+    --chrome-top: 4rem; /* barra + offset + 4px: donde arranca el sidebar */
+    --hero-sm: 20rem; /* busqueda, favoritos, historial */
+    --hero-md: 24rem; /* catalogo: peliculas, series, anime */
+    --hero-lg: 30rem; /* home y detalle */
+    --poster-min: 8.5rem; /* 136px: ancho minimo de poster en grilla */
+    --grid-gap: 1.125rem; /* 18px */
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --gutter: 3rem;
+      --poster-min: 10.5rem;
+      --grid-gap: 1.5rem;
+    }
   }
 
   .dark {
@@ -184,10 +247,29 @@
     background: linear-gradient(180deg, rgba(29, 29, 29, 1) 0%, rgba(29, 29, 29, 0) 100%);
   }
 
-  /* Container responsive */
-  .container-custom {
-    @apply container mx-auto px-4 xl:px-0;
+  /* Scrims del hero: siempre oscuros, independientes del tema. Antes colgaban de
+     `from-dark`, que en tema claro es blanco: el arte del hero desaparecia
+     (40.3% de los pixeles por encima de L 0.7 en claro, contra 3.1% en oscuro). */
+  .scrim-b {
+    background: linear-gradient(
+      to top,
+      oklch(0.1 0.02 285),
+      oklch(0.1 0.02 285 / 0.4) 45%,
+      transparent
+    );
   }
+
+  .scrim-r {
+    background: linear-gradient(
+      to right,
+      oklch(0.1 0.02 285),
+      oklch(0.1 0.02 285 / 0.4) 45%,
+      transparent
+    );
+  }
+
+  /* Container unico: ver .container-app arriba. La receta .container-custom
+     se elimino con el contrato de layout (S5): dejaba un segundo gutter vivo. */
 
   .motion-card {
     transition:
@@ -215,11 +297,65 @@
   html.reduce-motion .motion-card:hover, html.reduce-motion .motion-card:active,
   html.reduce-motion .motion-lift:hover .motion-media,
   html.reduce-motion .motion-press:hover, html.reduce-motion .motion-press:active { transform: none; }
+
+  /* Astryx semantic type (triplets size/weight/leading, via --text-* vars). */
+  .type-display-3 { font-size: var(--text-3xl); font-weight: 400; line-height: 1.2414; }
+  .type-heading-1 { font-size: var(--text-2xl); font-weight: 600; line-height: 1.3333; }
+  .type-heading-2 { font-size: var(--text-xl); font-weight: 600; line-height: 1.4; }
+  .type-heading-3 { font-size: var(--text-lg); font-weight: 600; line-height: 1.4118; }
+  .type-heading-4 { font-size: var(--text-base); font-weight: 600; line-height: 1.4286; }
+  .type-body { font-size: var(--text-base); font-weight: 400; line-height: 1.4286; }
+  .type-label { font-size: var(--text-base); font-weight: 500; line-height: 1.4286; }
+  .type-supporting { font-size: var(--text-sm); font-weight: 400; line-height: 1.6667; }
+
+  /* ===== Contrato de layout: los unicos contenedores y grillas del sistema ===== */
+
+  /* Contenedor unico: gutter + max-width. Toda vista lo usa; no hay otro. */
+  .container-app {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* Grilla de posters: refluye sola por ancho minimo, sin escalera de breakpoints. */
+  .grid-posters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--poster-min), 1fr));
+    gap: var(--grid-gap);
+  }
+
+  /* Rail horizontal: cancela el gutter para que el arte toque el borde. */
+  .rail {
+    display: flex;
+    gap: var(--grid-gap);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    padding-block: 0.25rem 0.5rem;
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+  .rail > * {
+    scroll-snap-align: start;
+  }
 }
 
 @layer utilities {
   .text-shadow {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Los titulares del hero viven sobre fotografia y no tenian profundidad
+     declarada: `text-shadow-lg` no existe en Tailwind 3 y la clase era letra muerta. */
+  .text-shadow-lg {
+    text-shadow:
+      0 2px 12px rgba(0, 0, 0, 0.75),
+      0 1px 3px rgba(0, 0, 0, 0.6);
   }
 
   .aspect-poster {

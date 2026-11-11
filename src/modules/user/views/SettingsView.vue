@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen px-4 md:px-12 pt-20 md:pt-24 pb-24">
-    <div class="max-w-3xl mx-auto space-y-8">
+  <BaseContainer as="div" class="min-h-screen pt-[var(--chrome-top)] pb-20">
+    <div class="max-w-3xl space-y-8">
       <!-- Header -->
       <header>
         <h1 class="text-3xl md:text-4xl font-bold font-poppins text-foreground">Ajustes</h1>
@@ -9,7 +9,7 @@
 
       <!-- Apariencia -->
       <section>
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">Apariencia</h2>
+        <h2 class="text-lg font-semibold tracking-normal text-foreground mb-3 px-1">Apariencia</h2>
         <BaseCard class="p-5 md:p-6">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -35,7 +35,7 @@
 
       <!-- Accesibilidad -->
       <section>
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">Accesibilidad</h2>
+        <h2 class="text-lg font-semibold tracking-normal text-foreground mb-3 px-1">Accesibilidad</h2>
         <BaseCard class="p-5 md:p-6">
           <div class="flex items-center justify-between gap-4">
             <div>
@@ -61,7 +61,7 @@
 
       <!-- Biblioteca -->
       <section>
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">Biblioteca</h2>
+        <h2 class="text-lg font-semibold tracking-normal text-foreground mb-3 px-1">Biblioteca</h2>
         <BaseCard class="p-5 md:p-6">
           <div class="divide-y divide-border">
             <div class="flex items-center justify-between gap-4 pb-4">
@@ -88,7 +88,7 @@
 
       <!-- Acerca de -->
       <section>
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">Acerca de</h2>
+        <h2 class="text-lg font-semibold tracking-normal text-foreground mb-3 px-1">Acerca de</h2>
         <BaseCard class="p-5 md:p-6">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -106,7 +106,7 @@
         </BaseCard>
       </section>
     </div>
-  </div>
+  </BaseContainer>
 </template>
 
 <script setup lang="ts">
@@ -114,6 +114,7 @@ import { computed } from 'vue'
 import { MoonIcon, SunIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
 import { useSettingsStore, type Theme } from '@/core/stores/settings.store'
 import { useUserStore } from '@/modules/user'
+import { BaseBadge, BaseButton, BaseCard, BaseContainer } from '@/modules/ui/components/base'
 
 const settings = useSettingsStore()
 const userStore = useUserStore()

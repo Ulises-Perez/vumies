@@ -1,29 +1,26 @@
 <template>
   <div class="min-h-screen pb-20">
     <!-- Featured History (Hero) -->
-    <section class="relative h-[60vh] w-full overflow-hidden">
+    <section class="relative h-[var(--hero-sm)] w-full overflow-hidden">
       <div
         v-if="heroItem"
         class="absolute inset-0 bg-cover bg-center transition-all duration-700"
         :style="{ backgroundImage: `url(${heroBackdrop})` }"
       >
-        <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent" />
-        <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/40 to-transparent" />
+        <div class="absolute inset-0 scrim-b" />
+        <div class="absolute inset-0 scrim-r" />
       </div>
 
       <div v-else class="absolute inset-0 bg-card flex items-center justify-center">
          <div class="text-center">
-             <h2 class="text-3xl text-muted-foreground font-bold mb-4">No has visto nada aún</h2>
+             <h1 class="text-3xl text-muted-foreground font-bold mb-4">No has visto nada aún</h1>
              <BaseButton to="/" variant="link">Explorar contenido</BaseButton>
          </div>
       </div>
 
       <div v-if="heroItem" class="absolute inset-0 flex items-center">
-        <div class="px-4 md:px-12">
+        <div class="container-app w-full">
           <div class="max-w-3xl space-y-6">
-            <BaseBadge variant="secondary" class="mb-2">
-              Visto Recientemente
-            </BaseBadge>
             <h1 class="text-4xl md:text-6xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
               {{ heroItem.title }}
             </h1>
@@ -45,8 +42,7 @@
     </section>
 
     <!-- History List -->
-    <main v-if="hasHistory" class="relative z-10 -mt-10 px-4 md:px-12">
-      <div class="container-custom">
+    <BaseContainer v-if="hasHistory" as="main" class="relative z-10 -mt-10">
          <div class="flex items-center justify-between mb-8">
            <h2 class="text-2xl md:text-3xl font-bold text-foreground font-poppins">Historial</h2>
            <div class="flex items-center space-x-4">
@@ -55,7 +51,7 @@
            </div>
          </div>
          
-         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+         <div class="grid-posters">
             <div
               v-for="item in history"
               :key="`${item.id}-${item.type}`"
@@ -88,8 +84,7 @@
               </button>
             </div>
          </div>
-      </div>
-    </main>
+    </BaseContainer>
   </div>
 </template>
 
@@ -97,8 +92,7 @@
 import { computed } from 'vue'
 import { useUserStore } from '../stores/user.store'
 import { getPosterUrl } from '@/core/config/api.config'
-import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
-import { BaseBadge, BaseButton } from '@/modules/ui/components/base'
+import { BaseButton, BaseContainer } from '@/modules/ui/components/base'
 
 const userStore = useUserStore()
 const history = computed(() => userStore.watchHistory)
@@ -120,5 +114,4 @@ function clearHistory() {
     userStore.clearHistory()
   }
 }
-useAmbienceSource(() => heroBackdrop.value)
 </script>

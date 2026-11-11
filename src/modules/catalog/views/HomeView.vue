@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen pb-20">
     <!-- Hero Section (solo imagen: sin video para máximo rendimiento/LCP) -->
-    <section class="relative h-[85vh] w-full overflow-hidden">
+    <section class="relative h-[var(--hero-lg)] w-full overflow-hidden">
 
       <!-- Skeleton mientras no hay película destacada (evita hero en blanco / CLS) -->
-      <SkeletonHero v-if="!featuredMovie" height="h-[85vh]" />
+      <SkeletonHero v-if="!featuredMovie" height="h-[var(--hero-lg)]" />
 
       <!-- Backdrop (LCP): <img> priorizado en lugar de background-image -->
       <template v-else>
@@ -15,13 +15,13 @@
           fetchpriority="high"
           decoding="async"
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent" />
+        <div class="absolute inset-0 scrim-b" />
         <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/60 to-transparent" />
       </template>
 
       <!-- Content Overlay -->
       <div class="absolute inset-0 flex items-center">
-        <div class="px-4 md:px-12 relative z-20 w-full">
+        <div class="container-app relative z-20 w-full">
           <div class="max-w-2xl">
             <transition name="fade" appear>
               <div v-if="featuredMovie">
@@ -30,7 +30,7 @@
                 </h1>
                 <div class="flex flex-wrap items-center gap-3 text-muted-foreground text-base sm:text-lg mt-3 sm:mt-4">
                   <BaseBadge v-if="featuredMovie?.release_date" variant="outline" class="bg-background/40 backdrop-blur-sm">{{ new Date(featuredMovie.release_date).getFullYear() }}</BaseBadge>
-                  <span class="text-green-400 font-semibold flex items-center gap-1">
+                  <span class="text-primary font-semibold flex items-center gap-1">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                     {{ featuredMovie?.vote_average ? (featuredMovie.vote_average).toFixed(1) : 0 }}
                   </span>
@@ -60,10 +60,10 @@
     </section>
 
     <!-- Content Sections -->
-    <div class="space-y-12 -mt-8 sm:-mt-16 lg:-mt-20 relative z-20">
+    <BaseContainer class="space-y-12 -mt-8 sm:-mt-16 lg:-mt-20 relative z-20">
 
       <!-- Trending Movies -->
-      <section class="pl-4 md:pl-12">
+      <section>
         <HorizontalScroll title="Tendencias" link="/movies">
           <template v-if="localTrendingMovies.length">
             <div v-for="movie in localTrendingMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
@@ -75,7 +75,7 @@
       </section>
 
       <!-- Recently Added (now playing) -->
-      <section class="pl-4 md:pl-12">
+      <section>
         <HorizontalScroll title="Recientemente Agregadas" link="/movies">
           <template v-if="recentlyAddedMovies.length">
             <div v-for="movie in recentlyAddedMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
@@ -87,7 +87,7 @@
       </section>
 
       <!-- Upcoming -->
-      <section class="pl-4 md:pl-12">
+      <section>
         <HorizontalScroll title="Próximamente" link="/movies">
           <template v-if="localUpcomingMovies.length">
             <div v-for="localMovie in localUpcomingMovies" :key="localMovie.id" class="flex-none w-[160px] md:w-[220px]">
@@ -99,7 +99,7 @@
       </section>
 
       <!-- Popular Series -->
-      <section class="pl-4 md:pl-12">
+      <section>
         <HorizontalScroll title="Series Populares" link="/series">
           <template v-if="popularSeries.length">
             <div v-for="series in popularSeries" :key="series.id" class="flex-none w-[160px] md:w-[220px]">
@@ -109,7 +109,7 @@
           <SkeletonCardRow v-else />
         </HorizontalScroll>
       </section>
-    </div>
+    </BaseContainer>
   </div>
 </template>
 
@@ -118,14 +118,13 @@ import { computed, onMounted, ref } from 'vue'
 import { useMovies } from '../composables/useMovies'
 import { useSeries } from '../composables/useSeries'
 import { getBackdropUrl } from '@/core/config/api.config'
-import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 
 import MovieCard from '../components/MovieCard.vue'
 import TVShowCard from '../components/TVShowCard.vue'
 import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue'
 import SkeletonHero from '@/modules/ui/components/skeletons/SkeletonHero.vue'
 import SkeletonCardRow from '@/modules/ui/components/skeletons/SkeletonCardRow.vue'
-import { BaseBadge, BaseButton } from '@/modules/ui/components/base'
+import { BaseBadge, BaseButton, BaseContainer } from '@/modules/ui/components/base'
 import type { Movie } from '../types/tmdb.types'
 
 const {
@@ -165,7 +164,6 @@ onMounted(async () => {
 
   await fetchPopularSeries()
 })
-useAmbienceSource(() => featuredBackdrop.value)
 </script>
 
 <style scoped>

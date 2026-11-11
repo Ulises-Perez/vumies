@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show" class="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg relative" role="alert">
+  <div v-if="show" class="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-lg relative" role="alert">
     <div class="flex items-start">
       <svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
         <path
@@ -10,12 +10,21 @@
       </svg>
       <div class="flex-1">
         <strong v-if="title" class="font-bold block mb-1">{{ title }}</strong>
-        <span class="block sm:inline">{{ message }}</span>
+        <span class="block">{{ friendlyMessage }}</span>
+        <!-- Recuperacion: un error sin salida deja al usuario en un callejon. -->
+        <router-link
+          to="/"
+          class="mt-3 inline-flex items-center rounded-md border border-destructive/60 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-destructive/10"
+        >
+          Volver al inicio
+        </router-link>
       </div>
       <button
         v-if="closeable"
+        type="button"
+        aria-label="Cerrar aviso"
+        class="ml-4 text-destructive hover:opacity-80"
         @click="close"
-        class="ml-4 text-red-500 hover:text-red-700"
       >
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path
@@ -30,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 interface Props {
   message: string
@@ -38,14 +47,23 @@ interface Props {
   closeable?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   closeable: true,
 })
 
 const show = ref(true)
 
+// El error crudo del servicio filtra el interno a la interfaz
+// ("TMDB 404 @ /movie/999999999"). El detalle queda para el log, no para el usuario.
+const INTERNAL_DETAIL = /\bTMDB\b|@\s*\/|\b[45]\d{2}\b/
+
+const friendlyMessage = computed(() =>
+  INTERNAL_DETAIL.test(props.message)
+    ? 'No pudimos cargar este contenido. Puede que ya no esté disponible.'
+    : props.message,
+)
+
 function close() {
   show.value = false
 }
 </script>
-

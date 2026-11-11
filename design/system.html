@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es" data-board="design-system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vumies · design system</title>
+<style>
+  /* ---------- Tokens, exactly as src/style.css declares them ---------- */
+  :root {
+    --background: 1 0 0;
+    --foreground: 0.205 0 0;
+    --card: 1 0 0;
+    --card-foreground: 0.205 0 0;
+    --popover: 1 0 0;
+    --popover-foreground: 0.205 0 0;
+    --primary: 0.55 0.22 285;
+    --primary-foreground: 0.985 0 0;
+    --primary-strong: 0.5 0.21 285;
+    --primary-strong-foreground: 1 0 0;
+    --secondary: 0.97 0 0;
+    --secondary-foreground: 0.205 0 0;
+    --muted: 0.97 0 0;
+    --muted-foreground: 0.55 0.015 285;
+    --accent: 0.96 0.02 285;
+    --accent-foreground: 0.205 0 0;
+    --destructive: 0.58 0.23 25;
+    --destructive-foreground: 0.985 0 0;
+    --border: oklch(0.92 0 0);
+    --input: oklch(0.92 0 0);
+    --ring: 0.55 0.22 285;
+    --sidebar: 0.985 0 0;
+    --sidebar-accent: 0.96 0.02 285;
+    --radius: 0.75rem;
+    --dur-fast: 140ms;
+    --dur-base: 200ms;
+    --dur-slow: 280ms;
+    --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+    --lift: -2px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+  }
+
+  .dark {
+    --background: 0.145 0.004 285;
+    --foreground: 0.985 0 0;
+    --card: 0.185 0.005 285;
+    --card-foreground: 0.985 0 0;
+    --popover: 0.165 0.005 285;
+    --popover-foreground: 0.985 0 0;
+    --primary: 0.66 0.185 285;
+    --primary-foreground: 0.985 0 0;
+    --primary-strong: 0.52 0.2 285;
+    --primary-strong-foreground: 1 0 0;
+    --secondary: 0.245 0.006 285;
+    --secondary-foreground: 0.985 0 0;
+    --muted: 0.245 0.006 285;
+    --muted-foreground: 0.7 0.012 285;
+    --accent: 0.28 0.02 285;
+    --accent-foreground: 0.985 0 0;
+    --destructive: 0.65 0.2 25;
+    --destructive-foreground: 0.985 0 0;
+    --border: oklch(1 0 0 / 8%);
+    --input: oklch(1 0 0 / 12%);
+    --ring: 0.62 0.19 285;
+    --sidebar: 0.165 0.005 285;
+    --sidebar-accent: 0.28 0.02 285;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    width: 1440px;
+    font-family: var(--font);
+    background: oklch(var(--background));
+    color: oklch(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.4286;
+  }
+
+  .page { padding: 48px 64px 80px; }
+
+  header.top { display: flex; align-items: baseline; gap: 16px; padding-bottom: 24px; border-bottom: 1px solid oklch(var(--border)); }
+  header.top h1 { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  header.top p { margin: 0; font-size: 12px; color: oklch(var(--muted-foreground)); }
+
+  section { padding: 40px 0; border-bottom: 1px solid oklch(var(--border)); }
+  section:last-of-type { border-bottom: 0; }
+  h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(var(--muted-foreground)); margin: 0 0 4px; }
+  .note { font-size: 12px; color: oklch(var(--muted-foreground)); margin: 0 0 24px; }
+  .row { display: grid; gap: 24px; }
+
+  /* swatches */
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .swatch { border: 1px solid oklch(var(--border)); border-radius: 10px; overflow: hidden; }
+  .swatch .chip { height: 56px; }
+  .swatch .meta { padding: 8px 10px; background: oklch(var(--card)); }
+  .swatch .name { font-family: var(--mono); font-size: 10px; color: oklch(var(--foreground)); }
+  .swatch .val { font-family: var(--mono); font-size: 10px; color: oklch(var(--muted-foreground)); }
+  .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .theme-label { font-size: 11px; font-weight: 600; margin: 0 0 12px; color: oklch(var(--foreground)); }
+  .theme-wrap { padding: 20px; border-radius: 12px; border: 1px solid oklch(var(--border)); }
+
+  /* type */
+  .type-scale { display: grid; gap: 10px; }
+  .type-row { display: grid; grid-template-columns: 120px 1fr; align-items: baseline; gap: 16px; }
+  .type-row .spec { font-family: var(--mono); font-size: 10px; color: oklch(var(--muted-foreground)); }
+  .weights { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 20px; }
+  .weights div { font-size: 17px; }
+
+  /* spacing */
+  .spacing { display: grid; grid-template-columns: repeat(11, 1fr); gap: 8px; align-items: end; }
+  .spacing .bar { display: grid; gap: 6px; justify-items: start; }
+  .spacing .fill { background: oklch(var(--primary) / 0.55); border-radius: 2px; height: 12px; }
+  .spacing .tick { font-family: var(--mono); font-size: 10px; color: oklch(var(--muted-foreground)); }
+
+  /* radius */
+  .radii { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .radii .box { height: 72px; background: oklch(var(--accent)); border: 1px solid oklch(var(--primary) / 0.35); }
+  .radii .lbl { margin-top: 8px; font-family: var(--mono); font-size: 10px; color: oklch(var(--muted-foreground)); }
+  .radii .lbl b { color: oklch(var(--foreground)); font-weight: 600; }
+
+  /* shadows */
+  .shadows { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; }
+  .shadows .card { height: 88px; border-radius: 16px; background: oklch(var(--popover) / 0.9); border: 1px solid oklch(var(--border)); backdrop-filter: blur(16px); display: grid; place-items: center; font-family: var(--mono); font-size: 10px; color: oklch(var(--muted-foreground)); }
+  .shadows .open { box-shadow: 0 10px 34px -16px rgb(0 0 0 / 0.85); }
+  .shadows .closed { box-shadow: 0 10px 30px -20px rgb(0 0 0 / 0.8); }
+
+  /* motion */
+  .motion { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .motion .cell { border: 1px solid oklch(var(--border)); border-radius: 10px; padding: 14px; }
+  .motion .k { font-family: var(--mono); font-size: 10px; color: oklch(var(--muted-foreground)); }
+  .motion .v { font-size: 14px; font-weight: 500; margin-top: 4px; }
+
+  /* components */
+  .components { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; border-radius: calc(var(--radius) - 2px); font-size: 14px; font-weight: 500; border: 1px solid transparent; cursor: pointer; font-family: inherit; }
+  .btn.sm { height: 32px; padding: 0 12px; font-size: 12px; }
+  .btn.md { height: 36px; padding: 8px 16px; }
+  .btn.lg { height: 44px; padding: 0 32px; font-size: 16px; }
+  .btn.icon { height: 36px; width: 36px; }
+  .btn.default { background: oklch(var(--primary-strong)); color: oklch(var(--primary-strong-foreground)); }
+  .btn.secondary { background: oklch(var(--secondary)); color: oklch(var(--secondary-foreground)); }
+  .btn.outline { border-color: oklch(var(--input)); background: transparent; color: oklch(var(--foreground)); }
+  .btn.ghost { background: transparent; color: oklch(var(--foreground)); }
+  .btn.destructive { background: oklch(var(--destructive)); color: oklch(var(--destructive-foreground)); }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; border-radius: calc(var(--radius) - 2px); border: 1px solid transparent; padding: 2px 8px; font-size: 12px; font-weight: 600; }
+  .badge.default { background: oklch(var(--primary-strong)); color: oklch(var(--primary-strong-foreground)); }
+  .badge.secondary { background: oklch(var(--secondary)); color: oklch(var(--secondary-foreground)); }
+  .badge.outline { border-color: oklch(var(--input)); color: oklch(var(--foreground)); }
+  .badge.muted { background: oklch(var(--muted)); color: oklch(var(--muted-foreground)); }
+
+  .card { border-radius: calc(var(--radius) + 4px); border: 1px solid oklch(var(--border)); background: oklch(var(--card)); color: oklch(var(--card-foreground)); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); padding: 16px; }
+  .field { height: 36px; border-radius: calc(var(--radius) - 2px); border: 1px solid oklch(var(--input)); background: transparent; color: oklch(var(--foreground)); padding: 0 12px; font-family: inherit; font-size: 14px; width: 100%; }
+
+  .poster { aspect-ratio: 2 / 3; border-radius: var(--radius); background: oklch(var(--muted)); box-shadow: 0 0 0 1px oklch(var(--border)); }
+  .poster-row { display: flex; gap: 16px; }
+  .poster-row > div { width: 104px; }
+
+  footer.foot { padding-top: 32px; font-size: 11px; color: oklch(var(--muted-foreground)); }
+  code { font-family: var(--mono); font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="top">
+    <h1>Vumies · design system</h1>
+    <p>Capturado de <code>src/style.css</code>, <code>tailwind.config.js</code> y <code>src/modules/ui/components/base/</code></p>
+  </header>
+
+  <!-- ============ COLOR ============ -->
+  <section>
+    <h2>1 · Color</h2>
+    <p class="note">Tripletes OKLCH en custom properties, envueltos por Tailwind como <code>oklch(var(--token) / alpha)</code>. La marca es violeta en hue 285.</p>
+    <div class="themes">
+      <div class="theme-wrap">
+        <p class="theme-label">Claro · :root</p>
+        <div class="swatches" id="swatches-light"></div>
+      </div>
+      <div class="theme-wrap dark">
+        <p class="theme-label" style="color: oklch(var(--foreground));">Oscuro · .dark</p>
+        <div class="swatches" id="swatches-dark"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TYPE ============ -->
+  <section>
+    <h2>2 · Tipografía</h2>
+    <p class="note">Inter (cargada por <code>&lt;link&gt;</code> en index.html). Sin extensión de <code>fontSize</code>: la app usa la escala por defecto de Tailwind.</p>
+    <div class="type-scale">
+      <div class="type-row"><span class="spec">text-5xl / 48 / 700</span><span style="font-size:48px;font-weight:700;letter-spacing:-0.02em;">Título de hero</span></div>
+      <div class="type-row"><span class="spec">text-3xl / 30 / 600</span><span style="font-size:30px;font-weight:600;letter-spacing:-0.01em;">Sinopsis de la película</span></div>
+      <div class="type-row"><span class="spec">text-xl / 20 / 600</span><span style="font-size:20px;font-weight:600;">Nombre de sección</span></div>
+      <div class="type-row"><span class="spec">text-base / 16 / 400</span><span style="font-size:16px;">Texto de lectura corrida sobre la superficie de página.</span></div>
+      <div class="type-row"><span class="spec">text-sm / 14 / 500</span><span style="font-size:14px;font-weight:500;">Título de card</span></div>
+      <div class="type-row"><span class="spec">text-xs / 12 / 600</span><span style="font-size:12px;font-weight:600;">BADGE · ETIQUETA</span></div>
+    </div>
+    <div class="weights">
+      <div style="font-weight:400;">400 normal — cuerpo</div>
+      <div style="font-weight:500;">500 medium — botones y cards</div>
+      <div style="font-weight:600;">600 semibold — marca y títulos</div>
+      <div style="font-weight:700;">700 bold — hero</div>
+    </div>
+  </section>
+
+  <!-- ============ SPACING ============ -->
+  <section>
+    <h2>3 · Espaciado</h2>
+    <p class="note">Escala por defecto de Tailwind, sin extensión: <code>0.5</code>=2px, <code>1</code>=4px, <code>2</code>=8px, <code>4</code>=16px, <code>6</code>=24px, <code>12</code>=48px.</p>
+    <div class="spacing" id="spacing"></div>
+  </section>
+
+  <!-- ============ RADIUS ============ -->
+  <section>
+    <h2>4 · Radio</h2>
+    <p class="note">Base <code>--radius: 0.75rem</code> (12px) en <code>:root</code>, no se redefine en <code>.dark</code>. La escala se deriva con <code>calc()</code>.</p>
+    <div class="radii">
+      <div><div class="box" style="border-radius:8px"></div><p class="lbl"><b>rounded-sm</b><br>radius − 4px · 8px</p></div>
+      <div><div class="box" style="border-radius:10px"></div><p class="lbl"><b>rounded-md</b><br>radius − 2px · 10px</p></div>
+      <div><div class="box" style="border-radius:12px"></div><p class="lbl"><b>rounded-lg</b><br>radius · 12px</p></div>
+      <div><div class="box" style="border-radius:16px"></div><p class="lbl"><b>rounded-xl</b><br>radius + 4px · 16px</p></div>
+      <div><div class="box" style="border-radius:9999px"></div><p class="lbl"><b>rounded-full</b><br>9999px</p></div>
+    </div>
+  </section>
+
+  <!-- ============ SHADOWS ============ -->
+  <section>
+    <h2>5 · Sombras</h2>
+    <p class="note">No hay tokens de sombra. Los dos únicos valores del sistema son arbitrarios y viven en el top bar.</p>
+    <div class="shadows">
+      <div class="card open">shadow · abierto<br>0 10px 34px -16px rgb(0 0 0 / 0.85)</div>
+      <div class="card closed">shadow · cerrado<br>0 10px 30px -20px rgb(0 0 0 / 0.8)</div>
+    </div>
+  </section>
+
+  <!-- ============ MOTION ============ -->
+  <section>
+    <h2>6 · Movimiento</h2>
+    <p class="note">Todo se anula bajo <code>prefers-reduced-motion</code> y bajo <code>html.reduce-motion</code>.</p>
+    <div class="motion">
+      <div class="cell"><p class="k">--dur-fast</p><p class="v">140ms</p></div>
+      <div class="cell"><p class="k">--dur-base</p><p class="v">200ms</p></div>
+      <div class="cell"><p class="k">--dur-slow</p><p class="v">280ms</p></div>
+      <div class="cell"><p class="k">--ease-out-quint</p><p class="v" style="font-size:12px;">cubic-bezier(0.22, 1, 0.36, 1)</p></div>
+      <div class="cell"><p class="k">--ease-soft</p><p class="v" style="font-size:12px;">cubic-bezier(0.4, 0, 0.2, 1)</p></div>
+      <div class="cell"><p class="k">--lift</p><p class="v">-2px</p></div>
+    </div>
+  </section>
+
+  <!-- ============ COMPONENTS ============ -->
+  <section>
+    <h2>7 · Componentes</h2>
+    <p class="note">Primitivas de <code>src/modules/ui/components/base/</code>, sobre el tema oscuro.</p>
+    <div class="components">
+      <div class="theme-wrap dark stack">
+        <p class="theme-label" style="color: oklch(var(--foreground));">BaseButton</p>
+        <div class="inline">
+          <button class="btn default">Ver ahora</button>
+          <button class="btn secondary">Mi lista</button>
+          <button class="btn outline">Compartir</button>
+          <button class="btn ghost">Cancelar</button>
+          <button class="btn destructive">Eliminar</button>
+        </div>
+        <div class="inline">
+          <button class="btn default sm">sm · 32px</button>
+          <button class="btn default md">default · 36px</button>
+          <button class="btn default lg">lg · 44px</button>
+          <button class="btn outline icon" aria-label="Buscar">⌕</button>
+        </div>
+        <p class="theme-label" style="margin-top:8px;color: oklch(var(--foreground));">BaseBadge</p>
+        <div class="inline">
+          <span class="badge default">HD</span>
+          <span class="badge secondary">2024</span>
+          <span class="badge outline">16+</span>
+          <span class="badge muted">1h 52m</span>
+        </div>
+      </div>
+
+      <div class="theme-wrap dark stack">
+        <p class="theme-label" style="color: oklch(var(--foreground));">BaseInput · BaseSelect</p>
+        <input class="field" placeholder="Buscar películas, series...">
+        <input class="field" placeholder="Campo enfocado" style="border-color: oklch(var(--ring));box-shadow: 0 0 0 3px oklch(var(--ring) / 0.25);">
+        <p class="theme-label" style="margin-top:8px;color: oklch(var(--foreground));">BaseCard</p>
+        <div class="card">
+          <div style="font-size:14px;font-weight:500;">Card sobre bg-card</div>
+          <div style="font-size:12px;color: oklch(var(--muted-foreground));margin-top:4px;">rounded-xl · border-border · shadow-sm</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="theme-label" style="margin:32px 0 12px;color: oklch(var(--foreground));">MovieCard · TVShowCard · aspect-poster 2/3, radio de card, título text-sm</p>
+    <div class="poster-row">
+      <div><div class="poster"></div><p style="font-size:14px;font-weight:500;margin:12px 0 0;">Dune: Parte dos</p></div>
+      <div><div class="poster"></div><p style="font-size:14px;font-weight:500;margin:12px 0 0;">La Odisea</p></div>
+      <div><div class="poster"></div><p style="font-size:14px;font-weight:500;margin:12px 0 0;">Shōgun</p></div>
+      <div><div class="poster"></div><p style="font-size:14px;font-weight:500;margin:12px 0 0;">Severance</p></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    Tablero generado desde el código del proyecto. No propone valores nuevos: los 5 contenedores, 5 alturas de hero y 4 recetas de grilla que hoy conviven en las vistas son las inconsistencias que el port de Astryx viene a cerrar.
+  </footer>
+</div>
+
+<script>
+  const TOKENS = [
+    ["--background", "fondo de página"],
+    ["--foreground", "texto"],
+    ["--card", "superficie de card"],
+    ["--popover", "superficie flotante"],
+    ["--primary", "marca / acento"],
+    ["--primary-strong", "superficie sólida"],
+    ["--secondary", "superficie secundaria"],
+    ["--muted", "superficie apagada"],
+    ["--muted-foreground", "texto secundario"],
+    ["--accent", "superficie de hover"],
+    ["--destructive", "error / borrar"],
+    ["--border", "borde"],
+    ["--input", "borde de campo"],
+    ["--ring", "anillo de foco"],
+    ["--sidebar", "panel lateral"],
+    ["--sidebar-accent", "hover del lateral"],
+  ];
+
+  const SPACING = [0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12];
+
+  function chipValue(scope, name) {
+    return scope === "light" ? getComputedStyle(document.documentElement).getPropertyValue(name)
+                             : getComputedStyle(document.querySelector(".theme-wrap.dark")).getPropertyValue(name);
+  }
+
+  function renderSwatches(el, scope) {
+    const host = scope === "dark" ? document.querySelector(".theme-wrap.dark") : document.documentElement;
+    el.innerHTML = TOKENS.map(([name, use]) => {
+      const raw = getComputedStyle(host).getPropertyValue(name).trim();
+      const css = raw.startsWith("oklch") ? raw : `oklch(${raw})`;
+      return `<div class="swatch">
+        <div class="chip" style="background:${css}"></div>
+        <div class="meta"><div class="name">${name}</div><div class="val">${raw} · ${use}</div></div>
+      </div>`;
+    }).join("");
+  }
+
+  renderSwatches(document.getElementById("swatches-light"), "light");
+  renderSwatches(document.getElementById("swatches-dark"), "dark");
+
+  document.getElementById("spacing").innerHTML = SPACING.map((step) => {
+    const px = step === 0.5 ? 2 : step * 4;
+    return `<div class="bar"><div class="fill" style="width:${Math.min(px, 48)}px"></div>
+      <div class="tick">${step}<br>${px}px</div></div>`;
+  }).join("");
+</script>
+</body>
+</html>

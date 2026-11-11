@@ -1,59 +1,56 @@
 <template>
-  <!-- Barra flotante: no ocupa el flujo de la página, se apoya sobre el contenido.
-       En las rutas de reproducción desaparece para no tapar el video. -->
+  <!-- Barra cero cromo (03-mosaico): franja de 48px sin fondo propio, sin placa,
+       sin borde, sin sombra ni blur. Dos clusters de 32px a los bordes del
+       contenedor unico; el vano central es transparente y deja pasar el clic.
+       En las rutas de reproduccion desaparece para no tapar el video. -->
   <header
     v-show="!isPlayerRoute"
-    class="topbar-shell pointer-events-none fixed inset-x-0 top-0 z-50 px-2.5 pt-2.5 sm:px-4 sm:pt-3"
+    class="topbar-shell pointer-events-none fixed inset-x-0 top-[var(--bar-offset)] z-[65] h-[var(--bar-height)]"
     :class="{ 'is-hidden': isHidden }"
     :aria-hidden="isHidden ? 'true' : undefined"
     :inert="isHidden ? true : undefined"
   >
-    <div
-      class="pointer-events-auto mx-auto flex h-12 max-w-[110rem] items-center gap-1 rounded-2xl border border-border/60 bg-popover/70 px-1.5 backdrop-blur-xl sm:h-14 sm:gap-1.5 sm:px-2"
-      :class="isOpen ? 'shadow-[0_10px_34px_-16px_rgb(0_0_0/0.85)]' : 'shadow-[0_10px_30px_-20px_rgb(0_0_0/0.8)]'"
-    >
-      <!-- Único control del menú: pliega y despliega el sidebar (S2). -->
-      <button
-        :key="isOpen ? 'close' : 'open'"
-        type="button"
-        class="topbar-control flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-foreground transition-colors duration-200 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-10 md:w-10"
-        :aria-expanded="isOpen"
-        aria-controls="app-sidebar"
-        :aria-label="isOpen ? 'Cerrar menú' : 'Abrir menú'"
-        @click="toggle"
-      >
-        <XMarkIcon v-if="isOpen" class="h-5 w-5" />
-        <Bars3Icon v-else class="h-5 w-5" />
-      </button>
-
-      <router-link
-        to="/"
-        class="group flex h-10 shrink-0 items-center gap-2 rounded-xl px-1.5 transition-colors duration-200 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Vumies — Inicio"
-      >
-        <span
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-sm font-bold text-foreground transition-colors duration-200 group-hover:bg-primary-strong group-hover:text-primary-strong-foreground"
-          aria-hidden="true"
+    <div class="container-app pointer-events-none flex h-full items-center justify-between">
+      <!-- Cluster izquierdo: toggle del sidebar + wordmark solo texto. -->
+      <div class="pointer-events-auto flex items-center gap-1">
+        <button
+          :key="isOpen ? 'close' : 'open'"
+          type="button"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground bg-popover/60 backdrop-blur-md ring-1 ring-border/60 transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          :aria-expanded="isOpen"
+          aria-controls="app-sidebar"
+          :aria-label="isOpen ? 'Cerrar menú' : 'Abrir menú'"
+          @click="toggle"
         >
-          V
-        </span>
-        <span class="hidden text-[15px] font-semibold tracking-tight sm:inline">Vumies</span>
-      </router-link>
+          <XMarkIcon v-if="isOpen" class="h-[18px] w-[18px]" />
+          <Bars3Icon v-else class="h-[18px] w-[18px]" />
+        </button>
 
-      <span class="flex-1" aria-hidden="true" />
+        <router-link
+          to="/"
+          class="hidden h-8 shrink-0 items-center rounded-lg px-2 text-[13px] bg-popover/60 backdrop-blur-md ring-1 ring-border/60 font-semibold uppercase tracking-[0.14em] text-foreground transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 sm:inline-flex"
+          aria-label="Vumies — Inicio"
+        >
+          Vumies
+        </router-link>
+      </div>
 
-      <button
-        type="button"
-        class="flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-border/60 bg-muted/30 text-sm text-muted-foreground transition-colors duration-200 hover:border-border hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-9 md:w-64 md:justify-start md:px-3"
-        aria-label="Buscar en el catálogo"
-        @click="open"
-      >
-        <MagnifyingGlassIcon class="h-4 w-4 shrink-0" />
-        <span class="hidden flex-1 truncate text-left md:inline">Buscar películas, series...</span>
+      <!-- Cluster derecho: busqueda icon-only + keycap. Sin theme toggle:
+           el control de tema ya vive en el sidebar (L9). -->
+      <div class="pointer-events-auto flex items-center gap-1">
+        <button
+          type="button"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground bg-popover/60 backdrop-blur-md ring-1 ring-border/60 transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          aria-label="Buscar en el catálogo"
+          @click="open"
+        >
+          <MagnifyingGlassIcon class="h-[18px] w-[18px]" />
+        </button>
         <kbd
-          class="hidden select-none rounded border border-border bg-background/60 px-1.5 py-0.5 font-mono text-[10px] font-medium md:inline-flex"
+          class="hidden select-none rounded-md bg-popover/70 px-1.5 py-1 font-mono text-[10px] font-medium text-muted-foreground backdrop-blur-md ring-1 ring-border/60 sm:inline-flex"
+          aria-hidden="true"
         >{{ shortcutLabel }}</kbd>
-      </button>
+      </div>
     </div>
   </header>
 </template>

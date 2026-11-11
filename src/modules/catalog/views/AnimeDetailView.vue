@@ -4,14 +4,14 @@
   </div>
 
   <div v-else-if="error" class="min-h-screen pt-20">
-    <div class="container-custom py-8">
+    <div class="container-app py-8">
       <ErrorMessage :message="error" title="Error al cargar el anime" />
     </div>
   </div>
 
   <div v-else-if="animeInfo" class="min-h-screen pb-20">
     <!-- Backdrop Hero -->
-    <div class="relative h-[80vh] w-full overflow-hidden bg-center">
+    <div class="relative h-[var(--hero-lg)] w-full overflow-hidden bg-center">
       <!-- Backdrop como <img> (LCP) priorizable, en vez de background-image. -->
       <img
         v-if="heroBackdrop"
@@ -21,11 +21,11 @@
         fetchpriority="high"
         decoding="async"
       />
-      <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent" />
+      <div class="absolute inset-0 scrim-b" />
       <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/60 to-transparent" />
 
       <div class="absolute inset-0 flex items-end pb-20">
-        <div class="px-4 md:px-12 w-full">
+        <div class="container-app w-full">
           <div class="flex flex-col md:flex-row gap-8 items-start md:items-end">
             <!-- Poster -->
             <img
@@ -94,9 +94,9 @@
     </div>
 
     <!-- Episodios -->
-    <div class="bg-background relative z-10 px-4 md:px-12 -mt-10">
+    <div class="container-app bg-background relative z-10 -mt-10 space-y-12">
       <!-- Selector de temporadas (franquicia) -->
-      <div v-if="seasons.length > 1" class="mb-10">
+      <div v-if="seasons.length > 1">
         <h2 class="text-2xl font-bold text-foreground font-poppins mb-5">Temporadas</h2>
         <div class="flex flex-wrap gap-3">
           <router-link
@@ -117,13 +117,13 @@
         </div>
       </div>
 
-      <div class="mb-16">
+      <div>
         <h2 class="text-2xl font-bold text-foreground font-poppins mb-8">
           Episodios
           <span v-if="seasons.length > 1" class="text-muted-foreground text-lg font-normal">— {{ animeInfo.title }}</span>
         </h2>
 
-        <div v-if="animeInfo.episodes.length" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div v-if="animeInfo.episodes.length" class="grid-posters">
           <button
             v-for="ep in animeInfo.episodes"
             :key="ep.id ?? ep.number"

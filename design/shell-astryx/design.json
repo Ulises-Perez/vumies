@@ -1,0 +1,28 @@
+{
+  "title": "Vumies shell · navbar minimalista y catálogo Astryx",
+  "brief": "Rediseño del shell de Vumies: top bar minimalista que deja de ser una superficie de ancho completo, y la vista de películas reestructurada sobre las escalas y convenciones de Astryx portadas a Vue. Violeta de marca (hue 285) intacto.",
+  "feature": "odd/tasks/ui-astryx-shell.md",
+  "artboards": [
+    {
+      "file": "01-piezas-sueltas.html",
+      "title": "Piezas sueltas",
+      "tradeoff": "Cada pieza tiene su superficie y el medio queda transparente, así el arte respira; se pierde la lectura de una sola barra y hay tres planos de blur compitiendo.",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "02-una-linea.html",
+      "title": "Una línea",
+      "tradeoff": "El bar se lee como contenido y no como cromo; se pierde la identidad de superficie única y los rails que hacían escaneable continuar viendo.",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "03-mosaico.html",
+      "title": "Mosaico",
+      "tradeoff": "Primer golpe más fuerte y cero cromo visible; más difícil de escanear que filas uniformes, y el mosaico pelea con arte de calidad despareja.",
+      "width": 1440,
+      "height": 1000
+    }
+  ]
+}

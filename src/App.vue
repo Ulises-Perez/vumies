@@ -1,15 +1,12 @@
 <template>
   <div class="relative min-h-screen bg-background">
-    <!-- Luz ambiente de la pestaña actual. Va debajo del contenido (z-0). -->
-    <AmbienceStage />
-
     <!-- Barra superior flotante: su único control de menú pliega el sidebar. -->
     <AppTopBar />
 
     <!-- Sidebar flotante: overlay, no reserva espacio en el layout. -->
     <SideMenu />
 
-    <!-- Contenido por encima del ambilight. -->
+    <!-- Contenido de la app. -->
     <div class="relative z-10 flex min-h-screen flex-col">
       <main class="flex-1">
         <router-view v-slot="{ Component }">
@@ -35,7 +32,6 @@ import { onMounted } from 'vue'
 import { useAppStore } from '@/core/stores/app.store'
 import { useAnimeStore } from '@/core/stores/anime.store'
 import { FEATURES } from '@/core/config/features'
-import AmbienceStage from '@/modules/ui/components/AmbienceStage.vue'
 import AppTopBar from '@/modules/ui/components/AppTopBar.vue'
 import AppFooter from '@/modules/ui/components/AppFooter.vue'
 import BottomMenu from '@/modules/ui/components/BottomMenu.vue'

@@ -2,7 +2,7 @@
   <SkeletonDetail v-if="loading" />
 
   <div v-else-if="error" class="min-h-screen pt-20">
-    <div class="container-custom py-8">
+    <div class="container-app py-8">
       <ErrorMessage :message="error" title="Error al cargar serie" />
     </div>
   </div>
@@ -10,21 +10,21 @@
   <div v-else-if="seriesDetails" class="min-h-screen pb-20">
     <!-- Backdrop Hero -->
     <div
-      class="relative h-[80vh] w-full bg-cover bg-center"
+      class="relative h-[var(--hero-lg)] w-full bg-cover bg-center"
       :style="{ backgroundImage: `url(${backdropUrl})` }"
     >
-      <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent" />
+      <div class="absolute inset-0 scrim-b" />
       <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/60 to-transparent" />
       
       <div class="absolute inset-0 flex items-end pb-20">
-        <div class="px-4 md:px-12 w-full">
+        <div class="container-app w-full">
           <div class="max-w-3xl space-y-6">
             <h1 class="text-5xl md:text-7xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
               {{ seriesDetails.name }}
             </h1>
 
             <div class="flex items-center gap-4 text-muted-foreground text-sm md:text-base">
-              <span class="text-green-400 font-bold">{{ (seriesDetails.vote_average * 10).toFixed(0) }}% Match</span>
+              <span class="text-primary font-bold">{{ (seriesDetails.vote_average * 10).toFixed(0) }}% Match</span>
               <span>{{ firstAirYear }}</span>
               <BaseBadge variant="outline">TV-MA</BaseBadge>
               <span>{{ seriesDetails.number_of_seasons }} Temporadas</span>
@@ -54,10 +54,10 @@
     </div>
 
     <!-- Content -->
-    <div class="relative z-10 px-4 md:px-12 -mt-10">
+    <div class="container-app relative z-10 -mt-10 space-y-12">
 
       <!-- Season Selector & Episodes -->
-      <div class="mb-16">
+      <div>
         <div class="flex items-center justify-between mb-8">
           <h2 class="text-2xl font-bold text-foreground font-poppins">Episodios</h2>
 
@@ -125,7 +125,7 @@
       </div>
 
       <!-- Cast -->
-      <div v-if="credits && credits.cast.length" class="mb-16">
+      <div v-if="credits && credits.cast.length">
         <h3 class="text-xl font-bold text-foreground mb-6 font-poppins">Reparto Principal</h3>
         <div class="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
           <div v-for="actor in credits.cast.slice(0, 10)" :key="actor.id" class="flex-none w-32 text-center group">
@@ -139,7 +139,7 @@
       <!-- Recommendations -->
       <div v-if="hasRecommendations">
         <h2 class="text-2xl font-bold text-foreground font-poppins mb-8">Te Recomendamos</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+        <div class="grid-posters">
           <TVShowCard
             v-for="series in recommendations.slice(0, 12)"
             :key="series.id"
@@ -160,7 +160,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSeries } from '../composables/useSeries'
 import { useUserStore } from '@/modules/user'
 import { getBackdropUrl } from '@/core/config/api.config'
-import { useAmbienceSource } from '@/modules/ui/composables/useAmbience'
 import TVShowCard from '../components/TVShowCard.vue'
 import SkeletonDetail from '@/modules/ui/components/skeletons/SkeletonDetail.vue'
 import ErrorMessage from '@/modules/ui/components/ErrorMessage.vue'
@@ -255,7 +254,6 @@ watch(
 watch(selectedSeasonNumber, async (newVal) => {
   await loadSeason(newVal)
 })
-useAmbienceSource(() => backdropUrl.value)
 </script>
 
 <style scoped>

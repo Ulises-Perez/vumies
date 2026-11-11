@@ -75,6 +75,22 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         lg: 'var(--radius)',
         xl: 'calc(var(--radius) + 4px)',
+        // Astryx port (aditivo): nombres nuevos mapeados a las vars de :root.
+        inner: 'var(--radius-inner)',
+        element: 'var(--radius-element)',
+        container: 'var(--radius-container)',
+        page: 'var(--radius-page)',
+      },
+      height: {
+        // Astryx control heights (aditivo).
+        'element-sm': 'var(--size-element-sm)',
+        'element-md': 'var(--size-element-md)',
+        'element-lg': 'var(--size-element-lg)',
+      },
+      minHeight: {
+        'element-sm': 'var(--size-element-sm)',
+        'element-md': 'var(--size-element-md)',
+        'element-lg': 'var(--size-element-lg)',
       },
       fontFamily: {
         // Inter como fuente shadcn. `poppins` se remapea a Inter para no tocar cada heading.
