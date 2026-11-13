@@ -1,11 +1,12 @@
 <template>
-  <!-- Velo solido bajo el chrome: la barra de AppTopBar es cero-cromo (fondo
-       transparente, sin blur ni borde) y este archivo no puede tocarla. bg-popover
-       solido: ningun contenido se transparenta (ni el boton primario del hero)
-       y al ser el mismo tono que las piezas de la barra no hay costura visible.
-       Se conserva backdrop-blur para la transicion. Bajo el header (z 65),
-       sobre el contenido; sin clics; el sidebar (z 70) encima. -->
-  <div aria-hidden="true" class="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[var(--chrome-top)] border-b border-transparent bg-popover backdrop-blur-md" />
+  <!-- Velo condicional bajo el chrome: la barra de AppTopBar es cero-cromo y
+       este archivo no puede tocarla. Arriba (scroll 0) el velo es opacity-0:
+       el arte sangra detras sin costura ni corte. Al pasar el pie del hero un
+       IntersectionObserver enciende la superficie (bg-popover solido: nada se
+       transparenta, ni el boton primario) con fade que respeta reduced motion.
+       Bajo el header (z 65), sobre el contenido; sin clics; el sidebar (z 70)
+       encima. -->
+  <div aria-hidden="true" :class="surfaceVisible ? 'opacity-100' : 'opacity-0'" class="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[var(--chrome-top)] border-b border-transparent bg-popover backdrop-blur-md transition-opacity duration-200 motion-reduce:transition-none" />
 
   <SkeletonDetail v-if="loading" />
 
@@ -20,10 +21,13 @@
        abajo. pb = alto + offset + un paso de ritmo (--spacing-8, 32px) en movil;
        en md+ no hay pill y se vuelve al pb-20 del resto de vistas. -->
   <div v-else-if="seriesDetails" class="min-h-screen pb-[calc(70px+16px+var(--spacing-8))] md:pb-20">
-    <!-- Hero a sangre completa: el arte nace en y=0 detras del velo y el h1
-         vive en flujo normal bajo --chrome-top mas un paso de ritmo: la
-         colision con la barra es imposible por construccion y nada toca su
-         hairline. -->
+    <!-- Hero a sangre completa: el arte nace en y=0 y el h1 vive en flujo normal
+         bajo --chrome-top mas un paso de ritmo: la colision con la barra es
+         imposible por construccion. El centinela marca el TECHO del hero: arriba
+         de la pagina no hay superficie (el arte se ve detras, sin costura) y el
+         velo solo se enciende cuando el hero ya salio por arriba. Puesto al pie,
+         un hero mas alto que el viewport dejaba el velo encendido desde el
+         arranque y volvia a cortar el arte. -->
     <SerieHero
       :backdrop-url="heroBackdropUrl"
       :backdrop-src-set="heroBackdropSrcSet"
@@ -36,6 +40,7 @@
       @play="playHero"
       @toggle-favorite="toggleFavorite"
     />
+    <div ref="sentinelRef" aria-hidden="true" class="h-px w-px" />
 
     <BaseContainer class="space-y-12 pt-[var(--spacing-8)]">
       <!-- Episodios -->
@@ -68,10 +73,10 @@
             class="group w-full text-left bg-card hover:bg-accent rounded-xl overflow-hidden flex flex-col sm:flex-row border border-border hover:border-primary/40 transition-colors duration-200 sm:min-h-[9rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
              <!-- Miniatura: el <img> solo existe cuando hay still real. Sin
-                  still, la misma caja queda quieta (bg-card con inset sutil,
-                  sin etiqueta grande que compita): el unico numero es el badge
-                  de la esquina, igual que en todas las filas. Nunca un <img>
-                  sin fuente. -->
+                  still, la misma caja queda deliberada: superficie muted con
+                  hairline inset y un play tenue centrado (el unico numero
+                  sigue siendo el badge de la esquina, sin duplicar). Nunca un
+                  <img> sin fuente. -->
              <div class="relative w-full sm:w-56 md:w-72 flex-shrink-0 aspect-video sm:aspect-auto bg-card">
                <img
                  v-if="episode.still_path"
@@ -80,7 +85,11 @@
                  class="absolute inset-0 w-full h-full object-cover"
                  loading="lazy"
                >
-               <div v-else aria-hidden="true" class="absolute inset-0 bg-card shadow-[inset_0_0_0_1px_var(--border)]" />
+               <div v-else aria-hidden="true" class="absolute inset-0 flex items-center justify-center bg-muted shadow-[inset_0_0_0_1px_var(--border)]">
+                 <span class="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground/40">
+                   <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" /></svg>
+                 </span>
+               </div>
                <!-- Número de episodio: el mismo pill oscuro en todas las filas,
                     vaya o no sobre foto. -->
                <span class="absolute top-2 left-2 rounded-md bg-background/70 backdrop-blur-sm border border-border/60 px-2 py-0.5 text-xs font-bold text-foreground">
@@ -97,7 +106,7 @@
              <!-- Info: titulo siempre arriba (items-start), haya o no
                   descripcion; la meta ocupa el mismo lugar en cada fila. -->
              <div class="flex-1 min-w-0 p-4 sm:p-5 flex flex-col items-start gap-2">
-               <div class="flex items-start justify-between gap-3 self-stretch">
+               <div class="flex items-baseline justify-between gap-3 self-stretch">
                  <h3 class="type-heading-4 text-foreground group-hover:text-primary transition-colors line-clamp-1">
                    {{ episode.name }}
                  </h3>
@@ -145,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSeries } from '../composables/useSeries'
 import { useUserStore } from '@/modules/user'
@@ -197,6 +206,29 @@ const seasonsLabel = computed(() => {
   const n = seriesDetails.value?.number_of_seasons
   if (n === undefined || n === null) return ''
   return n === 1 ? '1 temporada' : `${n} temporadas`
+})
+
+// Superficie condicional del chrome: sin superficie arriba (el arte sangra
+// detras del velo y no hay costura ni corte), opaca al pasar el hero. Un
+// La superficie del chrome se enciende por posicion de scroll, no por un
+// centinela: un observer sobre 1px reporta interseccion falsa en reposo (caso de
+// area cero en Chrome) y sobre una franja con alto metia 64px de layout que
+// empujaban el hero. Un listener pasivo que solo escribe cuando el booleano
+// cambia no corre por frame y es determinista.
+const surfaceVisible = ref(false)
+
+function syncSurface() {
+  const next = window.scrollY > 24
+  if (next !== surfaceVisible.value) surfaceVisible.value = next
+}
+
+onMounted(() => {
+  syncSurface()
+  window.addEventListener('scroll', syncSurface, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', syncSurface)
 })
 
 // Primer episodio real de la temporada cargada; 1 cuando aun carga.

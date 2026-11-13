@@ -2,9 +2,12 @@
   <footer class="border-t border-border bg-card/30">
     <!-- Despeje inferior en movil para la pildora flotante (BottomMenu): ocupa
          70px de alto (medido) a 16px del borde, o sea 86px tapados desde abajo.
-         Misma constante que el pb de las vistas de detalle para no duplicar
-         medidas. Solo movil: en md+ no hay pill y se conserva el pb-20 actual. -->
-    <div class="container-app py-10 pb-[calc(70px+16px+var(--spacing-8))] md:pb-20">
+         Misma constante que el pb de las vistas de detalle. El primer paso de
+         ritmo despega los enlaces y el segundo deja la linea de copyright (la
+         ultima del footer) por encima del borde superior de la pill con aire.
+         Solo movil: en md+ no hay pill y se conserva el pb-20 actual. Se usa
+         pt-10 + pb explicito (no py-10) para que nada pise el pb arbitrario. -->
+    <div class="container-app pt-10 pb-[calc(70px+16px+var(--spacing-8)+var(--spacing-8))] md:pb-20">
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
         <!-- Logo & Info -->
         <div class="col-span-1 md:col-span-3 lg:col-span-1">

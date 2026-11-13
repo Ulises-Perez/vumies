@@ -386,3 +386,27 @@ new component.
 **Deliberately not "fixed":** E6/E7 have no `runtime` and some rows have no synopsis. Their slots stay reserved and empty — printing "Duración N/D" would be the same filler the first audit flagged, and the reserved slot is what holds every row at one height.
 
 Checks: `vue-tsc` clean, `vite build` clean, impeccable `[]` on all three files (`SerieHero.vue`, `SerieDetailView.vue`, `AppFooter.vue`).
+
+**L27** — Fourth and fifth audit rounds: the surface I made opaque was itself the defect, and the observer was lying.
+
+1. **Round 4** reported the opaque surface as a slab: it cut the hero art flat at y=64 (a planet sliced in half) and left a
+   tonal step when scrolled. The right pattern is a **conditional surface**: no surface at the top of the page, so the art
+   shows through and cannot be sliced; the surface fades in once the page scrolls, and by then the art is no longer behind
+   it, so nothing can ghost. Also: the phone pill still hid the copyright line, and the empty episode tiles read as failed
+   images. The worker implemented the conditional surface, added a second clearance step to `AppFooter.vue`, and gave the
+   empty tile a deliberate treatment (muted surface, inset hairline, faint play glyph, badge as the only number).
+2. **Its IntersectionObserver never worked, and I found that by measuring.** Two failed attempts are recorded because both
+   are real traps:
+   - With a **1px sentinel** at the hero's foot, Chrome reports `isIntersecting: false` at rest (zero-area edge case), so the
+     surface was pinned on from the first frame.
+   - Swapping to a **sentinel as tall as the chrome** fixed the flag but added 64px of real layout height (the `h1` moved
+     205 → 268) and its first callback ran before layout, with `bottom === 0`, which satisfied a `<= 0` test — surface on
+     again.
+   - Final, deterministic fix: **no sentinel at all**. A passive `scroll` listener writes `window.scrollY > 24` into the
+     ref and only touches it when the boolean flips, so there is no work per frame and no observer boundary to be wrong
+     about. Measured after: **surface opacity 0 at scroll 0** and **1 at scroll 400**, with the `h1` back at 204 and a
+     144px gap to the bar.
+3. **Fourth round, otherwise confirmed:** no ghosting left, footer links clear of the pill, no horizontal overflow.
+
+Checks: `vue-tsc` clean (after removing the now-unused `nextTick` import), `vite build` clean, impeccable `[]` on all three
+files, and screenshots `temp/ego-play/serie-v6-*.png`.
