@@ -349,3 +349,29 @@ Verified: `vue-tsc` and `vite build` clean; 12 geometry loads at 1440/1024/768/3
 pairs, 0 px horizontal overflow, one `h1`); srcset selection measured at 1440 DPR1, 1440 DPR2 and 390
 DPR1; the static glow measured at 1440 and 390; impeccable detector on the three routes reports only
 the already-waived `overused-font`.
+
+**L25** — Series detail redesign (`/serie/:id`), the navbar/title collision and two rounds of visual audit.
+
+1. **Root cause, measured.** The top bar was `position: fixed` at y=12, height 48, with computed
+   `background: transparent`, `backdrop-filter: none`, `border: 0` and no shadow, and the `<h1>` also started at
+   y=12 — they shared a top edge. At 390px the overlap was 22 real pixels and the hamburger sat on the "D" of the
+   title. The bar floated naked over the hero art.
+2. **Fixed by construction.** The title is in normal flow below `--chrome-top` (no absolute, no negative margins) and
+   the route renders a fixed surface behind the bar (`oklch(0.165 0.005 285 / 0.95)` + `blur(12px)`, 64px tall,
+   `pointer-events: none`). Measured after: header→h1 gap 232px at scroll 0, **intersection null** at scroll 0, at
+   scroll 500 and at 390px.
+3. **Other real defects the audit found and that were fixed:** the metadata printed "1 Temporadas"; episodes without
+   `still_path` rendered a broken `<img>` with clipped alt text over the number badge (12 of 23 counted as broken until
+   lazy loads finished — now a token placeholder, 0 broken); "Sin descripción disponible." repeated on most rows;
+   there was no primary action at all, only a secondary "Mi Lista" (now a real `Reproducir` on the selected season's
+   first episode, no invented progress); no container, so rows stretched 1344px wide.
+4. **Two audit rounds, applied, not argued.** Round one: hero full-bleed instead of a card (the card "read as a card,
+   not a title page" and produced three different left edges), a real gap above the hero, opaque surface so the hero
+   buttons stopped ghosting through the bar, measured bottom clearance for the phone pill, episode rows aligned to the
+   start with a reserved meta slot and one badge treatment, quieter placeholders, equal-width hero buttons at 390, and a
+   constrained synopsis so it never sits over bright art. Round two measured the result: **one optical edge** (h1 and
+   "Episodios" both at 56px desktop / 16px mobile), one `<h1>`, no horizontal overflow.
+5. **Sections added with real data only:** Episodios, Reparto Principal, Te Recomendamos.
+
+Checks: `vue-tsc` clean, `vite build` clean, impeccable detector `[]` on both files, `SerieHero.vue` added as the only
+new component.
