@@ -11,6 +11,12 @@ interface FavoriteItem {
 
 interface WatchHistoryItem extends FavoriteItem {
   watchedAt: number
+  /**
+   * Backdrop 16:9 cuando la ficha lo tenia. Las tarjetas de "Continuar viendo"
+   * son 16:9 y recortar un poster 2:3 decapita al sujeto; con backdrop no hay
+   * recorte. Opcional para que el historial ya guardado siga sirviendo.
+   */
+  backdrop_path?: string | null
   progress?: number
   /**
    * Que se reprodujo exactamente, para poder retomarlo. `kind` solo existe en

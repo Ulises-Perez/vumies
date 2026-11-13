@@ -106,7 +106,7 @@
            temporada no redimensione el panel, y una sola zona con scroll. -->
       <div
         v-if="episodesOpen"
-        class="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6"
+        class="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm sm:p-6"
         @click.self="closeEpisodes"
       >
           <div
@@ -115,7 +115,7 @@
             aria-modal="true"
             aria-labelledby="episodes-title"
           >
-            <header class="flex items-center gap-[var(--spacing-3)] border-b border-border/60 px-[var(--spacing-5)] pb-[var(--spacing-3)] pt-[var(--spacing-4)]">
+            <header class="flex items-center gap-[var(--spacing-3)] border-b border-border/60 px-[var(--spacing-4)] pb-[var(--spacing-3)] pt-[var(--spacing-4)]">
               <div class="min-w-0 flex-1">
                 <h2 id="episodes-title" class="type-heading-3 text-foreground">Episodios</h2>
                 <p v-if="episodes.length" class="type-supporting mt-0.5 text-muted-foreground">
@@ -142,7 +142,7 @@
               </button>
             </header>
 
-            <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-[var(--spacing-2)] pb-[var(--spacing-3)]">
+            <div class="episodes-scroll min-h-0 flex-1 overflow-y-auto px-[var(--spacing-2)] pb-[var(--spacing-3)] pt-[var(--spacing-1-5)] [mask-image:linear-gradient(to_bottom,#000_calc(100%-1.5rem),transparent)]">
               <div v-if="loadingEpisodes" class="flex min-h-[10rem] items-center justify-center"><LoadingSpinner /></div>
               <ul
                 v-else
@@ -166,7 +166,7 @@
                     "
                   >
                     <!-- AspectRatio 16:9 + Thumbnail con fit cover. -->
-                    <span class="relative aspect-video w-32 flex-none overflow-hidden rounded-[var(--radius-inner)] bg-muted sm:w-40">
+                    <span class="relative aspect-video w-24 flex-none overflow-hidden rounded-[var(--radius-inner)] bg-muted sm:w-40">
                       <span
                         v-if="!isStillLoaded(ep.still_path)"
                         aria-hidden="true"
@@ -186,7 +186,7 @@
                       <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
                         <span
                           class="flex h-8 w-8 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/20 backdrop-blur-sm"
-                          :class="isCurrentEpisode(ep.episode_number) ? 'opacity-100' : 'opacity-0 transition-opacity group-hover/item:opacity-100'"
+                          :class="isCurrentEpisode(ep.episode_number) ? 'opacity-100' : 'opacity-70 transition-opacity group-hover/item:opacity-100'"
                         >
                           <svg class="ml-0.5 h-3.5 w-3.5 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
                         </span>
@@ -203,7 +203,7 @@
                         </span>
                         <span
                           v-if="isCurrentEpisode(ep.episode_number)"
-                          class="shrink-0 rounded-[var(--radius-full)] bg-primary/15 px-[var(--spacing-1-5)] py-[1px] text-[length:var(--text-xs)] font-semibold uppercase tracking-wide text-primary"
+                          class="shrink-0 rounded-[var(--radius-full)] bg-primary px-[var(--spacing-1-5)] py-[1px] text-[length:var(--text-xs)] font-semibold uppercase tracking-wide text-primary-foreground"
                         >
                           Viendo
                         </span>
@@ -545,3 +545,24 @@ onUnmounted(() => {
 
 watch(() => route.params, () => { loadContent() })
 </script>
+
+<style scoped>
+.episodes-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+.episodes-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.episodes-scroll::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+}
+.episodes-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+}
+.episodes-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+</style>

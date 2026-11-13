@@ -26,18 +26,22 @@
         class="group relative flex-none w-[240px] overflow-hidden rounded-[var(--radius-container)] bg-card text-left ring-1 ring-border transition-shadow duration-200 hover:shadow-lg hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:w-[280px]"
       >
         <span class="relative block aspect-[16/9] w-full overflow-hidden bg-muted">
+          <!-- Backdrop 16:9 si existe: el marco es 16:9 y recortar un poster 2:3
+               corta cabezas, elija el anclaje que elija. El poster queda como
+               respaldo, anclado arriba, que es donde esta la cara. -->
           <img
-            v-if="item.poster_path"
-            :src="getPosterUrl(item.poster_path, 'w342')"
+            v-if="item.backdrop_path || item.poster_path"
+            :src="frameUrl(item)"
             :alt="item.title"
-            class="absolute inset-0 h-full w-full object-cover object-[50%_18%] transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
+            :class="item.backdrop_path ? '' : 'object-top'"
             loading="lazy"
             decoding="async"
           />
           <span aria-hidden="true" class="absolute inset-0 scrim-b" />
-          <span aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/15" />
+          <span aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/20" />
           <span
-            class="absolute inset-0 flex items-center justify-center"
+            class="absolute bottom-2 right-2 flex items-end justify-end"
             aria-hidden="true"
           >
             <span class="flex h-11 w-11 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur-sm transition-[transform,background-color] duration-200 group-hover:scale-105 group-hover:bg-background/90 motion-reduce:group-hover:scale-100">
@@ -64,14 +68,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
-import { getPosterUrl } from '@/core/config/api.config'
+import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
+
+/** 16:9 backdrop at the card's real width, poster only when there is no backdrop. */
+function frameUrl(item: ResumeItem): string {
+  return item.backdrop_path ? getBackdropUrl(item.backdrop_path, 'w300') : getPosterUrl(item.poster_path, 'w342')
+}
 
 interface ResumeItem {
   id: number
   type: 'movie' | 'tv'
   title: string
   poster_path: string | null
+  /** 16:9 art when the ficha had one; the card frame is 16:9. */
+  backdrop_path?: string | null
   kind?: 'movie' | 'series' | 'anime'
   season?: number
   episode?: number

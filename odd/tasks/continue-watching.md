@@ -480,3 +480,32 @@ empty, screenshots at `temp/ego-play/`.
 6. **The source dialog's close glyph** was 16px in a 40px target and read as a speck: now 18px.
 
 Checked: `vue-tsc` clean, `vite build` clean, impeccable detector empty on both modules, mobile dialog measured at `top 70 / bottom 70` (properly centred).
+
+**L19** — Second vision pass, applied. Ten findings, nine fixed, one documented as a deliberate limit.
+
+1. **The first row was sliced by the hairline** and the last row was cut flush against the bottom edge. The scroll
+   region now has `pt-[var(--spacing-1-5)]`, and a `mask-image` fade over its last 24px makes the cut read as "more
+   below" instead of a rendering fault. Measured fade present: `linear-gradient(rgb(0,0,0) calc(100% - 1.5rem), transparent)`.
+2. **Header text and thumbnails were 4px apart down the left edge** (20px padding against 8+8px inset). The header is
+   now `px-[var(--spacing-4)]`: measured both at **16px**.
+3. **Mobile titles were truncated** ("Picadura de una abeja m…") because a 128px still ate the text column. The still
+   is `w-24` (96px) on phones and stays 160px from `sm` up; measured `stillWidth 96` and `labelClipped false` on
+   "1. Siete con treinta y siete".
+4. **The play disc was hover-only**, so a touch device never saw it. It now rests at `opacity-70` and fills on hover,
+   on mobile as well.
+5. **The `Viendo` badge was purple text on a purple tint at 10px.** It is solid `bg-primary` with
+   `text-primary-foreground`.
+6. **The native scrollbar** showed OS arrows inside a designed dialog: buttons are hidden, the thumb is themed.
+7. **The 16:9 frames still cut heads on two cards.** A poster is 2:3 and a 16:9 frame keeps only about 37% of its
+   height, so no anchor satisfies all art. The real fix: history now stores `backdrop_path` (written by the movie and
+   series detail views, optional so old entries keep working) and the card prefers it. Measured end to end after one
+   real play: the new card requests `w300/subj7kn…` with **natural 300×169, `objectTop false`** — native 16:9, zero
+   crop — while entries without a backdrop fall back to the `w342` poster anchored `object-top`, which is where the
+   face is.
+8. **The play disc sat on top of faces** in the middle of the still: it moved to the bottom-right corner.
+9. **Documented limit, not fixed:** the hovered card's ring still reads stronger over the dark footer than over a
+   blown-out highlight. The frame keeps a 1px `ring-inset ring-white/20` inside the clip, but a white-on-white edge
+   cannot be made to contrast; the outer ring plus the scaled image carry the state.
+
+Measured after the pass: dialog **672×704** desktop and **358×704** mobile (70px above and below), one single row
+height (**107px**) in both, `vue-tsc` clean, `vite build` clean, impeccable detector empty on both modules.

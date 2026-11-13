@@ -246,6 +246,7 @@ function playMovie() {
       type: 'movie',
       title: movieDetails.value.title,
       poster_path: movieDetails.value.poster_path,
+      backdrop_path: movieDetails.value.backdrop_path,
       kind: 'movie',
     })
     router.push({

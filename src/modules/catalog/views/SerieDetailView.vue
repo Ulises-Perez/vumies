@@ -205,6 +205,7 @@ function playEpisode(episodeNumber: number) {
       type: 'tv',
       title: seriesDetails.value.name,
       poster_path: seriesDetails.value.poster_path,
+      backdrop_path: seriesDetails.value.backdrop_path,
       kind: isAnimeRoute ? 'anime' : 'series',
       season: selectedSeasonNumber.value,
       episode: episodeNumber,
