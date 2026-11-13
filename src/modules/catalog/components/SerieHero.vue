@@ -1,13 +1,15 @@
 <template>
-  <!-- Hero a sangre completa: sin tarjeta, sin anillo, sin radio. El arte ocupa
-       todo el ancho y el texto vive dentro de container-app, el mismo gutter
-       que las secciones de abajo: un solo borde optico en la pagina. La seccion
-       crece con su contenido sobre un min-h de token; nada absoluto lleva el
-       titulo. Texto sobre arte con tokens independientes del tema (text-art*),
-       porque los scrims son oscuros en claro y en oscuro. -->
+  <!-- Hero a sangre completa: sin tarjeta, sin anillo, sin radio. El arte sangra
+       hasta y=0 (detras del velo fijo opaco) y el texto vive dentro de
+       container-app, el mismo gutter que las secciones de abajo: un solo borde
+       optico en la pagina. El bloque de texto arranca bajo --chrome-top mas un
+       paso de ritmo; la seccion crece con su contenido sobre un min-h de token
+       y nada absoluto lleva el titulo. Texto sobre arte con tokens
+       independientes del tema (text-art*), porque los scrims son oscuros en
+       claro y en oscuro. -->
   <section
     aria-labelledby="serie-hero-title"
-    class="relative mt-[calc(var(--chrome-top)+var(--spacing-6))] overflow-hidden"
+    class="relative overflow-hidden"
   >
     <img
       v-if="backdropUrl"
@@ -24,13 +26,18 @@
     <div v-else aria-hidden="true" class="absolute inset-0 bg-muted" />
     <div aria-hidden="true" class="absolute inset-0 scrim-b" />
     <div aria-hidden="true" class="absolute inset-0 scrim-r" />
+    <!-- Fundido superior al chrome: el arte nace en y=0 detras del velo y esta
+         capa lo disuelve hacia from-background, asi nunca se ve un corte
+         recto bajo la barra. Cubre el alto del velo mas un paso de ritmo para
+         que el fundido termine ya fuera del velo. from-background sigue al tema. -->
+    <div aria-hidden="true" class="absolute inset-x-0 top-0 h-[calc(var(--chrome-top)+var(--spacing-12))] bg-gradient-to-b from-background to-transparent" />
     <!-- Fundido inferior al fondo de pagina: el scrim termina en oscuro y en
          tema claro la pagina es blanca, asi que sin esta capa el arte se corta
          en una linea horizontal. from-background sigue al tema. -->
     <div aria-hidden="true" class="absolute inset-x-0 bottom-0 h-[var(--spacing-12)] bg-gradient-to-t from-background to-transparent" />
 
     <div class="container-app relative">
-      <div class="flex min-h-[var(--hero-lg)] max-w-3xl flex-col justify-end space-y-6 pb-[var(--spacing-8)] pt-[var(--spacing-8)]">
+      <div class="flex min-h-[var(--hero-lg)] max-w-3xl flex-col justify-end space-y-6 pb-[var(--spacing-8)] pt-[calc(var(--chrome-top)+var(--spacing-6))]">
         <div>
           <h1
             id="serie-hero-title"

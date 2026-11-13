@@ -375,3 +375,14 @@ the already-waived `overused-font`.
 
 Checks: `vue-tsc` clean, `vite build` clean, impeccable detector `[]` on both files, `SerieHero.vue` added as the only
 new component.
+
+**L26** — Third audit round, applied. Four defects, four fixes, all measured after.
+
+1. **The hero art began on a hard line at y≈88** (a dark strip above it, and the character's head cropped at 390). The art now begins at **y=0**, behind the fixed surface, with a background→transparent gradient over the chrome height; the text block keeps its offset (`--chrome-top` + one spacing step). Measured: `artTop 0`, header→`<h1>` gap **144px** at scroll 0 — further from the bar than the 28px minimum the construction guarantees.
+2. **The phone pill cut the footer links** ("Comedia" read "Come…"). The clearance only existed in the view, so `AppFooter.vue` got the same measured constant, mobile-only, with `md:pb-20` untouched. Measured at 390: pill at 758–828, last footer link "Terror" at 556–580 — clear, and it gets further from the pill the deeper the page scrolls.
+3. **E6/E7 printed their number twice** (centred label + corner badge). The tile is now a quiet box and the badge is the only number.
+4. **A faint purple ghost survived the 0.95 surface** (x≈60–230, y≈0–40 — the primary button bleeding through the blur). The surface is now fully opaque `oklch(0.165 0.005 285)`, blur kept for the transition. A solid surface beats glass that leaks.
+
+**Deliberately not "fixed":** E6/E7 have no `runtime` and some rows have no synopsis. Their slots stay reserved and empty — printing "Duración N/D" would be the same filler the first audit flagged, and the reserved slot is what holds every row at one height.
+
+Checks: `vue-tsc` clean, `vite build` clean, impeccable `[]` on all three files (`SerieHero.vue`, `SerieDetailView.vue`, `AppFooter.vue`).

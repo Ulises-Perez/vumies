@@ -1,10 +1,11 @@
 <template>
-  <!-- Velo opaco bajo el chrome: la barra de AppTopBar es cero-cromo (fondo
+  <!-- Velo solido bajo el chrome: la barra de AppTopBar es cero-cromo (fondo
        transparente, sin blur ni borde) y este archivo no puede tocarla. bg-popover
-       al 95% mas blur no deja pasar el hero (sin fantasmas violetas) y al ser el
-       mismo tono que las piezas de la barra no hay costura visible. Bajo el
-       header (z 65), sobre el contenido; sin clics; el sidebar (z 70) encima. -->
-  <div aria-hidden="true" class="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[var(--chrome-top)] border-b border-transparent bg-popover/95 backdrop-blur-md" />
+       solido: ningun contenido se transparenta (ni el boton primario del hero)
+       y al ser el mismo tono que las piezas de la barra no hay costura visible.
+       Se conserva backdrop-blur para la transicion. Bajo el header (z 65),
+       sobre el contenido; sin clics; el sidebar (z 70) encima. -->
+  <div aria-hidden="true" class="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[var(--chrome-top)] border-b border-transparent bg-popover backdrop-blur-md" />
 
   <SkeletonDetail v-if="loading" />
 
@@ -19,9 +20,10 @@
        abajo. pb = alto + offset + un paso de ritmo (--spacing-8, 32px) en movil;
        en md+ no hay pill y se vuelve al pb-20 del resto de vistas. -->
   <div v-else-if="seriesDetails" class="min-h-screen pb-[calc(70px+16px+var(--spacing-8))] md:pb-20">
-    <!-- Hero a sangre completa: ocupa todo el ancho sin caja. El h1 vive en
-         flujo normal bajo --chrome-top mas un paso de ritmo: la colision con
-         la barra es imposible por construccion y nada toca su hairline. -->
+    <!-- Hero a sangre completa: el arte nace en y=0 detras del velo y el h1
+         vive en flujo normal bajo --chrome-top mas un paso de ritmo: la
+         colision con la barra es imposible por construccion y nada toca su
+         hairline. -->
     <SerieHero
       :backdrop-url="heroBackdropUrl"
       :backdrop-src-set="heroBackdropSrcSet"
@@ -66,9 +68,10 @@
             class="group w-full text-left bg-card hover:bg-accent rounded-xl overflow-hidden flex flex-col sm:flex-row border border-border hover:border-primary/40 transition-colors duration-200 sm:min-h-[9rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
              <!-- Miniatura: el <img> solo existe cuando hay still real. Sin
-                  still, la misma caja en tono bajo (bg-card con inset sutil,
-                  sin relleno solido que compita) y el numero en type-heading-3
-                  muted: legible sin parecer arte. Nunca un <img> sin fuente. -->
+                  still, la misma caja queda quieta (bg-card con inset sutil,
+                  sin etiqueta grande que compita): el unico numero es el badge
+                  de la esquina, igual que en todas las filas. Nunca un <img>
+                  sin fuente. -->
              <div class="relative w-full sm:w-56 md:w-72 flex-shrink-0 aspect-video sm:aspect-auto bg-card">
                <img
                  v-if="episode.still_path"
@@ -77,9 +80,7 @@
                  class="absolute inset-0 w-full h-full object-cover"
                  loading="lazy"
                >
-               <div v-else class="absolute inset-0 flex items-center justify-center bg-card shadow-[inset_0_0_0_1px_var(--border)]">
-                 <span class="type-heading-3 text-muted-foreground/60">E{{ episode.episode_number }}</span>
-               </div>
+               <div v-else aria-hidden="true" class="absolute inset-0 bg-card shadow-[inset_0_0_0_1px_var(--border)]" />
                <!-- Número de episodio: el mismo pill oscuro en todas las filas,
                     vaya o no sobre foto. -->
                <span class="absolute top-2 left-2 rounded-md bg-background/70 backdrop-blur-sm border border-border/60 px-2 py-0.5 text-xs font-bold text-foreground">
