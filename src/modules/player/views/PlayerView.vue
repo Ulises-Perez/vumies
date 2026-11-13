@@ -102,111 +102,134 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <!-- Episodios como modal centrado, con el mismo cuerpo que el de fuentes:
-           misma cabecera, misma tarjeta, mismo radio. Antes era un cajon lateral. -->
+      <!-- Dialog de Astryx: radio `container`, alto fijo para que cambiar de
+           temporada no redimensione el panel, y una sola zona con scroll. -->
       <div
         v-if="episodesOpen"
         class="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6"
         @click.self="closeEpisodes"
       >
-        <div
-          class="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-card text-card-foreground ring-1 ring-border shadow-2xl"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="episodes-title"
-        >
-          <header class="flex items-center gap-3 px-6 pb-3 pt-5">
-            <div class="min-w-0 flex-1">
-              <h2 id="episodes-title" class="font-poppins text-lg font-bold tracking-tight text-foreground">
-                Episodios
-              </h2>
-              <p v-if="episodes.length" class="mt-0.5 text-xs text-muted-foreground">
-                {{ episodes.length }} episodios
-              </p>
-            </div>
-            <BaseSelect
-              v-if="seasons.length > 1"
-              :model-value="selectedSeasonNumber"
-              class="w-auto min-w-[9rem]"
-              @update:model-value="onSeasonSelect(String($event))"
-            >
-              <option v-for="s in seasons" :key="s.id" :value="s.season_number">{{ s.name }}</option>
-            </BaseSelect>
-            <button
-              @click="closeEpisodes"
-              class="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
-              aria-label="Cerrar"
-            >
-              <XMarkIcon class="h-5 w-5" />
-            </button>
-          </header>
+          <div
+            class="flex h-[min(86vh,44rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius-container)] bg-card text-card-foreground ring-1 ring-border shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="episodes-title"
+          >
+            <header class="flex items-center gap-[var(--spacing-3)] px-[var(--spacing-5)] pb-[var(--spacing-3)] pt-[var(--spacing-4)]">
+              <div class="min-w-0 flex-1">
+                <h2 id="episodes-title" class="type-heading-3 text-foreground">Episodios</h2>
+                <p v-if="episodes.length" class="type-supporting mt-0.5 text-muted-foreground">
+                  {{ episodes.length }} {{ episodes.length === 1 ? 'episodio' : 'episodios' }}
+                </p>
+              </div>
+              <!-- Selector de temporada: Selector de Astryx (altura md = 32px,
+                   variante input, indicador al final, etiqueta oculta). -->
+              <BaseSelect
+                v-if="seasons.length > 1"
+                :model-value="selectedSeasonNumber"
+                aria-label="Temporada"
+                class="h-[var(--size-element-md)] w-auto min-w-[8.5rem]"
+                @update:model-value="onSeasonSelect(String($event))"
+              >
+                <option v-for="s in seasons" :key="s.id" :value="s.season_number">{{ s.name }}</option>
+              </BaseSelect>
+              <button
+                @click="closeEpisodes"
+                class="-mr-1 flex h-[var(--size-element-md)] w-[var(--size-element-md)] shrink-0 items-center justify-center rounded-[var(--radius-element)] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                aria-label="Cerrar"
+              >
+                <XMarkIcon class="h-4 w-4" />
+              </button>
+            </header>
 
-          <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-            <div v-if="loadingEpisodes" class="flex min-h-[10rem] items-center justify-center"><LoadingSpinner /></div>
-            <ul
-              v-else
-              class="space-y-1"
-              @keydown.down.prevent="moveEpisodeFocus(1)"
-              @keydown.up.prevent="moveEpisodeFocus(-1)"
-              @keydown.home.prevent="focusEpisodeIndex(0)"
-              @keydown.end.prevent="focusEpisodeIndex(episodes.length - 1)"
-            >
-              <li v-for="ep in episodes" :key="ep.id">
-                <button
-                  :ref="(el) => setEpisodeRef(el as HTMLButtonElement | null, ep.episode_number)"
-                  @click="goToEpisode(ep.episode_number)"
-                  class="group/item flex w-full items-start gap-3 rounded-2xl p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
-                  :class="
-                    isCurrentEpisode(ep.episode_number)
-                      ? 'bg-primary/10 ring-1 ring-primary/40'
-                      : 'hover:bg-accent'
-                  "
-                >
-                  <span class="relative aspect-video w-32 flex-none overflow-hidden rounded-xl bg-muted sm:w-40">
-                    <img
-                      v-if="ep.still_path"
-                      :src="`https://image.tmdb.org/t/p/w300${ep.still_path}`"
-                      alt=""
-                      class="h-full w-full object-cover transition-transform duration-300 group-hover/item:scale-[1.03] motion-reduce:group-hover/item:scale-100"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <span class="absolute inset-0 flex items-center justify-center">
+            <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-[var(--spacing-2)] pb-[var(--spacing-3)]">
+              <div v-if="loadingEpisodes" class="flex min-h-[10rem] items-center justify-center"><LoadingSpinner /></div>
+              <ul
+                v-else
+                class="space-y-[var(--spacing-0-5)]"
+                @keydown.down.prevent="moveEpisodeFocus(1)"
+                @keydown.up.prevent="moveEpisodeFocus(-1)"
+                @keydown.home.prevent="focusEpisodeIndex(0)"
+                @keydown.end.prevent="focusEpisodeIndex(episodes.length - 1)"
+              >
+                <li v-for="ep in episodes" :key="ep.id">
+                  <!-- Item de Astryx: inset inline spacing-2, densidad balanced
+                       (8px), contenido de arranque, etiqueta, descripcion y badge. -->
+                  <button
+                    :ref="(el) => setEpisodeRef(el as HTMLButtonElement | null, ep.episode_number)"
+                    @click="goToEpisode(ep.episode_number)"
+                    class="group/item flex w-full items-start gap-[var(--spacing-3)] rounded-[var(--radius-element)] px-[var(--spacing-2)] py-[var(--spacing-2)] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                    :class="
+                      isCurrentEpisode(ep.episode_number)
+                        ? 'bg-primary/10 ring-1 ring-primary/40'
+                        : 'hover:bg-accent'
+                    "
+                  >
+                    <!-- AspectRatio 16:9 + Thumbnail con fit cover. -->
+                    <span class="relative aspect-video w-32 flex-none overflow-hidden rounded-[var(--radius-inner)] bg-muted sm:w-40">
                       <span
-                        class="flex h-9 w-9 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/20 backdrop-blur-sm"
-                        :class="isCurrentEpisode(ep.episode_number) ? 'opacity-100' : 'opacity-0 transition-opacity group-hover/item:opacity-100'"
-                      >
-                        <svg class="ml-0.5 h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                        v-if="!isStillLoaded(ep.still_path)"
+                        aria-hidden="true"
+                        class="absolute inset-0 animate-pulse bg-muted motion-reduce:animate-none"
+                      />
+                      <img
+                        v-if="ep.still_path"
+                        :src="`https://image.tmdb.org/t/p/w300${ep.still_path}`"
+                        alt=""
+                        class="relative h-full w-full object-cover transition-transform duration-300 group-hover/item:scale-[1.03] motion-reduce:group-hover/item:scale-100"
+                        loading="lazy"
+                        decoding="async"
+                        fetchpriority="low"
+                        @load="markStillLoaded(ep.still_path)"
+                        @error="markStillLoaded(ep.still_path)"
+                      />
+                      <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                        <span
+                          class="flex h-8 w-8 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/20 backdrop-blur-sm"
+                          :class="isCurrentEpisode(ep.episode_number) ? 'opacity-100' : 'opacity-0 transition-opacity group-hover/item:opacity-100'"
+                        >
+                          <svg class="ml-0.5 h-3.5 w-3.5 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                        </span>
                       </span>
                     </span>
-                  </span>
 
-                  <span class="min-w-0 flex-1 py-0.5">
-                    <span
-                      class="block truncate text-sm font-semibold leading-snug sm:text-base"
-                      :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-foreground'"
-                    >
-                      {{ ep.episode_number }}. {{ ep.name }}
-                    </span>
-                    <span class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{{ ep.runtime ? `${ep.runtime} min` : 'Duración N/D' }}</span>
-                      <template v-if="ep.vote_average">
-                        <span aria-hidden="true">·</span>
-                        <span class="inline-flex items-center gap-1">
-                          <svg class="h-3 w-3 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                          {{ ep.vote_average.toFixed(1) }}
+                    <span class="min-w-0 flex-1 py-[var(--spacing-0-5)]">
+                      <span class="flex items-center gap-[var(--spacing-2)]">
+                        <span
+                          class="type-label truncate"
+                          :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-foreground'"
+                        >
+                          {{ ep.episode_number }}. {{ ep.name }}
                         </span>
-                      </template>
+                        <span
+                          v-if="isCurrentEpisode(ep.episode_number)"
+                          class="shrink-0 rounded-[var(--radius-full)] bg-primary/15 px-[var(--spacing-1-5)] py-[1px] text-[length:var(--text-xs)] font-semibold uppercase tracking-wide text-primary"
+                        >
+                          Viendo
+                        </span>
+                      </span>
+                      <span class="type-supporting mt-[var(--spacing-1)] flex items-center gap-[var(--spacing-2)] text-muted-foreground">
+                        <span>{{ ep.runtime ? ep.runtime + ' min' : 'Duracion N/D' }}</span>
+                        <template v-if="ep.vote_average">
+                          <span aria-hidden="true">·</span>
+                          <span class="inline-flex items-center gap-1">
+                            <svg class="h-3 w-3 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                            {{ ep.vote_average.toFixed(1) }}
+                          </span>
+                        </template>
+                      </span>
+                      <span
+                        v-if="ep.overview"
+                        class="type-supporting mt-[var(--spacing-1)] line-clamp-2 block leading-relaxed text-muted-foreground"
+                      >
+                        {{ ep.overview }}
+                      </span>
                     </span>
-                    <span v-if="ep.overview" class="mt-1 line-clamp-2 block text-[11px] leading-relaxed text-muted-foreground">
-                      {{ ep.overview }}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            </ul>
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
       </div>
     </transition>
 
@@ -387,6 +410,18 @@ function onSeasonSelect(value: string) {
   handleSeasonChange()
 }
 
+// Stills que ya pintaron: el shimmer solo vive mientras la imagen no llego.
+const loadedStills = ref<Set<string>>(new Set())
+function isStillLoaded(path: string | null | undefined): boolean {
+  return !!path && loadedStills.value.has(path)
+}
+function markStillLoaded(path: string | null | undefined) {
+  if (!path) return
+  const next = new Set(loadedStills.value)
+  next.add(path)
+  loadedStills.value = next
+}
+
 // ---- Foco por teclado dentro del modal de episodios ----
 // El boton de cada episodio se registra por numero, no por indice: asi el foco
 // sobrevive a un cambio de temporada.
@@ -416,14 +451,23 @@ function moveEpisodeFocus(delta: number) {
 
 // Abrir el panel lleva el foco y la vista al episodio que se esta viendo: es lo
 // que la persona viene a buscar cuando entra aca.
-watch(episodesOpen, async (open) => {
-  if (!open) return
+async function focusCurrentEpisode() {
   await nextTick()
   const current = episodes.value.find((e) => e.episode_number === episode.value)
   const el = current ? episodeRefs.value.get(current.episode_number) : undefined
   if (!el) return
   el.scrollIntoView({ block: 'center', behavior: 'smooth' })
   el.focus({ preventScroll: true })
+}
+
+// El foco vuelve al episodio que se esta viendo al abrir el panel y tambien
+// despues de cambiar de temporada: la lista se reemplaza y, sin esto, el foco
+// caia al body. Se espera a que la temporada nueva llegue, porque los botones
+// de la lista vieja ya no existen cuando cambia el selector.
+watch([episodesOpen, selectedSeasonNumber, episodes], () => {
+  if (episodesOpen.value && !loadingEpisodes.value && episodes.value.length) {
+    void focusCurrentEpisode()
+  }
 })
 
 function goToEpisode(epNum: number) {

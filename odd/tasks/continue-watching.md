@@ -436,3 +436,36 @@ the Netflix pattern.
    being played were kept — they are the part that makes the list feel immediate.
 
 Static: `vue-tsc` clean, `vite build` clean, impeccable detector on the player and on the card: empty.
+
+**L17** — The human asked to continue with visual proof, to launch vision subagents always at low or medium effort, to take the episode picker from the Astryx docs, to serve the stills as WebP sized to their slot, and to keep the modal at one fixed width and height.
+
+1. **Subagents.** `jd-judge-a` and `jd-judge-b` are vision reviewers, so both moved to models whose `input` includes images
+   (`command-code/claude-sonnet-5-5`, `command-code/google/gemini-4-argon`), and every profile in
+   `~/.gentle-shell/agent/subagents.json` was capped at `medium`; nothing runs above medium again.
+2. **Astryx, from the docs.** The component API came from `@astryxdesign/core@0.7.15`'s own `*.doc.mjs` files
+   (the `/components/<Name>` pages are client-rendered and ship no props; Meta's `llms.txt` points agents at the CLI).
+   Mapped to what this app already ports: **Dialog** (`radius container`, one scrolling region), **Selector**
+   (there is no `Select` and no `ListBox` — the dropdown is `Selector`, `size md` = 32px, `variant input`,
+   `indicatorPosition end`) for the season, **Item** for each row (`density balanced` = 8px, inset inline `spacing-2`,
+   `labelLines 1`, `descriptionLines 2`, `isSelected`), **AspectRatio** `16/9` + **Thumbnail** `fit cover` for the still,
+   **Skeleton** (`radius 3`, shimmer) while a still has not painted, **Badge** for `Viendo`. Type comes from the ported
+   semantic classes (`type-heading-3`, `type-label`, `type-supporting`), spacing and radius from the ported custom
+   properties, so no new scale was invented.
+3. **Stills, measured.** `image.tmdb.org/t/p/{size}/{path}.webp` **is a 404**: the extension cannot be swapped. The CDN
+   negotiates the format from the request instead — same URL, `Accept: image/webp` → **26,088 B WebP** against
+   **36,220 B JPEG** at `w300` (−28%), and `w500` would be 62 KB for a 128–160px slot. So the slot keeps `w300`
+   (natural 300×169 for a 128×72 box at 1x), `loading="lazy"`, `decoding="async"`, `fetchpriority="low"`, a shimmer
+   that stops as soon as the image paints (a permanently animating layer under an opaque image is wasted paint), and
+   no `srcset`, so nothing can swap mid-interaction.
+4. **Fixed box, verified.** `h-[min(86vh,44rem)]`: measured **672×704** with season 2 open and **672×704** after
+   switching to season 4, and **366×704** at 390 — the dialog no longer resizes when the episode list changes length.
+5. **Hover, verified in the browser.** The card sits at `top: 339` with `transform: none` before, during and after
+   hover, and 12 consecutive pointer samples inside it returned `hover = true` 12 times, with `srcset` absent. The old
+   flicker came from a box that moved under the pointer plus a responsive candidate that could be re-selected.
+6. **Focus, found by measuring and fixed.** Opening the panel focuses the episode being played, but switching season
+   dropped focus to `body`, because the old rows are torn down before the new season arrives. The watcher now waits for
+   the season's episodes: measured again, opening lands on `5. Rotura`, switching to season 4 lands on `5. Copiloto`,
+   and `ArrowDown` moves to `6. Arrinconados` with `:focus-visible` true.
+
+Checks: `vue-tsc` clean, `vite build` clean, impeccable detector on `src/modules/player` and `src/modules/catalog`
+empty, screenshots at `temp/ego-play/`.
