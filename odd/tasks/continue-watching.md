@@ -509,3 +509,15 @@ Checked: `vue-tsc` clean, `vite build` clean, impeccable detector empty on both 
 
 Measured after the pass: dialog **672×704** desktop and **358×704** mobile (70px above and below), one single row
 height (**107px**) in both, `vue-tsc` clean, `vite build` clean, impeccable detector empty on both modules.
+
+**L20** — PlayLatinSRC for series: what is verified and what is not.
+
+- **Verified, visually.** Choosing PlayLatinSRC on `/player/tv/1396/2/5` mounts
+  `https://playlatinsrc.co/custom/serial/1396/2/5` in a 1440×900 iframe and the embed renders **their player**:
+  a 4×4 contact sheet of episode frames, a large centred play button and a server/cloud button top-left. It is not
+  their home page and not an error page, which was the original defect (`/tv/…` was an invented route; the documented
+  one is `/custom/serial/{id}/{season}/{episode}`).
+- **Not verified: that playback starts.** Two synthetic clicks at the centre of the embed, nine seconds apart, produced
+  **byte-identical screenshots** (md5 `37a7686b…` both times). These embeds typically open the first click into an ad or
+  a new tab, or demand a trusted gesture, and a synthetic click from the automation is not one. Claiming "it plays"
+  would be inventing evidence, so it stays open and needs one human click in the real browser.
