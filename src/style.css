@@ -269,6 +269,22 @@
     );
   }
 
+  /* Texto sobre arte: los scrims son oscuros en los dos temas, asi que el texto
+     que va encima tampoco puede seguir al tema. Con `text-foreground` el titulo
+     quedaba casi negro sobre negro en tema claro (1.15:1) y `text-primary`
+     bajaba a 3.88:1. Estos tres no cambian con el tema. */
+  .text-art {
+    color: oklch(0.985 0 0);
+  }
+
+  .text-art-muted {
+    color: oklch(0.985 0 0 / 0.78);
+  }
+
+  .text-art-accent {
+    color: oklch(0.8 0.14 290);
+  }
+
   /* Container unico: ver .container-app arriba. La receta .container-custom
      se elimino con el contrato de layout (S5): dejaba un segundo gutter vivo. */
 

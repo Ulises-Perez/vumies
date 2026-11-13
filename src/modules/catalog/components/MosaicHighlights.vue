@@ -47,35 +47,37 @@
                es del artboard; el texto es real (tendencia, mejor valorada). -->
           <p
             v-if="leadKicker"
-            class="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary"
+            class="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-art-accent"
           >
             <span aria-hidden="true" class="h-px w-[18px] bg-current" />
             {{ leadKicker }}
           </p>
           <component
             :is="leadTag"
-            class="text-3xl md:text-5xl font-bold font-poppins text-foreground leading-tight text-shadow-lg"
+            class="text-3xl md:text-5xl font-bold font-poppins text-art leading-tight text-shadow-lg"
           >
             {{ lead.title }}
           </component>
-          <p v-if="lead.meta || lead.year" class="mt-2 text-sm md:text-base text-muted-foreground">
-            <span v-if="lead.meta" class="text-primary font-semibold">{{ lead.meta }}</span>
+          <p v-if="lead.meta || lead.year" class="mt-2 text-sm md:text-base text-art-muted">
+            <span v-if="lead.meta" class="text-art-accent font-semibold">{{ lead.meta }}</span>
             <span v-if="lead.meta && lead.year"> · </span>
             <span v-if="lead.year">{{ lead.year }}</span>
           </p>
           <p
             v-if="lead.overview"
-            class="mt-2 max-w-2xl text-sm md:text-base text-muted-foreground line-clamp-3"
+            class="mt-2 max-w-2xl text-sm md:text-base text-art-muted line-clamp-3"
           >
             {{ lead.overview }}
           </p>
-          <div class="mt-4">
+          <div class="mt-4 flex flex-wrap items-center gap-3">
             <BaseButton :to="lead.to" size="lg">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
               </svg>
               <span>Ver ahora</span>
             </BaseButton>
+            <!-- Acciones que la vista quiera sumar a la pieza principal (favoritos, etc.). -->
+            <slot name="lead-actions" />
           </div>
         </div>
       </article>
@@ -85,7 +87,7 @@
         v-for="tile in tallTiles"
         :key="tile.id"
         :to="tile.to"
-        class="relative block overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-1 md:row-span-2 aspect-[2/3] md:aspect-auto md:h-full transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:ring-primary/50 hover:shadow-lg motion-reduce:hover:translate-y-0"
+        class="relative block overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-1 md:row-span-2 aspect-[2/3] md:aspect-auto md:h-full transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:ring-primary/50 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0"
       >
         <img
           v-if="tile.artwork"
@@ -104,8 +106,8 @@
           {{ tile.badge }}
         </span>
         <div class="absolute inset-x-0 bottom-0 p-3">
-          <p class="text-sm font-semibold text-foreground line-clamp-2">{{ tile.title }}</p>
-          <p v-if="tile.year" class="mt-1 text-xs text-muted-foreground">{{ tile.year }}</p>
+          <p class="text-sm font-semibold text-art line-clamp-2">{{ tile.title }}</p>
+          <p v-if="tile.year" class="mt-1 text-xs text-art-muted">{{ tile.year }}</p>
         </div>
       </router-link>
 
@@ -119,7 +121,7 @@
           <router-link
             v-if="wideTo"
             :to="wideTo"
-            class="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            class="shrink-0 inline-flex min-h-[24px] items-center rounded-[var(--radius-inner)] px-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             Ver todo
           </router-link>
@@ -128,7 +130,7 @@
           <li v-for="item in wide" :key="item.id">
             <router-link
               :to="item.to"
-              class="flex min-h-[32px] items-center justify-between gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              class="flex min-h-[32px] items-center justify-between gap-3 rounded-[var(--radius-inner)] text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <span class="truncate font-medium">{{ item.title }}</span>
               <span class="flex shrink-0 items-center gap-2 text-xs">
