@@ -26,6 +26,8 @@
         <LazyImage
           v-if="movie.poster_path"
           :src="posterUrl"
+          :srcset="posterSrcSet"
+          sizes="(min-width: 768px) 220px, 160px"
           :alt="movie.title"
           class="motion-media w-full h-full object-cover"
         />
@@ -98,7 +100,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Movie } from '../types/tmdb.types'
-import { getPosterUrl } from '@/core/config/api.config'
+import { getPosterSrcSet, getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
 import LazyImage from '@/modules/ui/components/LazyImage.vue'
 import { BaseBadge, BaseButton } from '@/modules/ui/components/base'
@@ -117,6 +119,7 @@ const props = withDefaults(defineProps<Props>(), {
 const userStore = useUserStore()
 
 const posterUrl = computed(() => getPosterUrl(props.movie.poster_path, 'w342'))
+const posterSrcSet = computed(() => getPosterSrcSet(props.movie.poster_path))
 
 // Ambilight perezoso: la capa pide el poster recien cuando la tarjeta recibe
 // puntero o foco. Despues queda en la cache del navegador: cero requests extra

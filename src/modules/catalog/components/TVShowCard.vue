@@ -25,6 +25,8 @@
         <LazyImage
           v-if="series.poster_path"
           :src="posterUrl"
+          :srcset="posterSrcSet"
+          sizes="(min-width: 768px) 220px, 160px"
           :alt="series.name"
           class="motion-media w-full h-full object-cover"
         />
@@ -97,7 +99,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { TVShow } from '../types/tmdb.types'
-import { getPosterUrl } from '@/core/config/api.config'
+import { getPosterSrcSet, getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
 import { useAnimeStore } from '@/core/stores/anime.store'
 import { FEATURES } from '@/core/config/features'
@@ -127,6 +129,7 @@ const resolvedContentType = computed(() => {
 })
 
 const posterUrl = computed(() => getPosterUrl(props.series.poster_path, 'w342'))
+const posterSrcSet = computed(() => getPosterSrcSet(props.series.poster_path))
 
 // Ambilight perezoso: la capa pide el poster recien cuando la tarjeta recibe
 // puntero o foco. Despues queda en la cache del navegador: cero requests extra

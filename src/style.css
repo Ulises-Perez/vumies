@@ -326,6 +326,25 @@
       transform var(--dur-slow) var(--ease-out-quint);
     pointer-events: none;
   }
+  /* Variante encendida: el hero del mosaico la lleva siempre, sin puntero. El
+     halo es parejo en los cuatro lados y cada lado cabe en el espacio que tiene:
+     arriba el aire del chrome (64px), abajo el gap de la grilla (18/24px), a los
+     costados el gutter (16/48px). Con -7% se cortaba contra el borde de la
+     pantalla y se leia como una mancha pegada a la izquierda; con el blur en
+     18px la caida terminaba fuera de la banda visible. */
+  .ambilight.is-static {
+    opacity: 0.55;
+    transform: scale(1);
+    inset: -3% -4%;
+    filter: blur(24px) saturate(1.3);
+  }
+
+  @media (min-width: 768px) {
+    .ambilight.is-static {
+      inset: -3% -5%;
+    }
+  }
+
   .motion-lift:hover .ambilight,
   .motion-lift:focus-within .ambilight {
     opacity: 0.55;
@@ -383,7 +402,11 @@
     gap: var(--grid-gap);
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
+    /* Sin `scroll-snap-type`. Medido en Chrome: con snap (proximity o mandatory)
+       un `scrollTo({behavior:'smooth'})` se resuelve de golpe en la posicion de
+       snap — 1 sola posicion distinta en 32 frames — y el carrusel se siente
+       duro. Sin snap: 32 posiciones, curva suave. Los saltos entre tarjetas ya
+       los alinea el JS redondeando al paso de tarjeta, sin costo de snap. */
     margin-inline: calc(var(--gutter) * -1);
     padding-inline: var(--gutter);
     /* El snap se alinea con el snapport, no con el padding: sin esto el primer
@@ -399,9 +422,6 @@
   }
   .rail::-webkit-scrollbar {
     display: none;
-  }
-  .rail > * {
-    scroll-snap-align: start;
   }
 }
 

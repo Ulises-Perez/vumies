@@ -27,12 +27,25 @@
       <!-- Lead: la pieza editorial principal. Es el LCP en todas las vistas que lo usan.
            Sin badge: el kicker ya dice de que coleccion viene; dos etiquetas para el
            mismo dato en la misma pieza es ruido, no informacion. -->
-      <article
-        class="relative overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-2 md:col-span-4 md:row-span-2 aspect-[4/5] sm:aspect-[16/10] md:aspect-auto md:min-h-[var(--mosaic-lead-min)]"
+      <!-- La pieza principal lleva su ambilight SIEMPRE, sin hover: es el hero
+           de la vista. El arte se reusa del mismo <img> (cero requests nuevas) y
+           la capa vive fuera del articulo, que recorta con overflow-hidden. -->
+      <div
+        class="relative isolate col-span-2 md:col-span-4 md:row-span-2 aspect-[4/5] sm:aspect-[16/10] md:aspect-auto md:min-h-[var(--mosaic-lead-min)]"
       >
+        <div
+          aria-hidden="true"
+          class="ambilight is-static"
+          :style="lead.artwork ? { backgroundImage: `url(${lead.artwork})` } : undefined"
+        />
+        <article
+          class="relative h-full w-full overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border"
+        >
         <img
           v-if="lead.artwork"
           :src="lead.artwork"
+          :srcset="lead.artworkSrcSet"
+          sizes="(min-width: 768px) 66vw, 100vw"
           :alt="lead.title"
           class="absolute inset-0 h-full w-full object-cover"
           loading="eager"
@@ -71,7 +84,8 @@
             <slot name="lead-actions" />
           </div>
         </div>
-      </article>
+        </article>
+      </div>
 
       <!-- Piezas altas: una columna de ancho, dos filas de alto en desktop. -->
       <router-link
@@ -83,6 +97,8 @@
         <img
           v-if="tile.artwork"
           :src="tile.artwork"
+          :srcset="tile.artworkSrcSet"
+          sizes="(min-width: 768px) 202px, 45vw"
           :alt="tile.title"
           class="absolute inset-0 h-full w-full object-cover"
           loading="lazy"
@@ -132,6 +148,8 @@
         <img
           v-if="item.artwork"
           :src="item.artwork"
+          :srcset="item.artworkSrcSet"
+          sizes="(min-width: 768px) 33vw, 100vw"
           :alt="item.title"
           class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02] motion-reduce:hover:scale-100"
           loading="lazy"

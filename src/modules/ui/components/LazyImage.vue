@@ -7,6 +7,8 @@
   <img
     ref="el"
     :src="currentSrc"
+    :srcset="currentSrc ? srcset : undefined"
+    :sizes="currentSrc ? sizes : undefined"
     :alt="alt"
     decoding="async"
   />
@@ -18,6 +20,13 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 const props = withDefaults(
   defineProps<{
     src: string
+    /**
+     * Candidatos responsivos. Se aplican SOLO al revelar: si el <img> nace con
+     * srcset, el navegador descarga el candidato sin esperar al observer y se
+     * pierde la carga diferida que este componente existe para dar.
+     */
+    srcset?: string
+    sizes?: string
     alt?: string
     /** Margen para precargar justo antes de entrar en vista (evita pop-in brusco). */
     rootMargin?: string

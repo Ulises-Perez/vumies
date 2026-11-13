@@ -298,3 +298,54 @@ Two things recorded rather than smoothed over:
 - The reviewer could not tell whether the hovered card's title colour in the grid capture was
   mid-transition; it was not re-verified because it is pre-existing card behaviour and outside this
   report.
+
+**L24** — Three requests in one slice: fluid rails, exact image sizes in a modern format, and the
+permanent ambilight on the mosaic's first tile.
+
+1. **The carousel was not janky because of JS: it was snapped.** The rail animated with a rAF loop
+   writing `scrollLeft` per frame, and `.rail` carried `scroll-snap-type: x proximity`. Measured in
+   Chrome by sampling `scrollLeft` once per animation frame around a real arrow click: with snap
+   enabled the scroll resolved in **1 distinct position across 32 frames** (an instant jump to the
+   snap point); with snap removed, **32 distinct positions** with a smooth easing curve. So the JS
+   rewrite alone would not have fixed the feel. What changed:
+   - snap removed from `.rail` (and the now-inert `scroll-snap-align` on its children);
+   - the arrow handler uses native `el.scrollTo({ behavior: 'smooth' })` instead of a rAF loop
+     writing `scrollLeft` — the browser animates in its own pipeline and we stop touching layout 60
+     times a second; the reduced-motion path still jumps instantly;
+   - the step is rounded to a whole card pitch (measured landing 976 = 4 x 244), so the rail still
+     lands card-aligned without paying the snap cost;
+   - the scroll handler is rAF-throttled and `scrollWidth`/`clientWidth` are cached and remeasured
+     only on resize/mutation, so scrolling no longer does a layout read per event.
+   Trade-off: touch momentum no longer snaps to cards. That is the fluidity the request asked for.
+2. **WebP: nothing to convert, everything to size.** `curl -H "Accept: image/webp"` against TMDB
+   returns `image/webp`, and browsers already send that header, so the app was already receiving WebP
+   (measured: `w342` 37.6 KB webp vs 53.8 KB jpeg). A conversion pipeline or proxy would have been
+   infrastructure for a problem that does not exist. What was wrong is the width: one fixed size per
+   role. Now `getPosterSrcSet` (w185/w342) and `getBackdropSrcSet` (w780/w1280) plus `sizes` per slot,
+   and `LazyImage` applies `srcset` **only on reveal** — an `<img>` born with `srcset` downloads at
+   parse time and would defeat the component's deferred loading. Measured selection: 160px card at
+   390 DPR1 → `w185` (13.5 KB instead of 37.6 KB, -64%); 220px card at 1440 DPR1 → `w342` (unchanged,
+   so nothing got blurrier); mosaic wide tile at 429px → `w780` (62 KB instead of 132 KB, -53%, three
+   per page); mosaic lead at 881px → `w1280` (unchanged, it genuinely needs it).
+3. **Permanent ambilight on the first mosaic tile only.** The lead is wrapped in its own `isolate`
+   container with an `.ambilight.is-static` layer (the article clips with `overflow-hidden`, so the
+   glow cannot live inside it). It reuses the lead's own artwork URL — no extra request — at
+   `opacity .55`, `blur(24px)`, and a symmetric spill of `-3% -4%` (`-3% -5%` from 768).
+
+Two defects found by measuring instead of assuming, both fixed:
+
+- The first version spilled `-7%` sideways, which at 390 put the glow 9px past the viewport and opened
+  **horizontal scroll on all three routes** (measured `hScroll: 9`, `innerWidth` reporting 399). The
+  spill is now bounded by the gutter it has to live in.
+- A vision review of the rendered frames reported the desktop halo as "a coloured patch at the left
+  edge, cut by the window" and the phone halo as invisible. The geometric cause was the same: the
+  inset exceeded the gutter on the left while the neighbouring tile simply covers the right side. The
+  final numbers are each side's available space (64px above, `--grid-gap` below, gutter sideways),
+  measured spill 44/44/12/12 px at 1440 and 14/14/13/13 at 390, fully inside the viewport, with the
+  blur raised to 24px so the falloff happens inside that band.
+
+Verified: `vue-tsc` and `vite build` clean; 12 geometry loads at 1440/1024/768/390 across `/`,
+`/movies` and `/series` (7 mosaic pieces, one column gap and one row gap per width, 0 overlapping
+pairs, 0 px horizontal overflow, one `h1`); srcset selection measured at 1440 DPR1, 1440 DPR2 and 390
+DPR1; the static glow measured at 1440 and 390; impeccable detector on the three routes reports only
+the already-waived `overused-font`.

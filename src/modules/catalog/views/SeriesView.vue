@@ -45,7 +45,7 @@ import TVShowCard from '@/modules/catalog/components/TVShowCard.vue'
 import MosaicHighlights from '@/modules/catalog/components/MosaicHighlights.vue'
 import type { MosaicTile } from '@/modules/catalog/types/mosaic.types'
 import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue'
-import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
+import { getBackdropSrcSet, getBackdropUrl, getPosterSrcSet, getPosterUrl } from '@/core/config/api.config'
 import { BaseContainer } from '@/modules/ui/components/base'
 import type { TVShow } from '@/modules/catalog/types/tmdb.types'
 
@@ -79,6 +79,12 @@ function toTile(show: TVShow, variant: 'lead' | 'tall' = 'lead'): MosaicTile {
     id: show.id,
     title: show.name,
     artwork: variant === 'lead' ? backdrop || poster : poster || backdrop,
+    // Mismo fallback que `artwork`: el srcset tiene que describir la imagen que
+    // realmente se pinta, no la que se hubiera preferido.
+    artworkSrcSet:
+      (variant === 'lead' ? backdrop || poster : poster || backdrop) === backdrop
+        ? getBackdropSrcSet(show.backdrop_path)
+        : getPosterSrcSet(show.poster_path),
     year: airYearOf(show),
     meta: `${matchOf(show)}% Match`,
     overview: show.overview,

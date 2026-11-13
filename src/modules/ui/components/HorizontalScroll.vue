@@ -43,7 +43,7 @@
     <!-- Scroll Container -->
     <div
       ref="scrollContainer"
-      class="rail scroll-smooth"
+      class="rail"
       @scroll="handleScroll"
     >
       <slot />
@@ -66,59 +66,72 @@ const scrollContainer = ref<HTMLElement | null>(null)
 const showLeftArrow = ref(false)
 const showRightArrow = ref(true)
 
+// Métricas cacheadas: leer `scrollWidth`/`clientWidth` dentro del handler de
+// scroll es una lectura de layout por evento (60+ por segundo durante un
+// desplazamiento). Se miden solo cuando cambian de verdad (resize/mutación).
+let metrics = { scrollWidth: 0, clientWidth: 0 }
+
+const measure = () => {
+  const el = scrollContainer.value
+  if (!el) return
+  metrics.scrollWidth = el.scrollWidth
+  metrics.clientWidth = el.clientWidth
+}
+
 const checkScroll = () => {
-  if (!scrollContainer.value) return
-  const { scrollLeft, scrollWidth, clientWidth } = scrollContainer.value
+  const el = scrollContainer.value
+  if (!el) return
+  const { scrollLeft } = el
+  if (!metrics.clientWidth) measure()
   showLeftArrow.value = scrollLeft > 10 // buffer
-  showRightArrow.value = scrollLeft + clientWidth < scrollWidth - 10
+  showRightArrow.value = scrollLeft + metrics.clientWidth < metrics.scrollWidth - 10
+}
+
+// Un solo cálculo por frame como máximo, aunque el navegador emita decenas de
+// eventos de scroll durante la animación nativa.
+let scheduled = 0
+const scheduleCheck = () => {
+  if (scheduled) return
+  scheduled = requestAnimationFrame(() => {
+    scheduled = 0
+    checkScroll()
+  })
+}
+
+/** Paso de una tarjeta (ancho + gap): deja el carrusel alineado sin snap. */
+const cardPitch = (el: HTMLElement): number => {
+  const first = el.firstElementChild as HTMLElement | null
+  if (!first) return 0
+  const gap = parseFloat(getComputedStyle(el).columnGap || '0') || 0
+  return first.offsetWidth + gap
 }
 
 const scroll = (direction: 'left' | 'right') => {
-  if (!scrollContainer.value) return
-  const { scrollLeft, clientWidth } = scrollContainer.value
-  const scrollAmount = clientWidth * 0.75
-  const targetScroll = direction === 'left' 
-    ? scrollLeft - scrollAmount 
-    : scrollLeft + scrollAmount
-  
-  smoothScrollTo(scrollContainer.value, targetScroll, 600) // 600ms duration
-}
+  const el = scrollContainer.value
+  if (!el) return
+  const { scrollLeft } = el
+  const pitch = cardPitch(el)
+  // Salto de ~una pantalla, redondeado a tarjetas enteras: cae prolijo sin
+  // pagar el costo de fluidez que tenia `scroll-snap`.
+  const raw = el.clientWidth * 0.75
+  const amount = pitch > 0 ? Math.max(1, Math.round(raw / pitch)) * pitch : raw
+  const target = direction === 'left' ? scrollLeft - amount : scrollLeft + amount
 
-const smoothScrollTo = (element: HTMLElement, target: number, duration: number) => {
-  // Respeta prefers-reduced-motion: salto instantáneo en vez de animar con rAF.
+  // Movimiento: scroll nativo `smooth`. Antes animabamos con rAF escribiendo
+  // `scrollLeft` en cada frame, o sea JS en el hilo principal durante 600ms y un
+  // setter que fuerza trabajo de scroll por frame. El navegador hace lo mismo en
+  // su propio pipeline y con la misma curva; solo cae al salto instantaneo si la
+  // persona pidio menos movimiento.
   if (prefersReducedMotion()) {
-    element.scrollLeft = target
-    checkScroll()
+    el.scrollLeft = target
+    scheduleCheck()
     return
   }
-
-  const start = element.scrollLeft
-  const change = target - start
-  const startTime = performance.now()
-
-  const animateScroll = (currentTime: number) => {
-    const timeElapsed = currentTime - startTime
-    if (timeElapsed < duration) {
-      // EaseInOutQuad
-      let progress = timeElapsed / duration
-      progress = progress < 0.5 
-        ? 2 * progress * progress 
-        : -1 + (4 - 2 * progress) * progress
-      
-      element.scrollLeft = start + change * progress
-      requestAnimationFrame(animateScroll)
-    } else {
-      element.scrollLeft = target
-      // Trigger update check
-      checkScroll()
-    }
-  }
-
-  requestAnimationFrame(animateScroll)
+  el.scrollTo({ left: target, behavior: 'smooth' })
 }
 
 const handleScroll = () => {
-  checkScroll()
+  scheduleCheck()
 }
 
 let mutationObserver: MutationObserver | null = null
@@ -129,21 +142,29 @@ onMounted(() => {
   if (!el) return
 
   // Primer cálculo tras el primer paint (sustituye a los dos setTimeout).
+  measure()
   requestAnimationFrame(checkScroll)
 
   // Solo el alta/baja de slides (hijos directos del slot), no atributos/texto/subárbol:
   // evita ráfagas de forced-reflow por cada <img> que carga o cada cambio de clase.
-  mutationObserver = new MutationObserver(() => checkScroll())
+  mutationObserver = new MutationObserver(() => {
+    measure()
+    scheduleCheck()
+  })
   mutationObserver.observe(el, { childList: true })
 
   // Cambios de tamaño del contenedor: más preciso que el listener global de 'resize'.
-  resizeObserver = new ResizeObserver(() => checkScroll())
+  resizeObserver = new ResizeObserver(() => {
+    measure()
+    scheduleCheck()
+  })
   resizeObserver.observe(el)
 })
 
 onUnmounted(() => {
   mutationObserver?.disconnect()
   resizeObserver?.disconnect()
+  if (scheduled) cancelAnimationFrame(scheduled)
 })
 
 defineExpose({ checkScroll })

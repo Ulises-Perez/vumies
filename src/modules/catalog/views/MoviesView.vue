@@ -94,7 +94,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useMovies } from '../composables/useMovies'
-import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
+import { getBackdropSrcSet, getBackdropUrl, getPosterSrcSet, getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
 import MovieCard from '../components/MovieCard.vue'
 import MosaicHighlights from '../components/MosaicHighlights.vue'
@@ -133,6 +133,12 @@ function toTile(movie: Movie, variant: 'lead' | 'tall' = 'lead'): MosaicTile {
     id: movie.id,
     title: movie.title,
     artwork: variant === 'lead' ? backdrop || poster : poster || backdrop,
+    // Mismo fallback que `artwork`: el srcset tiene que describir la imagen que
+    // realmente se pinta, no la que se hubiera preferido.
+    artworkSrcSet:
+      (variant === 'lead' ? backdrop || poster : poster || backdrop) === backdrop
+        ? getBackdropSrcSet(movie.backdrop_path)
+        : getPosterSrcSet(movie.poster_path),
     year: releaseYearOf(movie),
     meta: `${matchOf(movie)}% Match`,
     overview: movie.overview,

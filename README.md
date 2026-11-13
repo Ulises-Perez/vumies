@@ -61,7 +61,14 @@ resolved tiles. The mosaic uses `auto-rows-[minmax(0,auto)]` and per-tile aspect
 fixed row height with taller min-heights: that combination let tiles overflow their rows and paint
 over each other on narrow screens.
 
-Poster cards answer the pointer with an **ambilight**: the card's own poster, blurred, fading in
+Posters are served by TMDB, which already negotiates **WebP** from the `Accept` header (measured on
+`w342`: 37.6 KB webp against 53.8 KB jpeg), so the app does not convert images: it picks the width
+that the slot actually needs through `srcset` + `sizes`, applied only when the image is revealed. A
+160px card on a 390px DPR1 screen takes `w185` (13.5 KB) instead of `w342` (37.6 KB), and the mosaic's
+wide tiles take `w780` (62 KB) instead of `w1280` (132 KB).
+
+Poster cards answer the pointer with an **ambilight** (the mosaic's lead tile carries it permanently,
+as the hero it is): the card's own poster, blurred, fading in
 behind the frame. It reuses the poster URL already in cache, primes the layer only when the card is
 hovered or focused, and animates `opacity` and `transform` only — measured 0 layouts and no extra
 image request per hover.

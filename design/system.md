@@ -151,7 +151,7 @@ One recipe, defined once in `src/style.css:175-190`. No view declares its own.
 | `.grid-posters` | `repeat(auto-fill, minmax(var(--poster-min), 1fr))` with `--grid-gap` | `src/style.css` |
 | `--poster-min` | `8.5rem` (136px), `10.5rem` (168px) from `768px` | `src/style.css` |
 | `--grid-gap` | `1.125rem` (18px), `1.5rem` (24px) from `768px` | `src/style.css` |
-| `.rail` | flex scroller that cancels the gutter (`margin-inline: calc(var(--gutter) * -1)`) and pads it back, `scroll-snap-type: x proximity`, `scroll-padding-inline: var(--gutter)` so snap cannot eat the leading gutter, hidden scrollbar | `src/style.css` |
+| `.rail` | flex scroller that cancels the gutter (`margin-inline: calc(var(--gutter) * -1)`) and pads it back, `scroll-padding-inline: var(--gutter)`, hidden scrollbar, **no `scroll-snap-type`**: with snap, Chrome resolves a programmatic smooth scroll in one step (measured 1 distinct position across 32 frames) instead of animating | `src/style.css` |
 | `--hero-sm/md/lg` | `20rem` / `24rem` / `30rem` (320/384/480px) | `src/style.css` |
 | `--mosaic-lead-min` | `24rem`: floor for the mosaic lead tile | `src/style.css` |
 | `--bar-height`, `--bar-offset`, `--chrome-top` | `3rem`, `0.75rem`, `4rem` | `src/style.css` |
@@ -214,6 +214,15 @@ cursor-pointer`.
 `h3 text-sm font-medium truncate`. Width is set by the presenting view, not by the card
 (`flex-none w-[160px] md:w-[220px]` in the rails).
 
+**Images** — posters and stills are served by TMDB, which already negotiates WebP by `Accept`
+(measured on `w342`: 37.6 KB webp against 53.8 KB jpeg), so there is nothing to convert locally. What
+this app chooses is the **width**: `getPosterSrcSet` offers `w185`/`w342` and `getBackdropSrcSet`
+offers `w780`/`w1280`, and every `<img>` declares `sizes` for its slot. Measured effect: a 160px card
+on a 390px, DPR1 viewport loads `w185` (13.5 KB) instead of `w342` (37.6 KB), the mosaic's wide tiles
+load `w780` (62 KB) instead of `w1280` (132 KB), and nothing gets blurrier than before because `w342`
+stays as the top candidate for cards. `LazyImage` applies `srcset` **only when it reveals**, otherwise
+the browser would pick a candidate at parse time and defeat the deferred loading.
+
 **Ambilight hover** — each card carries one `.ambilight` layer (`src/style.css`): the card's own
 poster as a blurred background behind the frame, `inset: -8% -7% 27% -7%`, `blur(20px)
 saturate(1.3)`, `opacity 0 → .55` and `scale(.94) → 1` on `:hover`/`:focus-within`. Three rules keep
@@ -230,6 +239,13 @@ it cheap and they are the contract, not an optimisation left to taste:
 
 The parent card is `isolate` so `z-index: -1` keeps the glow behind its own poster instead of the
 page background, and `pointer-events: none` keeps it out of the hit test.
+
+**Ambilight, always on: the mosaic lead only.** The lead tile is the hero of the view, so its layer
+carries `.is-static`: `opacity .55`, no hover dependency, and a symmetric spill (`inset: -3% -4%`,
+`-3% -5%` from 768) with `blur(24px)`. The numbers are not taste: each side has to fit the space it
+has — 64px of chrome above, the `--grid-gap` below, and the gutter (`16px`/`48px`) at the sides.
+Measured spill: 44/44/12/12 px at 1440 and 14/14/13/13 px at 390, fully inside the viewport. A wider
+inset reached the screen edge and read as a stain clipped by the window.
 
 **Aspect ratios** (`src/style.css:225-231`): `.aspect-poster` = `2 / 3`, `.aspect-backdrop` = `16 / 9`.
 

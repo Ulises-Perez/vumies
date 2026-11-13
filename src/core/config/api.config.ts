@@ -73,6 +73,25 @@ export const getPosterUrl = (
   return `${API_CONFIG.TMDB.IMAGE_BASE_URL}/${size}${path}`
 }
 
+// srcset con los DOS anchos que un poster de tarjeta puede necesitar. TMDB ya
+// negocia WebP por `Accept` (medido: w342 = 37.6 KB webp contra 53.8 KB jpeg),
+// asi que lo que falta no es convertir: es pedir el ancho justo. Con w185/w342 el
+// navegador elige 13.5 KB en movil DPR1 en vez de 37.6 KB, y sigue topando en
+// w342 en DPR2, o sea que ningun caso queda mas borroso que hoy.
+export const getPosterSrcSet = (path: string | null): string | undefined => {
+  if (!path) return undefined
+  const base = API_CONFIG.TMDB.IMAGE_BASE_URL
+  return `${base}/${IMAGE_SIZES.POSTER.W185}${path} 185w, ${base}/${IMAGE_SIZES.POSTER.W342}${path} 342w`
+}
+
+// Backdrop del lead del mosaico: 358px CSS en movil y 881px en desktop, asi que
+// w780 sirve todo lo que no sea retina y w1280 queda para las pantallas densas.
+export const getBackdropSrcSet = (path: string | null): string | undefined => {
+  if (!path) return undefined
+  const base = API_CONFIG.TMDB.IMAGE_BASE_URL
+  return `${base}/${IMAGE_SIZES.BACKDROP.W780}${path} 780w, ${base}/${IMAGE_SIZES.BACKDROP.W1280}${path} 1280w`
+}
+
 export const getProfileUrl = (
   path: string | null,
   size: string = IMAGE_SIZES.PROFILE.W185
