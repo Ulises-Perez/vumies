@@ -391,3 +391,24 @@ control; no claim is made that a provider actually plays until that pass runs.
 Static: `vue-tsc` clean, `vite build` clean, impeccable detector on `src/modules/player` **empty**.
 Pending, as before: the rendered pass at 1440/390 and a real playback check, because the browser
 workspace is under the human's control.
+
+**L15** — Requested: a more minimalist source picker and a more interactive, intuitive episode picker.
+
+1. **Fuentes, reduced to a list.** The cards, the 44px monogram, the coloured language chip, the
+   `Recomendada` badge, the `Abrir` affordance and the `text-xl` header are gone. It is now a
+   `max-w-md` panel with a `text-base` title, one line of real context ("4 fuentes · 2 en español"),
+   44px single-line rows (`name` + language in muted text), the active row tinted with the words
+   `En uso` instead of a pill, and a chevron that only appears on hover or keyboard focus. The footer
+   is one short line. The keyboard contract was kept, because it is the part that makes a short list
+   usable: arrows, Home/End, Enter, Escape, and focus on the first source when it opens.
+2. **Episodios, made interactive.** Three things that change how it behaves rather than how it looks:
+   - **It lands where you are.** Opening the panel focuses and centres the episode being played, so the
+     list no longer starts from the top of a season you already passed.
+   - **Keyboard navigation**: arrows move between episodes, Home/End jump to the ends, Enter opens the
+     focused one. The refs are keyed by episode number, not by index, so focus survives a season change.
+   - **The still answers the pointer**: it scales 1.03 inside its frame on hover, matching the
+     poster-card motion already used across the app, and rests under reduced motion.
+
+Static: `vue-tsc` clean, `vite build` clean, impeccable detector on `src/modules/player` empty.
+Still pending the rendered pass, for the same reason as the last four turns: the browser workspace is
+under the human's control.

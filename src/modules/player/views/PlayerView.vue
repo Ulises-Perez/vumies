@@ -158,9 +158,17 @@
 
           <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3">
             <div v-if="loadingEpisodes" class="flex min-h-[10rem] items-center justify-center"><LoadingSpinner /></div>
-            <ul v-else class="space-y-1">
+            <ul
+              v-else
+              class="space-y-1"
+              @keydown.down.prevent="moveEpisodeFocus(1)"
+              @keydown.up.prevent="moveEpisodeFocus(-1)"
+              @keydown.home.prevent="focusEpisodeIndex(0)"
+              @keydown.end.prevent="focusEpisodeIndex(episodes.length - 1)"
+            >
               <li v-for="ep in episodes" :key="ep.id">
                 <button
+                  :ref="(el) => setEpisodeRef(el as HTMLButtonElement | null, ep.episode_number)"
                   @click="goToEpisode(ep.episode_number)"
                   class="group/item flex w-full items-start gap-3 rounded-2xl p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
                   :class="
@@ -174,7 +182,7 @@
                       v-if="ep.still_path"
                       :src="`https://image.tmdb.org/t/p/w300${ep.still_path}`"
                       alt=""
-                      class="h-full w-full object-cover"
+                      class="h-full w-full object-cover transition-transform duration-300 group-hover/item:scale-[1.03] motion-reduce:group-hover/item:scale-100"
                       loading="lazy"
                       decoding="async"
                     />
@@ -229,7 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Squares2X2Icon, QueueListIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { FEATURES } from '@/core/config/features'
@@ -391,6 +399,45 @@ function onSeasonSelect(value: string) {
   selectedSeasonNumber.value = Number(value)
   handleSeasonChange()
 }
+
+// ---- Foco por teclado dentro del modal de episodios ----
+// El boton de cada episodio se registra por numero, no por indice: asi el foco
+// sobrevive a un cambio de temporada.
+const episodeRefs = ref<Map<number, HTMLButtonElement>>(new Map())
+
+function setEpisodeRef(el: HTMLButtonElement | null, episodeNumber: number) {
+  if (el) episodeRefs.value.set(episodeNumber, el)
+  else episodeRefs.value.delete(episodeNumber)
+}
+
+function focusEpisodeIndex(index: number) {
+  const target = episodes.value[index]
+  if (!target) return
+  episodeRefs.value.get(target.episode_number)?.focus()
+}
+
+function moveEpisodeFocus(delta: number) {
+  const current = episodes.value.findIndex(
+    (e) => episodeRefs.value.get(e.episode_number) === document.activeElement
+  )
+  if (current === -1) {
+    focusEpisodeIndex(delta > 0 ? 0 : episodes.value.length - 1)
+    return
+  }
+  focusEpisodeIndex(current + delta)
+}
+
+// Abrir el panel lleva el foco y la vista al episodio que se esta viendo: es lo
+// que la persona viene a buscar cuando entra aca.
+watch(episodesOpen, async (open) => {
+  if (!open) return
+  await nextTick()
+  const current = episodes.value.find((e) => e.episode_number === episode.value)
+  const el = current ? episodeRefs.value.get(current.episode_number) : undefined
+  if (!el) return
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  el.focus({ preventScroll: true })
+})
 
 function goToEpisode(epNum: number) {
   episodesOpen.value = false
