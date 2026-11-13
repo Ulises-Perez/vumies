@@ -45,7 +45,7 @@
             :key="item.path"
             :to="item.path"
             :data-nav-index="indexOf(item.path)"
-            class="nav-row group relative z-10 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            class="nav-row group relative z-10 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
             :class="isActive(item.path) ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
             :aria-current="isActive(item.path) ? 'page' : undefined"
             @click="close"
@@ -68,7 +68,7 @@
         <!-- Tema de la app: claro / oscuro / sistema, un toque cicla. -->
         <button
           type="button"
-          class="group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-colors duration-200 hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          class="group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-colors duration-200 hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
           aria-label="Cambiar tema"
           @click="cycleTheme"
         >
@@ -83,7 +83,7 @@
           v-for="item in pinnedGroup.items"
           :key="item.path"
           :to="item.path"
-          class="group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          class="group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
           :class="isActive(item.path) ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
           :aria-current="isActive(item.path) ? 'page' : undefined"
           @click="close"

@@ -53,7 +53,9 @@ One layout vocabulary for the whole app; no view defines its own.
 
 `/`, `MoviesView` and `SeriesView` open with a **mosaic**: a 6-column grid with explicit spans (a
 lead tile carrying the title, the score, the synopsis and the primary action, two tall poster
-tiles, a wide band listing three titles), then the rest of the catalogue. It is one component,
+tiles, a full-width row header and three 16/10 art tiles under it), then the rest of the catalogue.
+Every piece sits on the grid's column lines, so the gaps are one number (`--grid-gap`) in both
+axes and no piece carries its own padding or box. It is one component,
 `MosaicHighlights.vue`, so a change to the recipe lands in one place; the views only hand it
 resolved tiles. The mosaic uses `auto-rows-[minmax(0,auto)]` and per-tile aspect ratios, never a
 fixed row height with taller min-heights: that combination let tiles overflow their rows and paint

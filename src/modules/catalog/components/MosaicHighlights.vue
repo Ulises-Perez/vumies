@@ -43,15 +43,6 @@
         <div class="absolute inset-0 scrim-b" />
         <div class="absolute inset-0 scrim-r" />
         <div class="absolute inset-x-0 bottom-0 max-w-[560px] p-5 md:p-7">
-          <!-- Kicker: la etiqueta pequena que abre la pieza. La regla de 18px
-               es del artboard; el texto es real (tendencia, mejor valorada). -->
-          <p
-            v-if="leadKicker"
-            class="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-art-accent"
-          >
-            <span aria-hidden="true" class="h-px w-[18px] bg-current" />
-            {{ leadKicker }}
-          </p>
           <component
             :is="leadTag"
             class="text-3xl md:text-5xl font-bold font-poppins text-art leading-tight text-shadow-lg"
@@ -101,7 +92,7 @@
         <div class="absolute inset-0 scrim-b" />
         <span
           v-if="tile.badge"
-          class="absolute left-3 top-3 rounded-[var(--radius-inner)] bg-primary-strong px-1.5 py-0.5 text-[10px] font-semibold text-primary-strong-foreground"
+          class="absolute left-3 top-3 rounded-[var(--radius-inner)] bg-primary-strong px-2 py-0.5 text-[11px] font-semibold text-primary-strong-foreground"
         >
           {{ tile.badge }}
         </span>
@@ -111,36 +102,52 @@
         </div>
       </router-link>
 
-      <!-- Lista ancha: pieza de apoyo a todo el ancho de la grilla. -->
+      <!-- Fila de titulo: ocupa las seis columnas, asi su borde izquierdo y su
+           accion comparten la linea de la grilla. Sin caja: una placa con
+           padding dentro del mosaico rompia la alineacion y sumaba ruido. -->
       <div
         v-if="wide.length"
-        class="col-span-2 rounded-[var(--radius-container)] bg-card p-5 ring-1 ring-border md:col-span-6"
+        class="col-span-2 flex items-center justify-between gap-4 md:col-span-6"
       >
-        <div class="flex items-baseline justify-between gap-3">
-          <h2 class="text-lg font-bold text-foreground font-poppins">{{ wideTitle }}</h2>
-          <router-link
-            v-if="wideTo"
-            :to="wideTo"
-            class="shrink-0 inline-flex min-h-[24px] items-center rounded-[var(--radius-inner)] px-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            Ver todo
-          </router-link>
-        </div>
-        <ul class="mt-3 space-y-2">
-          <li v-for="item in wide" :key="item.id">
-            <router-link
-              :to="item.to"
-              class="flex min-h-[32px] items-center justify-between gap-3 rounded-[var(--radius-inner)] text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <span class="truncate font-medium">{{ item.title }}</span>
-              <span class="flex shrink-0 items-center gap-2 text-xs">
-                <span v-if="item.meta" class="text-primary font-semibold">{{ item.meta }}</span>
-                <span v-if="item.year">{{ item.year }}</span>
-              </span>
-            </router-link>
-          </li>
-        </ul>
+        <h2 class="text-lg font-bold font-poppins text-foreground">{{ wideTitle }}</h2>
+        <router-link
+          v-if="wideTo"
+          :to="wideTo"
+          class="inline-flex min-h-[24px] shrink-0 items-center gap-1 rounded-[var(--radius-inner)] px-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+        >
+          Ver todo
+          <span aria-hidden="true">→</span>
+        </router-link>
       </div>
+
+      <!-- Piezas de apoyo: arte real a 16/10, misma familia que las altas pero
+           con menos peso. Tres columnas en desktop, ancho completo en movil
+           para que ninguna quede sola en su fila. -->
+      <router-link
+        v-for="item in wide"
+        :key="item.id"
+        :to="item.to"
+        class="relative block overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-2 md:col-span-2 aspect-[16/10] transition-[box-shadow] duration-200 hover:ring-primary/50 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        <img
+          v-if="item.artwork"
+          :src="item.artwork"
+          :alt="item.title"
+          class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02] motion-reduce:hover:scale-100"
+          loading="lazy"
+          decoding="async"
+        />
+        <div v-else class="absolute inset-0 bg-muted" />
+        <div class="absolute inset-0 scrim-b" />
+        <div class="absolute inset-x-0 bottom-0 p-4">
+          <p class="text-sm font-semibold text-art line-clamp-1">{{ item.title }}</p>
+          <p v-if="item.meta || item.year" class="mt-0.5 text-xs text-art-muted">
+            <span v-if="item.meta" class="text-art-accent font-semibold">{{ item.meta }}</span>
+            <span v-if="item.meta && item.year"> · </span>
+            <span v-if="item.year">{{ item.year }}</span>
+          </p>
+        </div>
+      </router-link>
     </template>
   </section>
 </template>
@@ -157,8 +164,6 @@ const props = withDefaults(
     lead: MosaicTile | null
     /** true hasta que la vista sabe si hay datos: distingue "cargando" de "no hay nada". */
     loading?: boolean
-    /** Etiqueta sobre el titulo del lead, ej. 'Tendencia de hoy'. */
-    leadKicker?: string
     talls?: MosaicTile[]
     wideTitle: string
     wide: MosaicTile[]
@@ -167,7 +172,6 @@ const props = withDefaults(
   }>(),
   {
     loading: false,
-    leadKicker: undefined,
     talls: () => [],
     wideTo: undefined,
     leadTag: 'h2',

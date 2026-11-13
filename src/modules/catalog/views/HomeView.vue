@@ -6,7 +6,6 @@
            que antes cargaba el hero de 480px, asi que no se pierde nada editorial. -->
       <MosaicHighlights
         lead-tag="h1"
-        lead-kicker="Tendencia de hoy"
         :lead="leadTile"
         :loading="mosaicLoading"
         :talls="tallTiles"

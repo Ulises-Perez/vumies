@@ -189,3 +189,43 @@ first estimated.
 - Cross-collection repeats remain: TMDB returns the same title in trending, now playing and popular,
   so a poster can appear in two different real rails. That is data, not duplicated markup, and
   removing it would mean hiding real content from real sections.
+
+**L21** — Human feedback on the result: "No me gusta como se ve proximos estrenos, es todo feo, no me
+gusta rediseñalo, tambien que todo este correctamente alineado y que nada choque entre si, tengo todo
+su espacio, no este muy saturado, los button de navbar no tengan ese border azul, hazlo con taste
+skill y audita con impeccable."
+
+Redesign, as one slice:
+
+1. **"Próximos estrenos" was a boxed text list inside the mosaic.** Three text rows with a truncated
+   title, a score and a year, inside a `bg-card p-5` plate: its own padding and its own radius put it
+   off the grid lines the rest of the mosaic follows, and it read as a form, not as a catalogue. It is
+   now a full-width row header (title on the leading edge, action on the trailing edge, no box, no
+   padding) plus three 16/10 art tiles in the same six-column grid, with the same scrim, radius and
+   text-over-art tokens as the tall tiles and less weight on hover. The data was already there
+   (`artwork`, `meta`, `year` were computed and never rendered); no request was added.
+2. **The blue edge on the navbar.** The top-bar controls carried `ring-1 ring-border/60` at rest and
+   `focus-visible:ring-primary/50` when focused — a violet-tinted hairline and a violet halo on a
+   translucent plate, which is what read as a blue border. The resting hairline is gone (the surface
+   and blur stay, which is what carries the contrast the earlier audit measured) and the focus ring
+   is neutral in both themes: measured on keyboard focus, `oklch(0.985 0 0 / 0.3)` 2px. The sidebar's
+   nav rows had the same violet ring and now use the same neutral one.
+3. **Audit findings, resolved.** The impeccable detector (URL mode, not just source) found, on all
+   three routes: `hero-eyebrow-chip` on the tracked-caps label above the lead `h1`, and
+   `undersized-ui-text` on the 10px tile badges. The kicker is removed (it duplicated the badge and
+   the detector bans the pattern outright; the `leadKicker` prop is gone, not hidden) and the badge
+   is `text-[11px]`. Re-run: the only remaining finding is `overused-font` (Inter), **waived**: the
+   typeface is the app's existing identity, it predates this feature and changing it would touch every
+   screen, which is a brand decision and not part of "redesign this band".
+
+Taste-skill rules applied where they fit an Operate surface: equal left and right content edges, one
+rhythm, nothing colliding, no caption or label under a picture, one card family, hover and focus that
+answer, 44px-class targets on a phone. Its brand rules (no violet) do **not** apply: violet is
+Vumies' existing accent, and the brief keeps it.
+
+Measured after the change, 12 loads at 1440/1024/768/390 on `/`, `/movies` and `/series`:
+**one column gap and one row gap per width** (24px from 768, 18px at 390 — `--grid-gap` in both
+axes), every piece snapping to a grid column line (left offsets 0/453/905/1132 at 1440, right edges
+ending on column lines or the container edge), **0 overlapping pairs**, **0 px horizontal overflow**,
+7 mosaic children, one `h1` per page. `vue-tsc` and `vite build` clean. Verified structurally and by
+measurement, not by eye: this session cannot view screenshots.

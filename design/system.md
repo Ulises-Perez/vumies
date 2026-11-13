@@ -174,13 +174,16 @@ so a change to the recipe belongs in the component, never in a view.
 | Grid | `grid-cols-2`, `md:grid-cols-6`, `auto-rows-[minmax(0,auto)]`, `gap: var(--grid-gap)` |
 | Lead | `col-span-2 md:col-span-4 md:row-span-2`, `aspect-[4/5]` then `sm:aspect-[16/10]`, `md:aspect-auto md:min-h-[var(--mosaic-lead-min)]` |
 | Tall tiles | `col-span-1 md:row-span-2`, `aspect-[2/3]`, `md:aspect-auto md:h-full` |
-| Wide band | `col-span-2 md:col-span-6`, a real list of titles, not art |
+| Row header | `col-span-2 md:col-span-6`, the band title on the container's leading edge and its action on the trailing edge, no box and no padding |
+| Wide tiles | `col-span-2 md:col-span-2`, `aspect-[16/10]`, three of them: art, scrim, title and score, the same family as the tall tiles with less weight |
 
 Row tracks are content-sized on purpose. With a fixed `grid-auto-rows` the tiles overflowed their
 rows and later siblings painted over earlier ones (measured at 390px: 23,874 px² per tile pair).
 The mosaic takes `lead`, an optional `loading` flag (skeleton until the view knows whether there is
-data, then nothing rather than an eternal skeleton), and the tiles' badge is the only place a
-collection label appears, because the lead already carries it as its kicker.
+data, then nothing rather than an eternal skeleton), and an optional `lead-actions` slot for extra
+actions the view wants on the lead (the movies "Mi Lista"). The tiles' badge is the only place a
+collection label appears: there is no tracked-caps kicker above the lead title, which the impeccable
+detector flags as `hero-eyebrow-chip` and which duplicated the badge.
 
 ## 8. Component rules
 

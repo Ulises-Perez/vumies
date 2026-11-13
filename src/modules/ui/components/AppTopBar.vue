@@ -16,7 +16,7 @@
         <button
           :key="isOpen ? 'close' : 'open'"
           type="button"
-          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground bg-popover/60 backdrop-blur-md ring-1 ring-border/60 transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground bg-popover/60 backdrop-blur-md transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
           :aria-expanded="isOpen"
           aria-controls="app-sidebar"
           :aria-label="isOpen ? 'Cerrar menú' : 'Abrir menú'"
@@ -28,7 +28,7 @@
 
         <router-link
           to="/"
-          class="hidden h-8 shrink-0 items-center rounded-lg px-2 text-[13px] bg-popover/60 backdrop-blur-md ring-1 ring-border/60 font-semibold uppercase tracking-[0.14em] text-foreground transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 sm:inline-flex"
+          class="hidden h-8 shrink-0 items-center rounded-lg px-2 text-[13px] bg-popover/60 backdrop-blur-md font-semibold uppercase tracking-[0.14em] text-foreground transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 sm:inline-flex"
           aria-label="Vumies — Inicio"
         >
           Vumies
@@ -40,14 +40,14 @@
       <div class="pointer-events-auto flex items-center gap-1">
         <button
           type="button"
-          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground bg-popover/60 backdrop-blur-md ring-1 ring-border/60 transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground bg-popover/60 backdrop-blur-md transition-colors duration-200 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
           aria-label="Buscar en el catálogo"
           @click="open"
         >
           <MagnifyingGlassIcon class="h-[18px] w-[18px]" />
         </button>
         <kbd
-          class="hidden select-none rounded-md bg-popover/70 px-1.5 py-1 font-mono text-[10px] font-medium text-muted-foreground backdrop-blur-md ring-1 ring-border/60 sm:inline-flex"
+          class="hidden select-none rounded-md bg-popover/70 px-1.5 py-1 font-mono text-[10px] font-medium text-muted-foreground backdrop-blur-md sm:inline-flex"
           aria-hidden="true"
         >{{ shortcutLabel }}</kbd>
       </div>

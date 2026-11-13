@@ -9,7 +9,6 @@
            Una sola receta para /movies, /series y /: el componente la define. -->
       <MosaicHighlights
         lead-tag="h1"
-        lead-kicker="Mejor valorada"
         :lead="leadTile"
         :loading="mosaicLoading"
         :talls="tallTiles"
