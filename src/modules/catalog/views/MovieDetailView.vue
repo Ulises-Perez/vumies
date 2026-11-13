@@ -239,6 +239,15 @@ function bentoImage(movie: any, i: number): string {
 
 function playMovie() {
   if (movieDetails.value) {
+    // Se registra aca, no al abrir la ficha: "continuar viendo" es lo que se
+    // reprodujo, no lo que se miro en una grilla.
+    userStore.addToHistory({
+      id: movieDetails.value.id,
+      type: 'movie',
+      title: movieDetails.value.title,
+      poster_path: movieDetails.value.poster_path,
+      kind: 'movie',
+    })
     router.push({
       name: 'player',
       params: { type: 'movie', id: movieDetails.value.id }

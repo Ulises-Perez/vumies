@@ -155,6 +155,7 @@ One recipe, defined once in `src/style.css:175-190`. No view declares its own.
 | `--hero-sm/md/lg` | `20rem` / `24rem` / `30rem` (320/384/480px) | `src/style.css` |
 | `--mosaic-lead-min` | `24rem`: floor for the mosaic lead tile | `src/style.css` |
 | `--bar-height`, `--bar-offset`, `--chrome-top` | `3rem`, `0.75rem`, `4rem` | `src/style.css` |
+| Sidebar panel | `fixed`, `top: var(--chrome-top)`, `left` and `bottom: var(--gutter)`, width `17.5rem`, inner padding `12px` in both blocks — the panel shares the content's leading line with the top bar's own controls instead of floating a gutter to its left | `SideMenu.vue` |
 
 `.container-custom` was removed: it nested a second gutter inside the views and was the source of
 the double gutter in Search, Favorites and History. `BaseContainer` renders `.container-app`, and

@@ -199,6 +199,16 @@ function toggleFavorite() {
 function playEpisode(episodeNumber: number) {
   if (seriesDetails.value) {
     const isAnimeRoute = route.name === 'anime-detail';
+    // Temporada y episodio viajan con la entrada: retomar abre ESE episodio.
+    userStore.addToHistory({
+      id: seriesDetails.value.id,
+      type: 'tv',
+      title: seriesDetails.value.name,
+      poster_path: seriesDetails.value.poster_path,
+      kind: isAnimeRoute ? 'anime' : 'series',
+      season: selectedSeasonNumber.value,
+      episode: episodeNumber,
+    })
     router.push({
       name: 'player',
       params: { 

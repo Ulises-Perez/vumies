@@ -17,7 +17,7 @@
     <aside
       id="app-sidebar"
       ref="panelRef"
-      class="sidebar-panel fixed bottom-2.5 left-2.5 top-[var(--chrome-top)] z-[70] flex w-[17.5rem] max-w-[calc(100vw-1.25rem)] flex-col overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar/90 text-sidebar-foreground backdrop-blur-2xl sm:bottom-3 sm:left-4"
+      class="sidebar-panel fixed bottom-[var(--gutter)] left-[var(--gutter)] top-[var(--chrome-top)] z-[70] flex w-[17.5rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar/90 text-sidebar-foreground backdrop-blur-2xl"
       :class="isOpen ? 'is-open' : 'is-closed'"
       :inert="isOpen ? undefined : true"
       :aria-hidden="isOpen ? undefined : 'true'"
@@ -27,7 +27,7 @@
       <!-- Navegación: grupos con etiqueta; el resto del largo es suyo. -->
       <nav
         ref="listRef"
-        class="custom-scrollbar relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2 pt-2"
+        class="custom-scrollbar relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3 pt-3"
         aria-label="Secciones"
       >
         <!-- Indicador del ítem activo: se desliza entre filas (estado, no decoración). -->
@@ -62,8 +62,9 @@
 
       <!-- Pie anclado: preferencias siempre a la vista al fondo del panel,
            independientemente de lo largo que sea el listado de secciones. -->
-      <div class="shrink-0 border-t border-sidebar-border/60 bg-sidebar/70 px-2 pb-2 pt-1">
-        <p class="nav-group-label">{{ pinnedGroup.label }}</p>
+      <div class="shrink-0 bg-sidebar/70 px-3 pb-3 pt-3">
+        <div class="mx-3 mb-1 h-px bg-sidebar-border/60" aria-hidden="true" />
+        <p class="nav-group-label first">{{ pinnedGroup.label }}</p>
 
         <!-- Tema de la app: claro / oscuro / sistema, un toque cicla. -->
         <button
@@ -288,12 +289,18 @@ onUnmounted(() => {
 
 /* ===== Etiquetas de grupo ===== */
 .nav-group-label {
-  padding: 0.75rem 0.75rem 0.25rem;
+  /* Un solo número por grupo: 18px arriba, 6px abajo. Antes era 12/4 y el
+     primer grupo arrancaba con 12 mientras el último cerraba con 8. */
+  padding: 1.125rem 0.75rem 0.375rem;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: oklch(var(--muted-foreground) / 0.75);
+}
+
+.nav-group-label.first {
+  padding-top: 0.375rem;
 }
 
 /* ===== Indicador del ítem activo ===== */

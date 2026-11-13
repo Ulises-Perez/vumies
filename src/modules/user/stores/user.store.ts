@@ -12,6 +12,15 @@ interface FavoriteItem {
 interface WatchHistoryItem extends FavoriteItem {
   watchedAt: number
   progress?: number
+  /**
+   * Que se reprodujo exactamente, para poder retomarlo. `kind` solo existe en
+   * entradas creadas por un play real: abrir una ficha no es haber visto algo.
+   */
+  kind?: 'movie' | 'series' | 'anime'
+  season?: number
+  episode?: number
+  /** Anime AV1 se identifica por slug, no por id numerico. */
+  slug?: string
 }
 
 export const useUserStore = defineStore('user', () => {
@@ -85,7 +94,8 @@ export const useUserStore = defineStore('user', () => {
 
   // Watch History
   function addToHistory(item: Omit<WatchHistoryItem, 'addedAt' | 'watchedAt'>) {
-    // Remove if already exists
+    // Una entrada por contenido: abrir el episodio 4 reemplaza al 2 de la misma
+    // serie, que es justo lo que "continuar viendo" necesita mostrar.
     const index = watchHistory.value.findIndex((h) => h.id === item.id && h.type === item.type)
     if (index !== -1) {
       watchHistory.value.splice(index, 1)

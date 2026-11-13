@@ -14,6 +14,10 @@
         :wide-to="{ name: 'movies' }"
       />
 
+      <!-- Continuar viendo: lo que se reprodujo, antes que el catalogo. Se
+           dibuja solo si hay historial con play real (ver ContinueWatching). -->
+      <ContinueWatching />
+
       <!-- Tendencias: sin las tres piezas que ya ocupa el mosaico. -->
       <section v-if="trendingRest.length">
         <HorizontalScroll title="Tendencias" link="/movies">
@@ -69,6 +73,7 @@ import { getBackdropSrcSet, getBackdropUrl, getPosterSrcSet, getPosterUrl } from
 import MovieCard from '../components/MovieCard.vue'
 import TVShowCard from '../components/TVShowCard.vue'
 import MosaicHighlights from '../components/MosaicHighlights.vue'
+import ContinueWatching from '../components/ContinueWatching.vue'
 import type { MosaicTile } from '../types/mosaic.types'
 import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue'
 import SkeletonCardRow from '@/modules/ui/components/skeletons/SkeletonCardRow.vue'

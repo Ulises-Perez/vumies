@@ -67,6 +67,12 @@ that the slot actually needs through `srcset` + `sizes`, applied only when the i
 160px card on a 390px DPR1 screen takes `w185` (13.5 KB) instead of `w342` (37.6 KB), and the mosaic's
 wide tiles take `w780` (62 KB) instead of `w1280` (132 KB).
 
+The home route opens with **Continuar viendo** when there is something to resume: it is built from
+plays, not from page views, and it reopens the exact movie or the exact season and episode. It shows
+no percentage, because the player runs on another origin and does not expose its playhead to this app;
+the resume itself happens inside the player, which keeps its own position per title. The investigation
+that established this is recorded in `odd/tasks/continue-watching.md`.
+
 Poster cards answer the pointer with an **ambilight** (the mosaic's lead tile carries it permanently,
 as the hero it is): the card's own poster, blurred, fading in
 behind the frame. It reuses the poster URL already in cache, primes the layer only when the card is
