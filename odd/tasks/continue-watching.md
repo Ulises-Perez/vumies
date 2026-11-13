@@ -216,3 +216,27 @@ can see them), plus the single-source fix.
    plus progress, which only their `cf`-authorized bridge provides. What to request from them: a
    `cf` token endpoint for our domain (or adding our origin to the token allowlist's `pm`). The skip
    times themselves are already solved and free (IntroDB + AniSkip, L5) — the missing half is control.
+
+**L8** — Investigated whether this side can obtain the `cf` token. It cannot, and that is now measured,
+not assumed.
+
+1. **Neither bundle mints it.** `vimeus.net/assets/index-DKNnpXv5.js` (745 KB, the dashboard/site app)
+   and `player-assets/index-v2.js` (405 KB, the embed shell) were fetched and searched for
+   `play_claim|claim|cf=|?cf|/cf/|hosts_support|cfToken`: the only `cf=` hits are minifier artifacts
+   (`cf=()=>{}` in i18next, `cf=unstable_ImmediatePriority` in React's scheduler). No client-side
+   minting exists in what we can read.
+2. **The dashboard exposes no such setting.** `/settings/general` shows only display name, email and the
+   masked API key (`ak_…`); `textMentionsCf: 0`, no domain/origin/allowlist field.
+   `/settings/embed` and `/settings/domains` are 404. So there is no self-service path to a token.
+3. **What the account's own dashboard traffic shows** (`/api/me`, `/api/client/popular`,
+   `/api/client/global-dashboard`, `/api/client/recent-views`): the site is authenticated, but nothing
+   in the captured requests carries or requests a `cf` token — playback minting happens server-side on
+   their embed route, behind an allowlist this account cannot edit.
+4. **Therefore the only path is a vimeus-side provision:** a `cf` token minted for our origin, or our
+   origins added to the token allowlist (`pm`/`ao`) together with a `hosts_support_cf_token` provider
+   for the content. With that, the change on our side is small and already designed: load the `/cf/*`
+   embed URL from the listing (`embed_url` already comes back on that route), listen for
+   `VIDAPI_PLAYER_EVENT` (`time` carries `player_progress`/`player_duration`), send
+   `{ type: 'VIDAPI_PLAYER_COMMAND', command: 'seekTo', payload: { seconds } }` for skip, and advance on
+   the last ~30 s for auto-next — with the skip times already available free from IntroDB (series and
+   movies) and AniSkip (anime), both verified in L5.
