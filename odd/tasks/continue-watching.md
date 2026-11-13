@@ -186,3 +186,33 @@ can see them), plus the single-source fix.
   ratings, clamped descriptions, scroll) highlights the episode being played (S2E5 "Rotura") with a
   distinct row, left border and play glyph; letterboxing is plain 16:9; the app does not scroll behind
   the player.
+
+**L7** — `deno task start` "not working" was ours to fix, and the `cf` verdict is now measured.
+
+1. **Cause of the failure: a stale process of this session.** `netstat` showed PID 18440 listening on
+   :8000, left behind by the probe in L2 (the earlier `pkill -f` is a no-op on Git Bash, which has no
+   `pgrep`). `deno task start` then died with `AddrInUse` (os error 10048) before ever reading the key.
+   Killed it with `taskkill //PID 18440 //F`; `deno run -A --env-file=.env server.ts` starts, prints
+   `Listening on http://localhost:8000/`, and the proxy answers real data.
+2. **The listing works and its shape is `data.result`**, not `data.movies` (my first probe looked for
+   the wrong key and reported 0 items — a probe defect, not a server one): 100 movies, 83 pages,
+   each with `embed_url`, `download_url`, `imdb_id`, `tmdb_id`, `poster`, `backdrop`, `quality`;
+   episodes carry `season`, `episode`, `parent_type`, `show_title`.
+3. **`with_cf=true` changes the route, not the URL:** `embed_url` becomes
+   `https://vimeus.net/cf/movie?tmdb=…&view_key=…` (and `/cf/serie?…&se=9&ep=1`). The `cf` parameter the
+   documentation says to append is **not** in the response and there is no documented endpoint to mint
+   it. Measured: `/cf/movie?…` without `cf` answers **404 "No CF-compatible provider found."** for that
+   title, and `…&cf=x` answers a 1,269-byte stub player page with no token in it. So the `/cf` route
+   needs (a) content whose provider supports CF tokens and (b) a valid token issued to a registered
+   site. Nothing here lets this app mint one, which is why the skip controls cannot be honoured yet.
+4. **Shipped instead: episode navigation in the player chrome**, which is the other half of what a
+   player like tokianime's offers and does not depend on the bridge. Prev/next episode buttons sit in
+   the top-right cluster (40px, `aria-label`, disabled at the extremes), "Episodios" and "Fuentes" got a
+   stronger surface (`bg-black/55` + ring) because they washed out over bright video, and
+   `prevEpisode()` mirrors `nextEpisode()` across seasons (previous season falls on its last episode,
+   not its first). Verified: from `/player/tv/1396/2/5`, next lands on `/player/serie/1396/2/6`; at
+   S1E1 prev is disabled and next is enabled.
+5. **Still blocked, and it is a vimeus-side ask:** skip intro/outro and automatic advance need `seekTo`
+   plus progress, which only their `cf`-authorized bridge provides. What to request from them: a
+   `cf` token endpoint for our domain (or adding our origin to the token allowlist's `pm`). The skip
+   times themselves are already solved and free (IntroDB + AniSkip, L5) — the missing half is control.

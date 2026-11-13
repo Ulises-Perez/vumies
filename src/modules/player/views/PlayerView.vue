@@ -52,16 +52,38 @@
     <div class="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-start justify-between bg-gradient-to-b from-black/70 to-transparent p-3">
       <button
         @click="goBack"
-        class="pointer-events-auto rounded-full bg-black/40 p-2 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70 hover:text-white"
+        class="pointer-events-auto rounded-full bg-black/55 p-2 text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white"
         aria-label="Volver" title="Volver"
       >
         <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
       </button>
       <div class="pointer-events-auto flex items-center gap-1.5">
+        <!-- Episodio anterior / siguiente: lo que un player de serie necesita a
+             mano, sin abrir el panel. Se deshabilitan solos en los extremos. -->
+        <template v-if="type === 'tv' || type === 'anime'">
+          <button
+            @click="prevEpisode"
+            :disabled="!canPrevEpisode"
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-black/55"
+            aria-label="Episodio anterior"
+            title="Episodio anterior"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <button
+            @click="nextEpisode"
+            :disabled="!canNextEpisode"
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-black/55"
+            aria-label="Episodio siguiente"
+            title="Episodio siguiente"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </template>
         <button
           v-if="type === 'tv' || type === 'anime'"
           @click="openEpisodes"
-          class="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70 hover:text-white"
+          class="flex items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white"
           title="Episodios"
         >
           <QueueListIcon class="h-5 w-5" />
@@ -69,7 +91,7 @@
         </button>
         <button
           @click="openSelector"
-          class="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-black/70 hover:text-white"
+          class="flex items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white"
           title="Cambiar fuente"
         >
           <Squares2X2Icon class="h-5 w-5" />
@@ -327,6 +349,42 @@ function goToEpisode(epNum: number) {
       episode: epNum,
     },
   })
+}
+
+const canPrevEpisode = computed(() => {
+  if (type.value === 'movie') return false
+  const idx = episodes.value.findIndex((e) => e.episode_number === episode.value)
+  if (idx > 0) return true
+  const seasonIdx = seasons.value.findIndex((s) => s.season_number === season.value)
+  return seasonIdx > 0
+})
+
+const canNextEpisode = computed(() => {
+  if (type.value === 'movie') return false
+  const idx = episodes.value.findIndex((e) => e.episode_number === episode.value)
+  if (idx !== -1 && idx < episodes.value.length - 1) return true
+  const seasonIdx = seasons.value.findIndex((s) => s.season_number === season.value)
+  return seasonIdx !== -1 && seasonIdx < seasons.value.length - 1
+})
+
+function prevEpisode() {
+  if (type.value === 'movie' || !canPrevEpisode.value) return
+  const currentEpIndex = episodes.value.findIndex((e) => e.episode_number === episode.value)
+  if (currentEpIndex > 0) {
+    const prev = episodes.value[currentEpIndex - 1]
+    if (prev) goToEpisode(prev.episode_number)
+    return
+  }
+  const currentSeasonIndex = seasons.value.findIndex((s) => s.season_number === season.value)
+  if (currentSeasonIndex > 0) {
+    const prevSeason = seasons.value[currentSeasonIndex - 1]
+    if (!prevSeason) return
+    // Al retroceder de temporada se cae en su ultimo episodio, no en el primero.
+    router.push({
+      name: 'player',
+      params: { type: type.value === 'anime' ? 'anime' : 'serie', id: id.value, season: prevSeason.season_number, episode: prevSeason.episode_count || 1 },
+    })
+  }
 }
 
 function nextEpisode() {
