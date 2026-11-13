@@ -151,7 +151,7 @@ One recipe, defined once in `src/style.css:175-190`. No view declares its own.
 | `.grid-posters` | `repeat(auto-fill, minmax(var(--poster-min), 1fr))` with `--grid-gap` | `src/style.css` |
 | `--poster-min` | `8.5rem` (136px), `10.5rem` (168px) from `768px` | `src/style.css` |
 | `--grid-gap` | `1.125rem` (18px), `1.5rem` (24px) from `768px` | `src/style.css` |
-| `.rail` | flex scroller that cancels the gutter (`margin-inline: calc(var(--gutter) * -1)`), `scroll-snap-type: x proximity`, hidden scrollbar | `src/style.css` |
+| `.rail` | flex scroller that cancels the gutter (`margin-inline: calc(var(--gutter) * -1)`) and pads it back, `scroll-snap-type: x proximity`, `scroll-padding-inline: var(--gutter)` so snap cannot eat the leading gutter, hidden scrollbar | `src/style.css` |
 | `--hero-sm/md/lg` | `20rem` / `24rem` / `30rem` (320/384/480px) | `src/style.css` |
 | `--mosaic-lead-min` | `24rem`: floor for the mosaic lead tile | `src/style.css` |
 | `--bar-height`, `--bar-offset`, `--chrome-top` | `3rem`, `0.75rem`, `4rem` | `src/style.css` |
@@ -213,6 +213,23 @@ cursor-pointer`.
 `-translate-y-0.5 shadow-lg ring-primary/40`, title block `mt-3 px-0.5` with
 `h3 text-sm font-medium truncate`. Width is set by the presenting view, not by the card
 (`flex-none w-[160px] md:w-[220px]` in the rails).
+
+**Ambilight hover** — each card carries one `.ambilight` layer (`src/style.css`): the card's own
+poster as a blurred background behind the frame, `inset: -8% -7% 27% -7%`, `blur(20px)
+saturate(1.3)`, `opacity 0 → .55` and `scale(.94) → 1` on `:hover`/`:focus-within`. Three rules keep
+it cheap and they are the contract, not an optimisation left to taste:
+
+1. **No extra request.** The layer reuses the poster URL the card already loads; the browser serves
+   it from cache (measured: 12 image requests before hovering, 12 after).
+2. **Lazy priming.** `background-image` is bound only once the card receives `mouseenter` or
+   `focusin`, so a grid or rail of 40+ cards fetches nothing extra and paints nothing at rest
+   (measured: 0 of 74 layers primed after load, 1 after one hover).
+3. **Compositor only.** The animation touches `opacity` and `transform` and nothing else, and
+   `will-change` exists only while hovered. Measured on hover: **0 layouts, 1 style recalculation**,
+   both card enter and leave.
+
+The parent card is `isolate` so `z-index: -1` keeps the glow behind its own poster instead of the
+page background, and `pointer-events: none` keeps it out of the hit test.
 
 **Aspect ratios** (`src/style.css:225-231`): `.aspect-poster` = `2 / 3`, `.aspect-backdrop` = `16 / 9`.
 

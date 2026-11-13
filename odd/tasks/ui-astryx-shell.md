@@ -229,3 +229,33 @@ axes), every piece snapping to a grid column line (left offsets 0/453/905/1132 a
 ending on column lines or the container edge), **0 overlapping pairs**, **0 px horizontal overflow**,
 7 mosaic children, one `h1` per page. `vue-tsc` and `vite build` clean. Verified structurally and by
 measurement, not by eye: this session cannot view screenshots.
+
+**L22** — Two follow-ups from the human, in one slice:
+
+1. **"Falta alinear las scroll de peliculas en el inicio como en las demas vistas."** Measured before
+   touching anything: every rail on every view started its first poster at `x = 0`, one full gutter
+   left of the container's content edge (48px at 1440, 16px at 390) — home was not the outlier, all
+   rails were. Root cause: `.rail` cancels the gutter with a negative margin and pads it back, but a
+   scroll container's `scroll-snap-align: start` snaps to the **snapport**, which is the padding box,
+   so the browser scrolled the rail by exactly one gutter and ate the leading padding (measured
+   `scrollLeft: 48`). Fixed with `scroll-padding-inline: var(--gutter)`. After: heading x, first
+   poster x and the container's content edge are the same number on `/`, `/movies` and `/series` at
+   1440 (48) and 390 (16), `scrollLeft: 0`, alignment delta 0.
+2. **Ambilight behind the poster on hover**, fast and cheap. `.ambilight` is one absolutely
+   positioned layer per card holding the card's own poster as a blurred background (`blur(20px)
+   saturate(1.3)`), fading `opacity 0 → .55` while it settles `scale(.94) → 1`, on `:hover` and
+   `:focus-within`, with the parent `isolate` so `z-index: -1` stays behind the frame and
+   `pointer-events: none` keeps it out of the hit test. The three performance rules are the contract:
+   no new request (it reuses the cached poster URL), lazy priming (`background-image` is bound only
+   after `mouseenter`/`focusin`, so 40 cards cost nothing at rest) and compositor-only animation
+   (`opacity` + `transform`, `will-change` only while hovered).
+
+Measured with ego lite, 1440 and 390: 0 of 74 ambilight layers primed after load and 12 image
+requests before hovering, **12 after** (one hover primes exactly one layer); `opacity 0 → 0.55`,
+`transform 0.94 → 1`, `filter blur(20px) saturate(1.3)`, `z-index -1`, `pointer-events none`, card
+`isolation: isolate`. Steady-state hover cycles on three different cards: **0 layouts and 1 style
+recalculation per enter, 0 and 0 per leave**. `vue-tsc` and `vite build` clean; the impeccable
+detector on the three rendered routes reports only the already-waived `overused-font`.
+
+Not measured: real frame timing on a low-end device, and touch behaviour (the effect is hover-only
+by nature; `pointerenter` on tap primes a layer but shows nothing until the next hover).

@@ -61,6 +61,11 @@ resolved tiles. The mosaic uses `auto-rows-[minmax(0,auto)]` and per-tile aspect
 fixed row height with taller min-heights: that combination let tiles overflow their rows and paint
 over each other on narrow screens.
 
+Poster cards answer the pointer with an **ambilight**: the card's own poster, blurred, fading in
+behind the frame. It reuses the poster URL already in cache, primes the layer only when the card is
+hovered or focused, and animates `opacity` and `transform` only — measured 0 layouts and no extra
+image request per hover.
+
 The mosaic is the opening, so no catalog view renders a hero above it, and its lead is the page's
 single `h1`. Text over the tiles uses `text-art*`, which does not follow the theme: the scrims stay
 dark in both themes, and theme tokens put near-black text on a near-black scrim in the light theme

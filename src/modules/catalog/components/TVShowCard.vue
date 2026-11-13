@@ -1,5 +1,19 @@
 <template>
-  <div class="group motion-lift motion-card cursor-pointer relative" @click="handleClick">
+  <div
+    class="group motion-lift motion-card cursor-pointer relative isolate"
+    @click="handleClick"
+    @mouseenter="primeAmbilight"
+    @focusin="primeAmbilight"
+  >
+    <!-- Ambilight: el mismo poster difuminado detras. La URL se primerea con el
+         puntero o el foco, asi que abrir una vista con 40 tarjetas no pide 40
+         imagenes ni crea 40 capas: el costo aparece solo en la tarjeta tocada. -->
+    <div
+      aria-hidden="true"
+      class="ambilight"
+      :style="ambilightSrc ? { backgroundImage: `url(${ambilightSrc})` } : undefined"
+    />
+
     <router-link
       :to="seriesLink"
       class="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -81,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { TVShow } from '../types/tmdb.types'
 import { getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
@@ -113,6 +127,16 @@ const resolvedContentType = computed(() => {
 })
 
 const posterUrl = computed(() => getPosterUrl(props.series.poster_path, 'w342'))
+
+// Ambilight perezoso: la capa pide el poster recien cuando la tarjeta recibe
+// puntero o foco. Despues queda en la cache del navegador: cero requests extra
+// al cargar la pagina, cero capas difuminadas en reposo.
+const ambilightSrc = ref<string | null>(null)
+
+function primeAmbilight() {
+  if (ambilightSrc.value || !props.series.poster_path) return
+  ambilightSrc.value = posterUrl.value
+}
 
 const releaseYear = computed(() => {
   if (!props.series.first_air_date) return null

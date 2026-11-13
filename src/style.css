@@ -300,19 +300,50 @@
   .motion-media { transition: transform var(--dur-slow) var(--ease-out-quint); }
   .motion-lift:hover .motion-media { transform: scale(1.03); }
 
+  /* Ambilight del poster: el mismo arte de la tarjeta, difuminado detras.
+     - Sin requests nuevas: reusa la URL del poster ya cargado por la tarjeta.
+     - La capa se primerea recien cuando el puntero o el foco entran, asi que una
+       grilla de 40 tarjetas no carga 40 imagenes ni crea 40 capas al abrir.
+     - Anima solo `opacity` y `transform`: el compositor las resuelve sin layout
+       ni repintar el resto de la pagina. `will-change` existe unicamente
+       mientras dura el hover, nunca en reposo. */
+  .ambilight {
+    position: absolute;
+    inset: -8% -7% 27% -7%;
+    z-index: -1;
+    border-radius: 1.75rem;
+    background-position: center;
+    background-size: cover;
+    filter: blur(20px) saturate(1.3);
+    opacity: 0;
+    transform: scale(0.94);
+    transition:
+      opacity var(--dur-base) var(--ease-out-quint),
+      transform var(--dur-slow) var(--ease-out-quint);
+    pointer-events: none;
+  }
+  .motion-lift:hover .ambilight,
+  .motion-lift:focus-within .ambilight {
+    opacity: 0.55;
+    transform: scale(1);
+    will-change: opacity, transform;
+  }
+
   .motion-press { transition: transform var(--dur-fast) var(--ease-out-quint); }
   .motion-press:hover { transform: translateY(-1px); }
   .motion-press:active { transform: translateY(0) scale(0.985); }
 
   @media (prefers-reduced-motion: reduce) {
-    .motion-card, .motion-media, .motion-press { transition: none; }
+    .motion-card, .motion-media, .motion-press, .ambilight { transition: none; }
     .motion-card:hover, .motion-card:active,
     .motion-lift:hover .motion-media,
+    .motion-lift:hover .ambilight,
     .motion-press:hover, .motion-press:active { transform: none; }
   }
-  html.reduce-motion .motion-card, html.reduce-motion .motion-media, html.reduce-motion .motion-press { transition: none; }
+  html.reduce-motion .motion-card, html.reduce-motion .motion-media, html.reduce-motion .motion-press, html.reduce-motion .ambilight { transition: none; }
   html.reduce-motion .motion-card:hover, html.reduce-motion .motion-card:active,
   html.reduce-motion .motion-lift:hover .motion-media,
+  html.reduce-motion .motion-lift:hover .ambilight,
   html.reduce-motion .motion-press:hover, html.reduce-motion .motion-press:active { transform: none; }
 
   /* Astryx semantic type (triplets size/weight/leading, via --text-* vars). */
@@ -351,6 +382,10 @@
     scroll-snap-type: x proximity;
     margin-inline: calc(var(--gutter) * -1);
     padding-inline: var(--gutter);
+    /* El snap se alinea con el snapport, no con el padding: sin esto el primer
+       poster se pegaba al borde de la pantalla (x 0 en vez de compartir el
+       borde del contenedor) y la rail entera quedaba corrida un gutter. */
+    scroll-padding-inline: var(--gutter);
     padding-block: 0.25rem 0.5rem;
     scrollbar-width: none;
   }
