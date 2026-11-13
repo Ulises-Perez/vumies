@@ -431,3 +431,29 @@ top of the page. Verdict from the reviewer: the top of this page no longer reads
 Accepted, documented data limitations (not defects): episodes without `runtime` keep an empty reserved duration slot, and
 rows without a synopsis stay sparse — the reserved slots are what hold every row at 143px, and filler text was the first
 thing the audits flagged.
+
+**L29** — Two bugs reported by the human, both reproduced and fixed.
+
+1. **The bar on the series page was not the bar of the rest of the app.** Measured on home: `header.topbar-shell`,
+   48px, `background: transparent`, `backdrop-filter: none`, and **no surface element**. On `/serie/:id` the shared bar
+   was the same, but the view added its own fixed veil (`oklch(0.165 0.005 285)`, 64px, blur) — so scrolling the series
+   page grew a navbar that no other route has. The route-local veil and its whole scroll machinery are gone: measured
+   after, home / serie at the top / serie scrolled are **identical** (`topbar-shell`, 48px, transparent, no blur, zero
+   veil elements). Equality was achieved by removing the extra surface, not by painting one everywhere.
+2. **Leaving the series view broke every other route** (home, movies, series rendered an empty `<main>`; leaving a movie
+   detail did not). Reproduced and narrowed by measurement, not by reading:
+   - Empty `<main>` is exactly `<!---->` — the router-view's component resolved to nothing.
+   - **Zero API requests** fired after the click, so the next view's `onMounted` never ran: it was never mounted.
+   - At +120ms the leaving node carried `page-leave-active page-leave-to` with `opacity, transform` at 0.18s/0.22s; at
+     +600ms it was gone and `<main>` was still empty. The leave **finished**; the enter never started.
+   - That is `mode="out-in"`: it holds the next route until the outgoing one completes a transition, and the series view
+     is a conditional chain (`v-if` / `v-else-if` / `v-else-if`, no trailing `v-else`) rather than one animatable element
+     root, so the hand-off never happened. Confirmed by bisect: the pre-redesign view (a `v-if`/`v-else` chain) navigated
+     fine, the round-one redesign broke it, and every route after it stalled.
+   - Fix, two parts: the view now always renders one element root with a real `v-else` fallback, and `App.vue` drops
+     `mode="out-in"` so the incoming route mounts immediately instead of waiting on the outgoing fade (the `page`
+     transition itself is unchanged).
+   - Verified across a hop chain: serie → movies **59** cards, → series **39**, → home **81**, → another serie detail
+     **12**, → home **81**. Before the fix every one of those was an empty page.
+
+Checks: `vue-tsc` clean, `vite build` clean.

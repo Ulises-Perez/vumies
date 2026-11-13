@@ -10,7 +10,11 @@
     <div class="relative z-10 flex min-h-screen flex-col">
       <main class="flex-1">
         <router-view v-slot="{ Component }">
-          <transition name="page" mode="out-in">
+          <!-- Sin `mode="out-in"`: con una ruta que no expone un unico elemento raiz
+               la salida no termina y la ruta siguiente nunca se monta (pantalla en
+               blanco). Sin modo, la entrada ocurre en el acto y el fundido sigue
+               igual. -->
+          <transition name="page">
             <component :is="Component" />
           </transition>
         </router-view>

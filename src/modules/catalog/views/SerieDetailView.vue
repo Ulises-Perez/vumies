@@ -1,13 +1,10 @@
 <template>
-  <!-- Velo condicional bajo el chrome: la barra de AppTopBar es cero-cromo y
-       este archivo no puede tocarla. Arriba (scroll 0) el velo es opacity-0:
-       el arte sangra detras sin costura ni corte. Al pasar el pie del hero un
-       IntersectionObserver enciende la superficie (bg-popover solido: nada se
-       transparenta, ni el boton primario) con fade que respeta reduced motion.
-       Bajo el header (z 65), sobre el contenido; sin clics; el sidebar (z 70)
-       encima. -->
-  <div aria-hidden="true" :class="surfaceVisible ? 'opacity-100' : 'opacity-0'" class="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[var(--chrome-top)] border-b border-transparent bg-popover backdrop-blur-md transition-opacity duration-200 motion-reduce:transition-none" />
-
+  <!-- Un solo elemento raiz: App.vue envuelve la ruta en
+       <transition name="page" mode="out-in"> y `out-in` no monta la ruta
+       siguiente hasta que la saliente termina su transicion. Con la cadena de
+       condiciones suelta, Vue no tenia un elemento que animar y la navegacion
+       quedaba en blanco al salir de esta vista. -->
+  <div>
   <SkeletonDetail v-if="loading" />
 
   <div v-else-if="error" class="min-h-screen pt-[var(--chrome-top)]">
@@ -151,10 +148,13 @@
 
     </BaseContainer>
   </div>
+
+  <div v-else class="min-h-screen" />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSeries } from '../composables/useSeries'
 import { useUserStore } from '@/modules/user'
@@ -210,42 +210,6 @@ const seasonsLabel = computed(() => {
 
 // Superficie condicional del chrome: sin superficie arriba (el arte sangra
 // detras del velo y no hay costura ni corte), opaca al pasar el hero. Un
-// La superficie del chrome se enciende por posicion de scroll, no por un
-// centinela: un observer sobre 1px reporta interseccion falsa en reposo (caso de
-// area cero en Chrome) y sobre una franja con alto metia 64px de layout que
-// empujaban el hero. Un listener pasivo que solo escribe cuando el booleano
-// cambia no corre por frame y es determinista.
-const surfaceVisible = ref(false)
-
-let rafId = 0
-
-function measureSurface() {
-  rafId = 0
-  // La superficie solo existe si hay chrome detras: la barra se esconde al bajar
-  // y, sin esta condicion, quedaba una franja oscura vacia de 64px arriba.
-  const header = document.querySelector('header')
-  const headerOnScreen = header ? header.getBoundingClientRect().bottom > 8 : true
-  const next = window.scrollY > 24 && headerOnScreen
-  if (next !== surfaceVisible.value) surfaceVisible.value = next
-}
-
-function syncSurface() {
-  if (rafId) return
-  rafId = requestAnimationFrame(measureSurface)
-}
-
-onMounted(() => {
-  measureSurface()
-  window.addEventListener('scroll', syncSurface, { passive: true })
-  window.addEventListener('resize', syncSurface, { passive: true })
-})
-
-onUnmounted(() => {
-  if (rafId) cancelAnimationFrame(rafId)
-  window.removeEventListener('scroll', syncSurface)
-  window.removeEventListener('resize', syncSurface)
-})
-
 // Primer episodio real de la temporada cargada; 1 cuando aun carga.
 const firstEpisodeNumber = computed(() =>
   currentSeason.value?.episodes[0]?.episode_number ?? 1
