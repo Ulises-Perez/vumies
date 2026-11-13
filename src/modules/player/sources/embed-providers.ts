@@ -9,8 +9,9 @@
 // Every template was verified by probing it with a real TMDB id, movie AND tv
 // (odd/tasks/continue-watching.md, L12). A provider that did not answer both is
 // not here: VidSrc (429 for scripted probes and the human reporting it broken),
-// VidLink (unreachable), 2Embed (301 loop), VidEasy (redirect to an unreachable
-// host), Stellar and AutoEmbed (tv route 404 with the documented shape).
+// EmbedWave (removed on request), VidLink (unreachable), 2Embed (301 loop),
+// VidEasy (redirect to an unreachable host), Stellar and AutoEmbed (tv route 404
+// with the documented shape).
 // ============================================================================
 import type { Media, Stream, StreamSource } from './types'
 
@@ -35,12 +36,15 @@ const PROVIDERS: ProviderTemplates[] = [
     weight: 95,
     languageLabel: 'Latino · Castellano · Subtitulado',
     movie: (id) => `https://playlatinsrc.co/movie/${id}`,
-    tv: (id, season, episode) => `https://playlatinsrc.co/tv/${id}/${season}/${episode}`,
+    // Ruta documentada por ellos: /serial/{id} para la serie entera y
+    // /custom/serial/{id}/{s}/{e} para un episodio. Con /tv/... caia en su home.
+    tv: (id, season, episode) => `https://playlatinsrc.co/custom/serial/${id}/${season}/${episode}`,
   },
   {
     id: 'vidfast',
     label: 'VidFast',
     weight: 75,
+    languageLabel: 'Inglés',
     movie: (id) => `https://vidfast.pro/movie/${id}`,
     tv: (id, season, episode) => `https://vidfast.pro/tv/${id}/${season}/${episode}`,
   },
@@ -51,13 +55,6 @@ const PROVIDERS: ProviderTemplates[] = [
     languageLabel: 'Subtítulos automáticos',
     movie: (id) => `https://vidnest.pro/movie/${id}`,
     tv: (id, season, episode) => `https://vidnest.pro/tv/${id}/${season}/${episode}`,
-  },
-  {
-    id: 'embedwave',
-    label: 'EmbedWave',
-    weight: 55,
-    movie: (id) => `https://embedwave.cc/embed/movie/${id}`,
-    tv: (id, season, episode) => `https://embedwave.cc/embed/tv/${id}/${season}/${episode}`,
   },
 ]
 

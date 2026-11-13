@@ -337,3 +337,30 @@ radius, one padding, equal edges, nothing duplicated, 44px-class rows.
 Static verification only: `vue-tsc` clean, `vite build` clean, impeccable detector on
 `src/modules/player` **empty**. The rendered check (dialog at 1440/390, the two Spanish sources actually
 playing) is still pending because the browser workspace is under the human's control.
+
+
+**L13** — Sources corrected and both dialogs rebuilt again, this time as modal siblings.
+
+1. **PlayLatinSRC series landed on their home page because the route was invented.** Their own docs
+   give `/movie/{id}`, `/serial/{id}` and `/custom/serial/{id}/{season}/{episode}`; we were calling
+   `/tv/{id}/{s}/{e}`, which does not exist on that host, so the SPA fell through to its homepage. The
+   provider now uses the documented episode route. Verified by HTTP: `/movie/{id}` (200, player
+   markers), `/custom/serial/1396/2/5` (200, SPA shell that renders the player client-side).
+2. **Pruned and labelled.** EmbedWave removed on request. VidFast is English and its subtitles do not
+   work, so its label is now exactly `Inglés` instead of implying subtitles. Remaining set:
+   **Vimeus — Español latino**, **PlayLatinSRC — Latino · Castellano · Subtitulado**, **VidFast —
+   Inglés**, **VidNest — Subtítulos automáticos** (the last two are a claim from their own docs, not
+   something this session could verify playing).
+3. **Fuentes selector, rebuild.** From a flat list to a **card grid** (one column on a phone, two from
+   `sm`): each card carries a monogram of the provider's initial, the name, the language on its own
+   line, `En uso` on the active one and a quiet kind line. The header shows a real count with the
+   Spanish subset ("4 fuentes disponibles · 2 en español"), and the footer states that each source is an
+   external player with its own catalogue, languages and ads.
+4. **Episodes, now a modal like Fuentes.** Same overlay, same `rounded-3xl` card, same header shape
+   (title + real counts), the same close button, and the season as **chips** instead of a native
+   `<select>` — a select hides the options, chips show every season and take one tap. The current
+   episode keeps the tinted row plus a 1px ring. The drawer, its border and `BaseSelect` are gone.
+
+Static verification: `vue-tsc` clean, `vite build` clean, impeccable detector on `src/modules/player`
+empty. As before, the rendered check is pending while the browser workspace is under the human's
+control; no claim is made that a provider actually plays until that pass runs.

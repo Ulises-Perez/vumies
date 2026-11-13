@@ -102,46 +102,74 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="episodesOpen" class="absolute inset-0 z-[60] flex">
-        <div class="flex-1 bg-black/70 backdrop-blur-sm" @click="closeEpisodes"></div>
-        <!-- Cajon derecho: mismo lenguaje que el resto del player (un solo radio,
-             un solo padding, filas de 44px o mas). El episodio actual se marca
-             con fondo tenido + ring, sin el borde lateral grueso de antes. -->
-        <div class="flex h-full w-full max-w-sm flex-col border-l border-border/60 bg-card shadow-2xl">
-          <div class="flex items-start gap-3 px-4 pb-3 pt-4">
+      <!-- Episodios como modal centrado, con el mismo cuerpo que el de fuentes:
+           misma cabecera, misma tarjeta, mismo radio. Antes era un cajon lateral. -->
+      <div
+        v-if="episodesOpen"
+        class="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6"
+        @click.self="closeEpisodes"
+      >
+        <div
+          class="flex max-h-[86vh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-card text-card-foreground ring-1 ring-border shadow-2xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="episodes-title"
+        >
+          <header class="flex items-start gap-3 px-5 pb-3 pt-5">
             <div class="min-w-0 flex-1">
-              <h2 class="font-poppins text-base font-bold text-foreground">Episodios</h2>
-              <p class="mt-0.5 text-xs text-muted-foreground">
-                {{ seasons.length ? `${seasons.length} ${seasons.length === 1 ? 'temporada' : 'temporadas'}` : 'Sin temporadas' }}
-                <span v-if="episodes.length" aria-hidden="true">·</span>
-                <span v-if="episodes.length">{{ episodes.length }} episodios</span>
+              <h2 id="episodes-title" class="font-poppins text-lg font-bold tracking-tight text-foreground">
+                Episodios
+              </h2>
+              <p class="mt-1 text-xs text-muted-foreground">
+                <span v-if="seasons.length">{{ seasons.length }} {{ seasons.length === 1 ? 'temporada' : 'temporadas' }}</span>
+                <span v-else>Sin temporadas</span>
+                <template v-if="episodes.length">
+                  <span aria-hidden="true"> · </span>{{ episodes.length }} episodios
+                </template>
               </p>
             </div>
             <button
               @click="closeEpisodes"
-              class="-mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+              class="-mr-2 -mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
               aria-label="Cerrar"
             >
               <XMarkIcon class="h-5 w-5" />
             </button>
+          </header>
+
+          <!-- Temporadas como chips: un select esconde las opciones; con pocas
+               temporadas conviene verlas todas y elegir de un toque. -->
+          <div v-if="seasons.length > 1" class="custom-scrollbar flex gap-1.5 overflow-x-auto px-4 pb-3">
+            <button
+              v-for="s in seasons"
+              :key="s.id"
+              @click="onSeasonSelect(String(s.season_number))"
+              class="inline-flex h-8 shrink-0 items-center rounded-full px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+              :class="
+                s.season_number === selectedSeasonNumber
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-accent hover:text-foreground'
+              "
+              :aria-pressed="s.season_number === selectedSeasonNumber"
+            >
+              {{ s.name }}
+            </button>
           </div>
 
-          <div v-if="seasons.length" class="px-4 pb-3">
-            <BaseSelect :model-value="selectedSeasonNumber" class="w-full" @update:model-value="onSeasonSelect($event)">
-              <option v-for="s in seasons" :key="s.id" :value="s.season_number">{{ s.name }}</option>
-            </BaseSelect>
-          </div>
-
-          <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-            <div v-if="loadingEpisodes" class="flex min-h-[9rem] items-center justify-center"><LoadingSpinner /></div>
+          <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+            <div v-if="loadingEpisodes" class="flex min-h-[10rem] items-center justify-center"><LoadingSpinner /></div>
             <ul v-else class="space-y-1">
               <li v-for="ep in episodes" :key="ep.id">
                 <button
                   @click="goToEpisode(ep.episode_number)"
-                  class="group/item flex w-full items-start gap-3 rounded-xl p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
-                  :class="isCurrentEpisode(ep.episode_number) ? 'bg-primary/10 ring-1 ring-primary/40' : 'hover:bg-accent'"
+                  class="group/item flex w-full items-start gap-3 rounded-2xl p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                  :class="
+                    isCurrentEpisode(ep.episode_number)
+                      ? 'bg-primary/10 ring-1 ring-primary/40'
+                      : 'hover:bg-accent'
+                  "
                 >
-                  <span class="relative aspect-video w-24 flex-none overflow-hidden rounded-md bg-muted">
+                  <span class="relative aspect-video w-24 flex-none overflow-hidden rounded-xl bg-muted">
                     <img
                       v-if="ep.still_path"
                       :src="`https://image.tmdb.org/t/p/w300${ep.still_path}`"
@@ -159,9 +187,9 @@
                     </span>
                   </span>
 
-                  <span class="min-w-0 flex-1">
+                  <span class="min-w-0 flex-1 py-0.5">
                     <span
-                      class="block truncate text-sm font-medium leading-snug"
+                      class="block truncate text-sm font-semibold leading-snug"
                       :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-foreground'"
                     >
                       {{ ep.episode_number }}. {{ ep.name }}
@@ -206,7 +234,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { Squares2X2Icon, QueueListIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { FEATURES } from '@/core/config/features'
 import LoadingSpinner from '@/modules/ui/components/LoadingSpinner.vue'
-import { BaseSelect } from '@/modules/ui/components/base'
 import StreamSourceModal from '@/modules/player/components/StreamSourceModal.vue'
 import { useMovies } from '@/modules/catalog/composables/useMovies'
 import { useSeries } from '@/modules/catalog/composables/useSeries'
