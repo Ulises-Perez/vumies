@@ -34,9 +34,9 @@ S9. The mosaic becomes the opening of the home route. Exact words: "Continuamos 
 - **T6** — Rebuild the top bar as floating pieces with a transparent middle, keeping the blurred token surface per piece. `Spec: S1, S2, S3` · route: inline
 - **T7** — Restructure the movies and series views on the chosen artboard: ported grid, card surface and one shared rail. `Spec: S6` · route: inline
 - **T8** — Verify: `vue-tsc`, `vite build`, real-browser checks at 1440/1024/768/390 (edges, overflow, tap targets, contrast), impeccable audit. `Spec: S7, S8` · route: verifier when a high-risk item is named
-- **T10** — Extract the inline mosaic from `MoviesView` and `SeriesView` into one `MosaicHighlights` component with a normalized view model, and migrate both views to it. `Spec: S5, S6, S9` · route: writer
-- **T11** — Rebuild the home route on that mosaic: hero removed, mosaic first, real rails kept with the mosaic's own items de-duplicated. `Spec: S9` · route: writer
-- **T9** — Update `README.md` and close this document with the commits that hold each task, after T10 and T11. `Spec: S7` · route: inline
+- **T10** — Extract the inline mosaic from `MoviesView` and `SeriesView` into one `MosaicHighlights` component with a normalized view model, and migrate both views to it. `Spec: S5, S6, S9` · route: writer · commit `b3072a0`
+- **T11** — Rebuild the home route on that mosaic: hero removed, mosaic first, real rails kept with the mosaic's own items de-duplicated. `Spec: S9` · route: writer · commits `b3072a0`, `b02bdb1`
+- **T9** — Update `README.md` and close this document with the commits that hold each task, after T10 and T11. `Spec: S7` · route: inline · commit `b02bdb1`
 
 ## Log
 
@@ -92,3 +92,100 @@ The production `.container-app` already declares `width: 100%`, so it is immune 
 - **A real regression was found and fixed.** The content wrapper still carried `-mt-20 relative z-10` from the era of 630px heroes, where it overlapped empty hero space. With `--hero-md` (384px) the hero's action row ends exactly at the hero's bottom edge, so on `/movies` the primary CTA sat underneath the content wrapper and received no clicks (hit-test returned the content div at all three widths). Removed `-mt-20` in `MoviesView` and `SeriesView`; the hero CTA and the mosaic CTA now hit-test clean at 1440 and 390. `/` was never affected because its 480px hero keeps its actions clear.
 - **Two probe defects of mine were corrected before trusting any number**: the mosaic has no literal `mosaic` class (it is `<section aria-label="Destacados">`, so an earlier run measured zero tiles and proved nothing), and `scrollIntoView` triggered the app's smooth scroll, so rects were read mid-animation and produced a false "CTA covered" reading. Both were fixed and everything above re-measured.
 - **Not proven**: `/series`' hero has no action matching the probe's label, so its hero actions are not independently verified (the overlay that caused the defect was removed there too); tile depths under a slow network were not exercised; skeleton states were migrated but not screenshotted.
+
+**L14** — The mandated `impeccable` audit (S8) ran over 8 routes at 1440 and 390 and found defects this feature had introduced, all fixed and re-measured here:
+
+- **Hero clipping (blocker).** A fixed `h-[var(--hero-md)]` with `overflow: hidden` cut the content it was supposed to hold: on `/movies` the eyebrow sat at y −25.5 and the CTA row at 368.5–412.5 inside a 384px hero, so the primary button received no clicks. The hero content was inside an `absolute inset-0` overlay, so nothing contributed to the section's height and `min-height` alone could not fix it. Heroes now use `min-h-[var(--hero-*)]` with a flowing content column. Re-measured: hero grows to 544 (`/movies`) and 472 (`/series`), last action bottom 464 and 392, both strictly inside; same on `/`, `/search` and `/favorites` at 1440 and 390.
+- **Mosaic dead area (important).** Row 3 was filled only 428.7 of 1334px because the tall tiles carried `aspect-[2/3]` inside a two-row span and the wide tile spanned 2 of 6 columns. Talls now fill their span on `md+` and the wide tile spans the full row: coverage 0.94–0.95 with 0 overlapping pairs (the remainder is `--grid-gap`, not dead space).
+- **Zero-chrome bar contrast (blocker).** With no resting surface the glyphs sat on photography with 1.04:1 (`/movies` menu) and 1.5:1 (`/search` keycap). Each control now has its own translucent surface with blur; measured `oklch(0.165 0.005 285 / 0.6)` + `blur(12px)` on the three 32px controls and `oklch(0.165 0.005 285 / 0.7)` + `blur(12px)` on the keycap. The middle of the bar stays transparent, so the direction survives.
+- **Two `h1` per page** on `/movies` and `/series` (hero + mosaic lead) reduced to one; the mosaic lead title is now `h2`.
+- **`text-shadow-lg` was dead** (Tailwind 3 has no such utility, `getComputedStyle` returned `none` on 8 hero titles): added as a real utility.
+- **`design/system.md` drift**: it still described `.container-custom` and claimed no container max-width. Rewritten to the actual contract.
+
+The audit also reported defects that pre-date this feature; the human chose to fix them in the same feature, and they are in the same commit: 8 eyebrow badges above headings removed (the skill bans them outright), `h1` added to the Favorites, History and empty-Search states, `SettingsView` section headings raised from `text-sm` to `text-lg` so a section heading no longer measures smaller than its own paragraph, `text-green-400` (1.74:1 in the light theme, and a second accent hue in a system that declares violet at hue 285) replaced by the `text-primary` token, and the hero scrims moved to `.scrim-b`/`.scrim-r`, which stay dark in both themes instead of inheriting `--background` (in light theme the hero art disappeared: 40.3% of its pixels above L 0.7).
+
+**L15** — Commit `b79597b` on `feature/ui-shell-ambilight` holds the whole feature as one slice: 38 files, 3272 insertions, 613 deletions, including the human's own `SideMenu` redesign and the ambilight removal that preceded it. The human chose a single commit over chained slices and accepted the review cost with that tradeoff stated. The branch is therefore one delivery unit past the ~400-line slice guidance; any further work belongs to a new slice, not to this one. Delivery (push, PR, merge) remains the human's decision.
+
+**L16** — `type-check` and `build` pass in a single authoritative run after every fix. Not verified: `/series`' hero carries no action matching the probe's label, so its hero actions are not independently hit-tested (the overlay that caused the defect was removed there too); skeleton states were migrated but never screenshotted; slow-network behaviour and LCP were not measured; the audit's own light-theme sampling was done by toggling the class in the page, not by changing the persisted preference.
+
+**L17** — S9 implemented as two slices, because the first one alone was already at the review-size
+guidance and the second changes two page structures.
+
+`b3072a0` — the extraction. `MosaicHighlights.vue` owns the recipe; `/` opens with it and its lead
+carries the `h1`, the year, the score, the synopsis and the primary action the 480px hero carried.
+Six defects found while verifying that slice, all fixed inside it:
+
+1. **Home dropped `upcoming[3..]`.** The wide band took the first three entries of a collection whose
+   rail had been deleted, so the tail was unreachable. The "Próximamente" rail is back with the tail.
+2. **Rails repeated what was above them.** `/movies`' hero was also the first "Películas Populares"
+   card, and `/series`' wide band listed three shows the popular rail rendered again. Each rail now
+   starts where the mosaic ends.
+3. **Badge drift.** Only home passed a badge. Tiles carry the label of the endpoint that feeds them
+   and the lead carries none: its kicker already says the same thing, and two labels for one fact on
+   one tile is noise.
+4. **`hasMosaic` defeated the component's own skeleton**, so "loading" and "empty" were the same
+   state and a failed fetch could leave an eternal skeleton with no `h1`. The component now takes
+   `loading`: skeleton while unknown, nothing when the load settles empty.
+5. Dead `.scrollbar-hide` blocks in two views, and a literal `24rem` replaced by
+   `--mosaic-lead-min` in the layout contract `design/system.md` documents.
+6. `AnimeView` (behind `FEATURES.anime=false`, so unreachable in this build) still had the
+   fixed-height hero with an absolutely positioned overlay plus `-mt-20`. Verified by temporarily
+   flipping the flag: hero 384px, `h1` inside, no overflow. The flag was reverted before committing.
+
+`b02bdb1` — the catalog views. `03-mosaico.html` has no hero, so `/movies` and `/series` opened with
+a 384px hero *and* then the mosaic: two editorial openings per page, the first carrying the oldest
+recipe. Both now start with the mosaic and its lead is the `h1`. Nothing the hero did was dropped:
+the movies hero's "Mi Lista" moved to the lead tile through a new `lead-actions` slot and was
+verified by clicking it (filled state flips, `localStorage` 25 → 237 bytes); its score, year,
+synopsis and primary action were already what the mosaic lead renders. The popular rail returns to
+the full collection on `/movies` now that its first item is no longer the hero, and `/series` feeds
+the wide band from `popular[0..2]` and the rail from `popular[3..]`, so nothing repeats and nothing
+drops.
+
+**L18** — The mandated `impeccable` audit (S8) ran on the changed screens (detector: no findings) and
+found one blocker this feature had introduced, plus two smaller a11y gaps, all fixed and
+re-measured:
+
+- **Text over art followed the theme over a scrim that does not (blocker).** `MosaicHighlights`
+  used `text-foreground`, `text-muted-foreground` and `text-primary`. The scrims are
+  `oklch(0.1 0.02 285)` in both themes, so in the light theme the lead and tall titles measured
+  **1.15:1** and the score **3.88:1** — unreadable text on the primary opening of three routes.
+  Three theme-independent tokens (`text-art`, `text-art-muted`, `text-art-accent`) replaced them:
+  measured 19.72 / 11.81 / 10.37 against the scrim, identical in both themes, because they no
+  longer depend on the theme at all.
+- **No focus ring on the tiles.** `BaseButton` has one; the tile links, the wide rows and
+  "Ver todo" fell back to the UA outline over photography. They now carry the same
+  `focus-visible:ring-2 ring-primary` contract.
+- **"Ver todo" measured 49×16** — under the WCAG 2.2 AA 24×24 minimum. It is now
+  `inline-flex min-h-[24px]`. Re-measured: zero interactive elements inside the mosaic under 24px
+  on either axis.
+
+Contrast was computed from the real computed `color` values with an `oklch` → sRGB conversion, not
+sampled from a screenshot: the browser returns `oklch()` strings, so an `rgb()`-only parser silently
+returns `null` and reports nothing. That was caught before any number was trusted.
+
+**L19** — Independent verification (`gentle-ai-verify`), ego lite, 8 loads: `/`, `/movies` and
+`/series` at 1440 and 390, dark and light. Every threshold passed: 4 mosaic tiles, **0 overlapping
+pairs**, **0 px horizontal overflow**, exactly one `h1` equal to the lead title, **0 undersized
+targets** inside the mosaic, 1 rail per catalog page (4 real sections on `/`, per L15), 0 console
+errors or exceptions, and text-over-art contrast 19.72 / 10.37 / 10.37 / 19.72 in both themes. It
+independently re-derived the pre-fix failure by stripping `text-art` in the light theme: 23,23,23 on
+3,3,8 = **1.15:1**, which is why the comment in `style.css` says 1.15 and not the 1.4 this session
+first estimated.
+
+**L20** — What this slice does **not** prove, recorded rather than assumed:
+
+- No test runner exists in this repository (no vitest/jest, no `*.test.*`), so verification is
+  structural plus real-browser measurement. A regex test over `style.css` would only restate the
+  source, so none was added as a substitute for behaviour.
+- `AnimeView` is verified only in the sense above; the anime data source returned nothing during the
+  run, so its hero CTA was never exercised with real content.
+- Skeleton states were migrated and observed to clear after load, but never captured mid-load.
+- The artboard's own ornaments still differ from the implementation and are **deliberate
+  follow-ups**, not oversights: the "VUMIES" watermark, the 0.92-alpha badge plate, a 16:9 art tile
+  for the wide band (it renders a real title list instead, because the wide data the views have is a
+  list and not a fourth piece of art), the 12px mobile gap (the contract's `--grid-gap` is 18/24px)
+  and the 40px lead title (the component uses 30/48px).
+- Cross-collection repeats remain: TMDB returns the same title in trending, now playing and popular,
+  so a poster can appear in two different real rails. That is data, not duplicated markup, and
+  removing it would mean hiding real content from real sections.

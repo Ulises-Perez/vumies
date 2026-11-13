@@ -51,11 +51,18 @@ One layout vocabulary for the whole app; no view defines its own.
 | `--bar-height`, `--bar-offset`, `--chrome-top` | Where the bar sits and where the sidebar and page content start under it. |
 | `BaseStack` | Flex stack with the Astryx spacing steps (`gap={2}` is 8px). |
 
-`MoviesView` and `SeriesView` open with a **mosaic**: a 6-column grid with explicit spans (a wide
-lead tile carrying the title and the primary action, two tall poster tiles, a wide support tile),
-then exactly one rail, then the uniform poster grid. The mosaic uses `auto-rows-[minmax(0,auto)]`
-and per-tile aspect ratios, never a fixed row height with taller min-heights: that combination let
-tiles overflow their rows and paint over each other on narrow screens.
+`/`, `MoviesView` and `SeriesView` open with a **mosaic**: a 6-column grid with explicit spans (a
+lead tile carrying the title, the score, the synopsis and the primary action, two tall poster
+tiles, a wide band listing three titles), then the rest of the catalogue. It is one component,
+`MosaicHighlights.vue`, so a change to the recipe lands in one place; the views only hand it
+resolved tiles. The mosaic uses `auto-rows-[minmax(0,auto)]` and per-tile aspect ratios, never a
+fixed row height with taller min-heights: that combination let tiles overflow their rows and paint
+over each other on narrow screens.
+
+The mosaic is the opening, so no catalog view renders a hero above it, and its lead is the page's
+single `h1`. Text over the tiles uses `text-art*`, which does not follow the theme: the scrims stay
+dark in both themes, and theme tokens put near-black text on a near-black scrim in the light theme
+(1.15:1).
 
 ### Scales ported from Astryx
 
