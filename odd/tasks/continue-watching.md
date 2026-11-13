@@ -240,3 +240,28 @@ not assumed.
    `{ type: 'VIDAPI_PLAYER_COMMAND', command: 'seekTo', payload: { seconds } }` for skip, and advance on
    the last ~30 s for auto-next — with the skip times already available free from IntroDB (series and
    movies) and AniSkip (anime), both verified in L5.
+
+**L9** — Two answers: the embed cannot be turned into a stream for our own player, and the player
+chrome was redesigned.
+
+1. **Embed → our own player: not viable, and now with the evidence.** The vimeos embed page carries an
+   obfuscated config (`sp`, `srv`, `zip`, `p3`, `urlset`, `m3u8`, `master`, a 12-hour `43200` window and
+   a `hosts_...` key list packed as a `'|'.split('|')` lookup), not a manifest URL. Its helper
+   `video77.js` (9.7 KB) is not the stream provider but a **defensive script**: it inspects URLs for
+   `.m3u8`/`.mp4`/`urlset`, and redacts anything shaped like a token, signature, session or API key
+   before it can be logged; the page also ships `disable-devtool`. So the manifest is minted
+   server-side against a rotating, tokenised URL with a 12-hour expiry and actively guarded against
+   inspection. A player of our own would mean re-deriving that scheme on every one of their deploys and
+   bypassing the layer they gate it with. Rejected.
+2. **Player chrome redesigned with the taste skill and audited with impeccable.** The old chrome was
+   two floating circles (40px) plus two loose pills (36px) in two sizes, and its back button sat
+   exactly under the embed's own "Servidores" chip (`x 16–176, y 17–52`). It is now **one control bar**
+   in the only free corner (top right): a single pill (`bg-black/60`, `ring-white/10`, `blur`, `p-1`)
+   holding one button family — `Volver | ‹ › | Episodios T2·E5 | Fuentes` — all `h-8`, `text-[13px]`,
+   `rounded-full`, separated by 1px dividers, with the current episode shown as a quiet suffix inside
+   the Episodios button instead of a separate element. Icon-only on mobile, labels from `sm`. The top
+   gradient now exists only to give the bar contrast. Impeccable's detector on the file: **no
+   findings**. The embed's own chip is no longer covered.
+3. **Not verified visually yet:** the browser task space was taken over by the human mid-run, so the
+   screenshot pass over the new bar (1440/390, geometry and vision review) is pending and the numbers
+   are not claimed.

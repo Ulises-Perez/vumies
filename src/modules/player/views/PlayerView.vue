@@ -48,57 +48,71 @@
       </div>
     </div>
 
-    <!-- Top chrome (back / episodes / sources) -->
-    <div class="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-start justify-between bg-gradient-to-b from-black/70 to-transparent p-3">
-      <button
-        @click="goBack"
-        class="pointer-events-auto rounded-full bg-black/55 p-2 text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white"
-        aria-label="Volver" title="Volver"
+    <!-- Barra de control unica, arriba a la derecha: el embed dibuja su propio
+         control (Servidores) arriba a la IZQUIERDA, asi que este es el unico
+         rincon libre. Una sola familia de botones dentro de una pildora, con
+         separadores: antes eran circulos y pastillas sueltas de dos tamanios.
+         La franja superior existe solo para dar contraste a la barra. -->
+    <div class="pointer-events-none absolute inset-x-0 top-0 z-40 flex justify-end bg-gradient-to-b from-black/60 via-black/20 to-transparent p-3">
+      <div
+        class="pointer-events-auto flex items-center gap-0.5 rounded-full bg-black/60 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-white/10 backdrop-blur-md"
+        role="toolbar"
+        aria-label="Controles del reproductor"
       >
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
-      </button>
-      <div class="pointer-events-auto flex items-center gap-1.5">
-        <!-- Episodio anterior / siguiente: lo que un player de serie necesita a
-             mano, sin abrir el panel. Se deshabilitan solos en los extremos. -->
+        <button
+          @click="goBack"
+          class="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          aria-label="Volver" title="Volver"
+        >
+          <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          <span class="hidden sm:inline">Volver</span>
+        </button>
+
         <template v-if="type === 'tv' || type === 'anime'">
+          <span aria-hidden="true" class="mx-0.5 h-5 w-px bg-white/15" />
           <button
             @click="prevEpisode"
             :disabled="!canPrevEpisode"
-            class="flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-black/55"
-            aria-label="Episodio anterior"
-            title="Episodio anterior"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/85"
+            aria-label="Episodio anterior" title="Episodio anterior"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
           </button>
           <button
             @click="nextEpisode"
             :disabled="!canNextEpisode"
-            class="flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-black/55"
-            aria-label="Episodio siguiente"
-            title="Episodio siguiente"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/85"
+            aria-label="Episodio siguiente" title="Episodio siguiente"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+            <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
           </button>
         </template>
+
+        <span aria-hidden="true" class="mx-0.5 h-5 w-px bg-white/15" />
+
         <button
           v-if="type === 'tv' || type === 'anime'"
           @click="openEpisodes"
-          class="flex items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white"
+          class="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          :aria-label="`Episodios, temporada ${season} episodio ${episode}`"
           title="Episodios"
         >
-          <QueueListIcon class="h-5 w-5" />
+          <QueueListIcon class="h-[18px] w-[18px]" />
           <span class="hidden sm:inline">Episodios</span>
+          <span class="hidden text-white/45 sm:inline">T{{ season }}·E{{ episode }}</span>
         </button>
+
         <button
           @click="openSelector"
-          class="flex items-center gap-2 rounded-full bg-black/55 px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-sm ring-1 ring-white/10 transition-colors hover:bg-black/75 hover:text-white"
-          title="Cambiar fuente"
+          class="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          aria-label="Cambiar fuente" title="Cambiar fuente"
         >
-          <Squares2X2Icon class="h-5 w-5" />
+          <Squares2X2Icon class="h-[18px] w-[18px]" />
           <span class="hidden sm:inline">Fuentes</span>
         </button>
       </div>
     </div>
+
 
     <!-- Episodes overlay -->
     <transition
