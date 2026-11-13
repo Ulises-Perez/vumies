@@ -412,3 +412,27 @@ workspace is under the human's control.
 Static: `vue-tsc` clean, `vite build` clean, impeccable detector on `src/modules/player` empty.
 Still pending the rendered pass, for the same reason as the last four turns: the browser workspace is
 under the human's control.
+
+**L16** — Two things: the "Continuar viendo" card broke on hover, and the episode picker now follows
+the Netflix pattern.
+
+1. **The hover broke because the card moved.** That card carried `.motion-card` *and* Tailwind's
+   `hover:-translate-y-0.5` — two transforms on the same element — and, worse, it also asked for a
+   `srcset`/`sizes` pair on an image that is a fixed 240/280px wide. A box that moves under the pointer
+   can lose and regain `:hover` at the edge, which reads as "it breaks and comes back", and a responsive
+   candidate can be re-selected mid-interaction. Both mechanisms are gone: **the card's box no longer
+   changes on hover** (only `box-shadow` and the ring colour animate, and the ring colour is instant),
+   the image has **one source** (`w342`, no `srcset`, so nothing can swap), and the only motion left is
+   the 1.03 scale of the image inside its `overflow-hidden` frame, which cannot affect hit-testing.
+   Honest limit: the flicker was reported from a screenshot this session cannot read, so the fix removes
+   the mechanism instead of reproducing the symptom; if it survives, the remaining suspect is image
+   decode, which needs the browser.
+2. **Episodes, Netflix pattern.** Wider panel (`max-w-2xl`), and the season moved out of a chip row and
+   into a **dropdown in the header**, right where Netflix puts it. Rows are bigger: the still goes from
+   96px to 128/160px on a 16:9 frame, the title steps up to `text-base` on desktop, the runtime and
+   rating stay on one meta line with the synopsis under it, and the current episode keeps its tinted row
+   plus ring and a filled play disc. Hover now reveals that play disc over the art (a 36px circle with a
+   ring and blur) instead of a bare glyph. The keyboard navigation and the auto-scroll to the episode
+   being played were kept — they are the part that makes the list feel immediate.
+
+Static: `vue-tsc` clean, `vite build` clean, impeccable detector on the player and on the card: empty.

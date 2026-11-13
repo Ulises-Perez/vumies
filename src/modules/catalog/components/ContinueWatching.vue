@@ -23,16 +23,14 @@
         v-for="item in items"
         :key="`${item.type}-${item.id}`"
         :to="resumeRoute(item)"
-        class="group motion-lift motion-card isolate relative flex-none w-[240px] overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border bg-card text-left transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:w-[280px]"
+        class="group relative flex-none w-[240px] overflow-hidden rounded-[var(--radius-container)] bg-card text-left ring-1 ring-border transition-shadow duration-200 hover:shadow-lg hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:w-[280px]"
       >
         <span class="relative block aspect-[16/9] w-full overflow-hidden bg-muted">
           <img
             v-if="item.poster_path"
             :src="getPosterUrl(item.poster_path, 'w342')"
-            :srcset="getPosterSrcSet(item.poster_path)"
-            sizes="(min-width: 768px) 280px, 240px"
             :alt="item.title"
-            class="absolute inset-0 h-full w-full object-cover motion-media"
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
             loading="lazy"
             decoding="async"
           />
@@ -65,7 +63,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
-import { getPosterSrcSet, getPosterUrl } from '@/core/config/api.config'
+import { getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
 
 interface ResumeItem {

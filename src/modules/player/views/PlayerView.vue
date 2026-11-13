@@ -110,24 +110,28 @@
         @click.self="closeEpisodes"
       >
         <div
-          class="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-card text-card-foreground ring-1 ring-border shadow-2xl"
+          class="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-card text-card-foreground ring-1 ring-border shadow-2xl"
           role="dialog"
           aria-modal="true"
           aria-labelledby="episodes-title"
         >
-          <header class="flex items-start gap-4 px-6 pb-3 pt-6">
+          <header class="flex items-center gap-3 px-6 pb-3 pt-5">
             <div class="min-w-0 flex-1">
-              <h2 id="episodes-title" class="font-poppins text-xl font-bold tracking-tight text-foreground">
+              <h2 id="episodes-title" class="font-poppins text-lg font-bold tracking-tight text-foreground">
                 Episodios
               </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
-                <span v-if="seasons.length">{{ seasons.length }} {{ seasons.length === 1 ? 'temporada' : 'temporadas' }}</span>
-                <span v-else>Sin temporadas</span>
-                <template v-if="episodes.length">
-                  <span aria-hidden="true"> · </span>{{ episodes.length }} episodios
-                </template>
+              <p v-if="episodes.length" class="mt-0.5 text-xs text-muted-foreground">
+                {{ episodes.length }} episodios
               </p>
             </div>
+            <BaseSelect
+              v-if="seasons.length > 1"
+              :model-value="selectedSeasonNumber"
+              class="w-auto min-w-[9rem]"
+              @update:model-value="onSeasonSelect(String($event))"
+            >
+              <option v-for="s in seasons" :key="s.id" :value="s.season_number">{{ s.name }}</option>
+            </BaseSelect>
             <button
               @click="closeEpisodes"
               class="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
@@ -136,25 +140,6 @@
               <XMarkIcon class="h-5 w-5" />
             </button>
           </header>
-
-          <!-- Temporadas como chips: un select esconde las opciones; con pocas
-               temporadas conviene verlas todas y elegir de un toque. -->
-          <div v-if="seasons.length > 1" class="custom-scrollbar flex gap-1.5 overflow-x-auto px-4 pb-3">
-            <button
-              v-for="s in seasons"
-              :key="s.id"
-              @click="onSeasonSelect(String(s.season_number))"
-              class="inline-flex h-8 shrink-0 items-center rounded-full px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
-              :class="
-                s.season_number === selectedSeasonNumber
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted/50 text-muted-foreground hover:bg-accent hover:text-foreground'
-              "
-              :aria-pressed="s.season_number === selectedSeasonNumber"
-            >
-              {{ s.name }}
-            </button>
-          </div>
 
           <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3">
             <div v-if="loadingEpisodes" class="flex min-h-[10rem] items-center justify-center"><LoadingSpinner /></div>
@@ -177,7 +162,7 @@
                       : 'hover:bg-accent'
                   "
                 >
-                  <span class="relative aspect-video w-24 flex-none overflow-hidden rounded-xl bg-muted">
+                  <span class="relative aspect-video w-32 flex-none overflow-hidden rounded-xl bg-muted sm:w-40">
                     <img
                       v-if="ep.still_path"
                       :src="`https://image.tmdb.org/t/p/w300${ep.still_path}`"
@@ -187,17 +172,18 @@
                       decoding="async"
                     />
                     <span class="absolute inset-0 flex items-center justify-center">
-                      <svg
-                        class="h-5 w-5 drop-shadow-md"
-                        :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-foreground opacity-0 transition-opacity group-hover/item:opacity-90'"
-                        fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"
-                      ><path d="M8 5v14l11-7z" /></svg>
+                      <span
+                        class="flex h-9 w-9 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/20 backdrop-blur-sm"
+                        :class="isCurrentEpisode(ep.episode_number) ? 'opacity-100' : 'opacity-0 transition-opacity group-hover/item:opacity-100'"
+                      >
+                        <svg class="ml-0.5 h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                      </span>
                     </span>
                   </span>
 
                   <span class="min-w-0 flex-1 py-0.5">
                     <span
-                      class="block truncate text-sm font-semibold leading-snug"
+                      class="block truncate text-sm font-semibold leading-snug sm:text-base"
                       :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-foreground'"
                     >
                       {{ ep.episode_number }}. {{ ep.name }}
@@ -240,6 +226,7 @@
 import { ref, onMounted, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Squares2X2Icon, QueueListIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { BaseSelect } from '@/modules/ui/components/base'
 import { FEATURES } from '@/core/config/features'
 import LoadingSpinner from '@/modules/ui/components/LoadingSpinner.vue'
 import StreamSourceModal from '@/modules/player/components/StreamSourceModal.vue'
