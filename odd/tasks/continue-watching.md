@@ -295,3 +295,45 @@ when exactly one exists), and the remembered choice keeps it closed afterwards.
 **Not verified in a browser:** the workspace was under the human's control for this whole change, so the
 rendered check of the new bar (1440/390) and of the two providers actually playing was not run. What is
 verified is static: `vue-tsc`, `vite build`, the impeccable detector, and the HTTP probes above.
+
+**L12** — Sources pruned, a Spanish one added, and both dialogs redesigned.
+
+**Provider probe, movie AND tv, one real TMDB id each** (the rule: a provider ships only if both
+routes answer):
+
+| Provider | Result | Language evidence | Shipped |
+| --- | --- | --- | --- |
+| PlayLatinSRC `playlatinsrc.co/movie/{id}` · `/tv/{id}/{s}/{e}` | **200 / 200** | page serves **Latino, Castellano, Subtitulado** | yes, weight 95 |
+| VidFast `vidfast.pro/…` | **200 / 200** | none declared | yes, 75 |
+| VidNest `vidnest.pro/…` | **200 / 200** | docs: automatic subtitles | yes, 65 |
+| EmbedWave `embedwave.cc/embed/…` | **200 / 200** | none declared | yes, 55 |
+| VidSrc `vidsrc.io/embed/…` | 429 for both | — | **removed** (the human reported it broken) |
+| VidLink `vidlink.pro/…` | 000 / 000 | — | no |
+| 2Embed `2embed.online/…` | 301 loop | — | no |
+| VidEasy `player.videasy.net` → `.to` | 301 → 000 | — | no |
+| Stellar `stellar.rip/…` | 200 movie, **404 tv** | "Spanish" in page | no (tv unresolved) |
+| AutoEmbed `autoembed.me/…` | 200 movie, **404 tv** | — | no |
+
+So the app now offers five sources: **Vimeus (Español latino)**, **PlayLatinSRC (Latino · Castellano ·
+Subtitulado)**, VidFast, VidNest (Subtítulos automáticos) and EmbedWave. Language is a first-class field
+now (`Stream.languageLabel`): it is shown only when the provider declares it or the probe found it, and
+left undefined otherwise rather than guessed — a wrong language badge is worse than none.
+
+**Both dialogs redesigned** with the taste rules that apply to an Operate surface: one card family, one
+radius, one padding, equal edges, nothing duplicated, 44px-class rows.
+
+- *Fuentes* (`StreamSourceModal.vue`): it rendered a provider heading **and** a row repeating the same
+  provider name, with a flag strip and a `kind` badge. It is now a flat list, one row per source:
+  name, `languageLabel · kind` as one line, an "En uso" chip on the active source (new
+  `activeSourceId` prop) and a play glyph; the header carries only the title and a real count
+  ("5 fuentes disponibles"); a footer states that each source is an external player with its own
+  catalogue, languages and ads. Flag images are gone: they needed a third-party request per flag and a
+  country is not a language.
+- *Episodios* (drawer in `PlayerView.vue`): same header shape with the real counts
+  (temporadas · episodios), season select, rows with a 24px-radius still, number + title, runtime and
+  rating on one meta line and a two-line synopsis, and the current episode marked with a tinted row
+  plus a 1px ring (the 4px side border is gone). The dead `border-l-2` classes went with it.
+
+Static verification only: `vue-tsc` clean, `vite build` clean, impeccable detector on
+`src/modules/player` **empty**. The rendered check (dialog at 1440/390, the two Spanish sources actually
+playing) is still pending because the browser workspace is under the human's control.

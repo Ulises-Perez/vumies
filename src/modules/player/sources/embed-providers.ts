@@ -1,20 +1,16 @@
 // ============================================================================
 // Extra embed sources (TMDB-id based, no key).
 // ----------------------------------------------------------------------------
-// Vimeus is the primary source: it is the only one that ships a Spanish library
-// out of the box. These providers are iframe embeds keyed by the TMDB id we
-// already have, so adding one costs a URL template and nothing else. They are
-// deliberately ranked BELOW Vimeus: their catalog is English-leaning (with
-// multi-language subtitles on most titles), so they act as fallbacks when a
-// title is missing or a source is down, not as the default.
+// Vimeus stays the primary source; PlayLatinSRC is the second one because it is
+// the only other provider that serves **Spanish audio** (Latino, Castellano and
+// subbed versions selectable inside its own player). The rest are fallbacks for
+// when a title is missing or a source is down.
 //
-// Every template here was verified against the provider's own documentation AND
-// probed with a real TMDB id (odd/tasks/continue-watching.md, L11):
-//   vidfast.pro  -> 200 text/html (movie + tv)          -> shipped
-//   vidsrc.io    -> 429 (rate-limits scripted probes;   -> shipped, it throttles
-//                   the host answers, browsers work)       curl but serves HTML
-//   vidlink.pro  -> 000, unreachable from this network  -> not shipped
-//   2embed.*     -> 301 loop between hosts             -> not shipped
+// Every template was verified by probing it with a real TMDB id, movie AND tv
+// (odd/tasks/continue-watching.md, L12). A provider that did not answer both is
+// not here: VidSrc (429 for scripted probes and the human reporting it broken),
+// VidLink (unreachable), 2Embed (301 loop), VidEasy (redirect to an unreachable
+// host), Stellar and AutoEmbed (tv route 404 with the documented shape).
 // ============================================================================
 import type { Media, Stream, StreamSource } from './types'
 
@@ -23,24 +19,45 @@ interface ProviderTemplates {
   label: string
   /** Higher runs earlier in the "Fuentes" list; Vimeus is 100. */
   weight: number
+  /**
+   * Only set when the provider states it or the probe found it. Left undefined
+   * rather than guessed: the picker shows nothing instead of a wrong language.
+   */
+  languageLabel?: string
   movie: (tmdbId: number) => string
   tv: (tmdbId: number, season: number, episode: number) => string
 }
 
 const PROVIDERS: ProviderTemplates[] = [
   {
-    id: 'vidsrc',
-    label: 'VidSrc',
-    weight: 90,
-    movie: (id) => `https://vidsrc.io/embed/movie/${id}`,
-    tv: (id, season, episode) => `https://vidsrc.io/embed/tv/${id}/${season}/${episode}`,
+    id: 'playlatinsrc',
+    label: 'PlayLatinSRC',
+    weight: 95,
+    languageLabel: 'Latino · Castellano · Subtitulado',
+    movie: (id) => `https://playlatinsrc.co/movie/${id}`,
+    tv: (id, season, episode) => `https://playlatinsrc.co/tv/${id}/${season}/${episode}`,
   },
   {
     id: 'vidfast',
     label: 'VidFast',
-    weight: 70,
+    weight: 75,
     movie: (id) => `https://vidfast.pro/movie/${id}`,
     tv: (id, season, episode) => `https://vidfast.pro/tv/${id}/${season}/${episode}`,
+  },
+  {
+    id: 'vidnest',
+    label: 'VidNest',
+    weight: 65,
+    languageLabel: 'Subtítulos automáticos',
+    movie: (id) => `https://vidnest.pro/movie/${id}`,
+    tv: (id, season, episode) => `https://vidnest.pro/tv/${id}/${season}/${episode}`,
+  },
+  {
+    id: 'embedwave',
+    label: 'EmbedWave',
+    weight: 55,
+    movie: (id) => `https://embedwave.cc/embed/movie/${id}`,
+    tv: (id, season, episode) => `https://embedwave.cc/embed/tv/${id}/${season}/${episode}`,
   },
 ]
 
@@ -59,14 +76,10 @@ function build(template: ProviderTemplates, media: Media): Stream {
     url,
     playable: true,
     weight: template.weight,
+    languageLabel: template.languageLabel,
   }
 }
 
-/**
- * One StreamSource per provider. All are always enabled: they need no key and no
- * configuration, and a provider being down only removes itself from the list
- * (fetchAllStreams settles each source independently).
- */
 export const embedProviderSources: StreamSource[] = PROVIDERS.map((template) => ({
   id: template.id,
   label: template.label,

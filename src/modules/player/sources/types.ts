@@ -42,6 +42,11 @@ export interface Stream {
   codec?: string
   /** ISO country codes (es, mx, gb…) detected from the name, for flags. */
   languages?: string[]
+  /**
+   * Idioma tal como lo declara la fuente, en texto. Se muestra solo cuando la
+   * fuente lo declara o cuando se verifico: nunca se adivina por el proveedor.
+   */
+  languageLabel?: string
   /** Can the current player handle this codec without transcoding? */
   playable?: boolean
   /** Higher = prioritized earlier in the list and in auto-play. */

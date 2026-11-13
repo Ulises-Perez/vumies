@@ -104,51 +104,85 @@
     >
       <div v-if="episodesOpen" class="absolute inset-0 z-[60] flex">
         <div class="flex-1 bg-black/70 backdrop-blur-sm" @click="closeEpisodes"></div>
-        <div class="flex h-full w-full max-w-md flex-col border-l border-border bg-card shadow-2xl">
-          <div class="flex items-center gap-3 border-b border-border p-4">
-            <h2 class="flex-1 font-poppins font-bold text-foreground">Episodios</h2>
-            <button @click="closeEpisodes" class="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Cerrar">
-              <XMarkIcon class="h-6 w-6" />
+        <!-- Cajon derecho: mismo lenguaje que el resto del player (un solo radio,
+             un solo padding, filas de 44px o mas). El episodio actual se marca
+             con fondo tenido + ring, sin el borde lateral grueso de antes. -->
+        <div class="flex h-full w-full max-w-sm flex-col border-l border-border/60 bg-card shadow-2xl">
+          <div class="flex items-start gap-3 px-4 pb-3 pt-4">
+            <div class="min-w-0 flex-1">
+              <h2 class="font-poppins text-base font-bold text-foreground">Episodios</h2>
+              <p class="mt-0.5 text-xs text-muted-foreground">
+                {{ seasons.length ? `${seasons.length} ${seasons.length === 1 ? 'temporada' : 'temporadas'}` : 'Sin temporadas' }}
+                <span v-if="episodes.length" aria-hidden="true">·</span>
+                <span v-if="episodes.length">{{ episodes.length }} episodios</span>
+              </p>
+            </div>
+            <button
+              @click="closeEpisodes"
+              class="-mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+              aria-label="Cerrar"
+            >
+              <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
 
-          <div class="border-b border-border p-4">
+          <div v-if="seasons.length" class="px-4 pb-3">
             <BaseSelect :model-value="selectedSeasonNumber" class="w-full" @update:model-value="onSeasonSelect($event)">
               <option v-for="s in seasons" :key="s.id" :value="s.season_number">{{ s.name }}</option>
             </BaseSelect>
           </div>
 
-          <div class="custom-scrollbar flex-1 space-y-1 overflow-y-auto p-2">
-            <div v-if="loadingEpisodes" class="flex justify-center py-8"><LoadingSpinner /></div>
-            <template v-else>
-              <button
-                v-for="ep in episodes"
-                :key="ep.id"
-                @click="goToEpisode(ep.episode_number)"
-                class="group/item relative flex w-full gap-3 overflow-hidden rounded-lg p-2 text-left transition-all duration-200"
-                :class="isCurrentEpisode(ep.episode_number) ? 'border-l-2 border-primary bg-muted/60' : 'border-l-2 border-transparent hover:bg-accent'"
-              >
-                <div class="relative aspect-video w-28 flex-none overflow-hidden rounded bg-card">
-                  <img v-if="ep.still_path" :src="`https://image.tmdb.org/t/p/w300${ep.still_path}`" alt="" class="h-full w-full object-cover opacity-80 transition-opacity group-hover/item:opacity-100" />
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <svg class="h-6 w-6 drop-shadow-md" :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-foreground opacity-0 group-hover/item:opacity-80'" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                  </div>
-                </div>
-                <div class="flex min-w-0 flex-1 flex-col justify-center">
-                  <h3 class="mb-1 truncate pr-1 text-sm font-medium leading-tight" :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-muted-foreground group-hover/item:text-foreground'">
-                    {{ ep.episode_number }}. {{ ep.name }}
-                  </h3>
-                  <div class="flex items-center space-x-2 text-xs text-muted-foreground">
-                    <span>{{ ep.runtime ? `${ep.runtime}m` : 'N/A' }}</span>
-                    <div v-if="ep.vote_average" class="flex items-center">
-                      <svg class="mr-1 h-3 w-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                      {{ ep.vote_average.toFixed(1) }}
-                    </div>
-                  </div>
-                  <p class="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">{{ ep.overview }}</p>
-                </div>
-              </button>
-            </template>
+          <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+            <div v-if="loadingEpisodes" class="flex min-h-[9rem] items-center justify-center"><LoadingSpinner /></div>
+            <ul v-else class="space-y-1">
+              <li v-for="ep in episodes" :key="ep.id">
+                <button
+                  @click="goToEpisode(ep.episode_number)"
+                  class="group/item flex w-full items-start gap-3 rounded-xl p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                  :class="isCurrentEpisode(ep.episode_number) ? 'bg-primary/10 ring-1 ring-primary/40' : 'hover:bg-accent'"
+                >
+                  <span class="relative aspect-video w-24 flex-none overflow-hidden rounded-md bg-muted">
+                    <img
+                      v-if="ep.still_path"
+                      :src="`https://image.tmdb.org/t/p/w300${ep.still_path}`"
+                      alt=""
+                      class="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span class="absolute inset-0 flex items-center justify-center">
+                      <svg
+                        class="h-5 w-5 drop-shadow-md"
+                        :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-foreground opacity-0 transition-opacity group-hover/item:opacity-90'"
+                        fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+                      ><path d="M8 5v14l11-7z" /></svg>
+                    </span>
+                  </span>
+
+                  <span class="min-w-0 flex-1">
+                    <span
+                      class="block truncate text-sm font-medium leading-snug"
+                      :class="isCurrentEpisode(ep.episode_number) ? 'text-primary' : 'text-foreground'"
+                    >
+                      {{ ep.episode_number }}. {{ ep.name }}
+                    </span>
+                    <span class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{{ ep.runtime ? `${ep.runtime} min` : 'Duración N/D' }}</span>
+                      <template v-if="ep.vote_average">
+                        <span aria-hidden="true">·</span>
+                        <span class="inline-flex items-center gap-1">
+                          <svg class="h-3 w-3 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                          {{ ep.vote_average.toFixed(1) }}
+                        </span>
+                      </template>
+                    </span>
+                    <span v-if="ep.overview" class="mt-1 line-clamp-2 block text-[11px] leading-relaxed text-muted-foreground">
+                      {{ ep.overview }}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -156,6 +190,7 @@
 
     <!-- Source selector (Stremio-style modal) -->
     <StreamSourceModal
+        :active-source-id="activeStream?.sourceId ?? preferredSourceId"
       v-if="selectorOpen"
       :loading="sourcesLoading"
       :results="sourceResults"

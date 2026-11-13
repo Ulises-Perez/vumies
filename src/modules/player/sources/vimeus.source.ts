@@ -31,6 +31,7 @@ export const vimeusSource: StreamSource = {
       {
         sourceId: 'vimeus',
         label: 'Vimeus',
+        languageLabel: 'Español latino',
         kind: 'iframe',
         url,
         playable: true,
