@@ -13,6 +13,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
 
 type Variant = 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link'
 type Size = 'sm' | 'default' | 'lg' | 'icon'
@@ -21,7 +22,9 @@ interface Props {
   variant?: Variant
   size?: Size
   // Si se pasa `to`, renderiza <router-link>; si `href`, <a>; si no, <button>.
-  to?: string | Record<string, unknown>
+  // `to` es RouteLocationRaw porque eso acepta router-link: un objeto nombrado
+  // ({ name, params }) es un destino valido, no un Record cualquiera.
+  to?: RouteLocationRaw
   href?: string
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean

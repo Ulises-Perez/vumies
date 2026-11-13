@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-background pb-20">
-    <!-- Hero: anime destacado (primer reciente) -->
-    <section class="relative h-[var(--hero-md)] w-full overflow-hidden">
+    <!-- Hero: anime destacado (primer reciente). min-h + columna en flujo: con una
+         altura fija y el contenido en un overlay absoluto, el CTA de abajo se salia
+         del hero y no recibia clics (el mismo defecto que se cerro en /movies y /series). -->
+    <section class="relative flex min-h-[var(--hero-md)] w-full items-center overflow-hidden">
       <template v-if="heroAnime">
         <!-- Hero como <img> real (LCP): fetchpriority='high' lo descarga con prioridad
              máxima en cuanto Vue lo monta, frente a la prioridad 'Low' de un background-image. -->
@@ -13,10 +15,10 @@
           decoding="async"
         />
         <div class="absolute inset-0 scrim-b" />
-        <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/60 to-transparent" />
+        <div class="absolute inset-0 scrim-r" />
       </template>
 
-      <div class="absolute inset-0 flex items-center">
+      <div class="relative w-full py-16 md:py-20">
         <div class="container-app">
           <div class="max-w-3xl space-y-6">
             <h1 class="text-5xl md:text-7xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
@@ -49,7 +51,7 @@
     </section>
 
     <!-- Listas -->
-    <BaseContainer class="space-y-12 -mt-20 relative z-10">
+    <BaseContainer class="space-y-12 relative z-10">
       <!-- Episodios recientes -->
       <section v-if="recentEpisodes.length">
         <HorizontalScroll title="Episodios Recientes">

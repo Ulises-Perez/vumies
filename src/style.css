@@ -109,6 +109,7 @@
     --hero-lg: 30rem; /* home y detalle */
     --poster-min: 8.5rem; /* 136px: ancho minimo de poster en grilla */
     --grid-gap: 1.125rem; /* 18px */
+    --mosaic-lead-min: 24rem; /* altura minima del lead del mosaico (S9) */
   }
 
   @media (min-width: 768px) {

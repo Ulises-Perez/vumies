@@ -3,12 +3,14 @@
   "chosen": "03-mosaico.html",
   "handoffs": {
     "03-mosaico.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-11T19:16:08.727Z",
       "startedAt": null,
-      "implementedAt": null,
-      "feature": "odd/tasks/ui-astryx-shell.md"
+      "implementedAt": "2026-11-11T19:22:51.861Z",
+      "feature": "odd/tasks/ui-astryx-shell.md",
+      "note": "Implementado y verificado: bar cero cromo con superficie por control, contrato de layout único, mosaico sin solapes y sin hueco. Commit b79597b.",
+      "previewUrl": "http://localhost:5173/movies"
     }
   }
 }

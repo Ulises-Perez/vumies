@@ -50,120 +50,24 @@
     <BaseContainer class="space-y-12 relative z-10">
 
       <!-- Mosaico: piezas con alto propio; las filas crecen con el contenido
-           (auto-rows auto) para que en 2 columnas de movil nada se solape. -->
-      <section v-if="hasMosaic" aria-label="Destacados" class="grid grid-cols-2 gap-[var(--grid-gap)] md:grid-cols-6 auto-rows-[minmax(0,auto)]">
-        <!-- Lead: la mas valorada -->
-        <article
-          v-if="mosaicLead"
-          class="relative overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-2 md:col-span-4 md:row-span-2 aspect-[4/5] sm:aspect-[16/10] md:aspect-auto md:min-h-[24rem]"
-        >
-          <img
-            v-if="mosaicLead.backdrop_path"
-            :src="leadBackdrop"
-            :alt="mosaicLead.name"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-          <div v-else class="absolute inset-0 bg-muted" />
-          <div class="absolute inset-0 scrim-b" />
-          <div class="absolute inset-0 scrim-r" />
-          <div class="absolute inset-x-0 bottom-0 p-5 md:p-7">
-            <h2 class="text-3xl md:text-5xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
-              {{ mosaicLead.name }}
-            </h2>
-            <p class="mt-2 text-sm md:text-base text-muted-foreground">
-              <span class="text-primary font-semibold">{{ matchOf(mosaicLead) }}% Match</span>
-              <span> · {{ airYearOf(mosaicLead) }}</span>
-            </p>
-            <div class="mt-4">
-              <BaseButton
-                :to="{ name: 'serie-detail', params: { id: mosaicLead.id } }"
-                size="lg"
-              >
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
-                </svg>
-                <span>Ver ahora</span>
-              </BaseButton>
-            </div>
-          </div>
-        </article>
-
-        <!-- Tall 1 -->
-        <router-link
-          v-if="mosaicTallOne"
-          :to="{ name: 'serie-detail', params: { id: mosaicTallOne.id } }"
-          class="relative block overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-1 md:row-span-2 aspect-[2/3] md:aspect-auto md:h-full"
-        >
-          <img
-            v-if="mosaicTallOne.poster_path"
-            :src="tallPoster(mosaicTallOne)"
-            :alt="mosaicTallOne.name"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-          <div v-else class="absolute inset-0 bg-muted" />
-          <div class="absolute inset-0 scrim-b" />
-          <div class="absolute inset-x-0 bottom-0 p-3">
-            <p class="text-sm font-semibold text-foreground line-clamp-2">{{ mosaicTallOne.name }}</p>
-            <p class="mt-1 text-xs text-muted-foreground">{{ airYearOf(mosaicTallOne) }}</p>
-          </div>
-        </router-link>
-
-        <!-- Tall 2 -->
-        <router-link
-          v-if="mosaicTallTwo"
-          :to="{ name: 'serie-detail', params: { id: mosaicTallTwo.id } }"
-          class="relative block overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-1 md:row-span-2 aspect-[2/3] md:aspect-auto md:h-full"
-        >
-          <img
-            v-if="mosaicTallTwo.poster_path"
-            :src="tallPoster(mosaicTallTwo)"
-            :alt="mosaicTallTwo.name"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-          <div v-else class="absolute inset-0 bg-muted" />
-          <div class="absolute inset-0 scrim-b" />
-          <div class="absolute inset-x-0 bottom-0 p-3">
-            <p class="text-sm font-semibold text-foreground line-clamp-2">{{ mosaicTallTwo.name }}</p>
-            <p class="mt-1 text-xs text-muted-foreground">{{ airYearOf(mosaicTallTwo) }}</p>
-          </div>
-        </router-link>
-
-        <!-- Wide: tambien populares (lista de apoyo con datos ya cargados) -->
-        <div
-          v-if="mosaicWide.length"
-          class="col-span-2 rounded-[var(--radius-container)] bg-card p-5 ring-1 ring-border md:col-span-6"
-        >
-          <h2 class="text-lg font-bold text-foreground font-poppins">También populares</h2>
-          <ul class="mt-3 space-y-2">
-            <li v-for="show in mosaicWide" :key="show.id">
-              <router-link
-                :to="{ name: 'serie-detail', params: { id: show.id } }"
-                class="flex min-h-[32px] items-center justify-between gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <span class="truncate font-medium">{{ show.name }}</span>
-                <span class="shrink-0 text-xs">{{ airYearOf(show) }}</span>
-              </router-link>
-            </li>
-          </ul>
-        </div>
-      </section>
+           (auto-rows auto) para que en 2 columnas de movil nada se solape.
+           Una sola receta para /movies, /series y /: el componente la define. -->
+      <MosaicHighlights
+        lead-kicker="Mejor valorada"
+        :lead="leadTile"
+        :loading="mosaicLoading"
+        :talls="tallTiles"
+        wide-title="También populares"
+        :wide="wideTiles"
+      />
 
       <!-- Unico rail horizontal de la pagina (.rail via HorizontalScroll):
-           Series Populares, la primera coleccion que la vista ya mostraba. -->
-      <section>
+           Series Populares, sin las piezas que ya ocupan hero, mosaico y lista ancha. -->
+      <section v-if="popularRest.length">
         <HorizontalScroll title="Series Populares">
-          <template v-if="popularSeries.length">
-            <div v-for="series in popularSeries" :key="series.id" class="flex-none w-[160px] md:w-[220px]">
-              <TVShowCard :series="series" />
-            </div>
-          </template>
-          <SkeletonCardRow v-else />
+          <div v-for="series in popularRest" :key="series.id" class="flex-none w-[160px] md:w-[220px]">
+            <TVShowCard :series="series" />
+          </div>
         </HorizontalScroll>
       </section>
 
@@ -183,9 +87,10 @@
 import { ref, onMounted, computed } from 'vue'
 import { useSeries } from '@/modules/catalog/composables/useSeries'
 import TVShowCard from '@/modules/catalog/components/TVShowCard.vue'
+import MosaicHighlights from '@/modules/catalog/components/MosaicHighlights.vue'
+import type { MosaicTile } from '@/modules/catalog/types/mosaic.types'
 import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue'
 import SkeletonHero from '@/modules/ui/components/skeletons/SkeletonHero.vue'
-import SkeletonCardRow from '@/modules/ui/components/skeletons/SkeletonCardRow.vue'
 import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
 import { BaseBadge, BaseButton, BaseContainer } from '@/modules/ui/components/base'
 import type { TVShow } from '@/modules/catalog/types/tmdb.types'
@@ -197,6 +102,7 @@ const { fetchPopularSeries, fetchTopRatedSeries } = useSeries()
 
 const popularSeries = ref<TVShow[]>([])
 const topRatedSeries = ref<TVShow[]>([])
+const mosaicLoading = ref(true)
 
 const heroSeries = computed(() => {
   if (popularSeries.value.length > 0) return popularSeries.value[0]
@@ -216,20 +122,33 @@ const mosaicTallOne = computed(() => topRatedSeries.value[1] ?? null)
 const mosaicTallTwo = computed(() => topRatedSeries.value[2] ?? null)
 const mosaicWide = computed(() => popularSeries.value.slice(1, 4))
 const topRatedRest = computed(() => topRatedSeries.value.slice(3))
-const hasMosaic = computed(
-  () =>
-    mosaicLead.value !== null ||
-    mosaicTallOne.value !== null ||
-    mosaicTallTwo.value !== null ||
-    mosaicWide.value.length > 0
-)
-const leadBackdrop = computed(() =>
-  mosaicLead.value?.backdrop_path ? getBackdropUrl(mosaicLead.value.backdrop_path, 'original') : ''
-)
-
-function tallPoster(show: TVShow): string {
-  return show.poster_path ? getPosterUrl(show.poster_path, 'w342') : ''
+// hero=popular[0], lista ancha=popular[1..3]: la rail arranca donde termina eso,
+// asi ninguna serie aparece dos veces en la misma pagina.
+const popularRest = computed(() => popularSeries.value.slice(4))
+// El mosaico recibe piezas ya resueltas: ninguna vista filtra campos de TMDB
+// al marcado (movie.title vs show.name, release_date vs first_air_date).
+function toTile(show: TVShow, variant: 'lead' | 'tall' = 'lead'): MosaicTile {
+  const backdrop = show.backdrop_path ? getBackdropUrl(show.backdrop_path, 'w1280') : ''
+  const poster = show.poster_path ? getPosterUrl(show.poster_path, 'w342') : ''
+  return {
+    id: show.id,
+    title: show.name,
+    artwork: variant === 'lead' ? backdrop || poster : poster || backdrop,
+    year: airYearOf(show),
+    meta: `${matchOf(show)}% Match`,
+    overview: show.overview,
+    badge: variant === 'tall' ? 'Mejor valorada' : undefined,
+    to: { name: 'serie-detail', params: { id: show.id } },
+  }
 }
+
+const leadTile = computed(() => (mosaicLead.value ? toTile(mosaicLead.value) : null))
+const tallTiles = computed(() =>
+  [mosaicTallOne.value, mosaicTallTwo.value]
+    .filter((show): show is TVShow => show !== null)
+    .map((show) => toTile(show, 'tall'))
+)
+const wideTiles = computed(() => mosaicWide.value.map((show) => toTile(show)))
 
 function airYearOf(show: TVShow): string {
   return show.first_air_date ? String(new Date(show.first_air_date).getFullYear()) : ''
@@ -240,20 +159,14 @@ function matchOf(show: TVShow): string {
 }
 
 onMounted(async () => {
-  const popularRes = await fetchPopularSeries()
-  popularSeries.value = popularRes.results
+  try {
+    const popularRes = await fetchPopularSeries()
+    popularSeries.value = popularRes.results
 
-  const topRatedRes = await fetchTopRatedSeries()
-  topRatedSeries.value = topRatedRes.results
+    const topRatedRes = await fetchTopRatedSeries()
+    topRatedSeries.value = topRatedRes.results
+  } finally {
+    mosaicLoading.value = false
+  }
 })
 </script>
-
-<style scoped>
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-</style>

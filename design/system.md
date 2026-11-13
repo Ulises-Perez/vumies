@@ -153,6 +153,7 @@ One recipe, defined once in `src/style.css:175-190`. No view declares its own.
 | `--grid-gap` | `1.125rem` (18px), `1.5rem` (24px) from `768px` | `src/style.css` |
 | `.rail` | flex scroller that cancels the gutter (`margin-inline: calc(var(--gutter) * -1)`), `scroll-snap-type: x proximity`, hidden scrollbar | `src/style.css` |
 | `--hero-sm/md/lg` | `20rem` / `24rem` / `30rem` (320/384/480px) | `src/style.css` |
+| `--mosaic-lead-min` | `24rem`: floor for the mosaic lead tile | `src/style.css` |
 | `--bar-height`, `--bar-offset`, `--chrome-top` | `3rem`, `0.75rem`, `4rem` | `src/style.css` |
 
 `.container-custom` was removed: it nested a second gutter inside the views and was the source of
@@ -162,6 +163,24 @@ the double gutter in Search, Favorites and History. `BaseContainer` renders `.co
 Hero heights are a floor, not a lock: the hero sections use `min-h-[var(--hero-*)]` with a
 flowing content column so a long title can never be clipped by the hero's own `overflow: hidden`
 (measured: a fixed 384px hero cut its CTA row by 28.5px).
+
+### 7.1 The mosaic
+
+`MosaicHighlights.vue` is the only mosaic in the app. `/`, `/movies` and `/series` open with it,
+so a change to the recipe belongs in the component, never in a view.
+
+| Piece | Recipe |
+| --- | --- |
+| Grid | `grid-cols-2`, `md:grid-cols-6`, `auto-rows-[minmax(0,auto)]`, `gap: var(--grid-gap)` |
+| Lead | `col-span-2 md:col-span-4 md:row-span-2`, `aspect-[4/5]` then `sm:aspect-[16/10]`, `md:aspect-auto md:min-h-[var(--mosaic-lead-min)]` |
+| Tall tiles | `col-span-1 md:row-span-2`, `aspect-[2/3]`, `md:aspect-auto md:h-full` |
+| Wide band | `col-span-2 md:col-span-6`, a real list of titles, not art |
+
+Row tracks are content-sized on purpose. With a fixed `grid-auto-rows` the tiles overflowed their
+rows and later siblings painted over earlier ones (measured at 390px: 23,874 px² per tile pair).
+The mosaic takes `lead`, an optional `loading` flag (skeleton until the view knows whether there is
+data, then nothing rather than an eternal skeleton), and the tiles' badge is the only place a
+collection label appears, because the lead already carries it as its kicker.
 
 ## 8. Component rules
 

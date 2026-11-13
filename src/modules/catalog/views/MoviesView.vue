@@ -67,116 +67,23 @@
     <BaseContainer class="space-y-12 relative z-10">
 
       <!-- Mosaico: piezas con alto propio; las filas crecen con el contenido
-           (auto-rows auto) para que en 2 columnas de movil nada se solape. -->
-      <section v-if="hasMosaic" aria-label="Destacados" class="grid grid-cols-2 gap-[var(--grid-gap)] md:grid-cols-6 auto-rows-[minmax(0,auto)]">
-        <!-- Lead: lo mas valorado -->
-        <article
-          v-if="mosaicLead"
-          class="relative overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-2 md:col-span-4 md:row-span-2 aspect-[4/5] sm:aspect-[16/10] md:aspect-auto md:min-h-[24rem]"
-        >
-          <img
-            v-if="mosaicLead.backdrop_path"
-            :src="leadBackdrop"
-            :alt="mosaicLead.title"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-          <div v-else class="absolute inset-0 bg-muted" />
-          <div class="absolute inset-0 scrim-b" />
-          <div class="absolute inset-0 scrim-r" />
-          <div class="absolute inset-x-0 bottom-0 p-5 md:p-7">
-            <h2 class="text-3xl md:text-5xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
-              {{ mosaicLead.title }}
-            </h2>
-            <p class="mt-2 text-sm md:text-base text-muted-foreground">
-              <span class="text-primary font-semibold">{{ matchOf(mosaicLead) }}% Match</span>
-              <span> · {{ releaseYearOf(mosaicLead) }}</span>
-            </p>
-            <div class="mt-4">
-              <BaseButton
-                :to="{ name: 'movie-detail', params: { id: mosaicLead.id } }"
-                size="lg"
-              >
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
-                </svg>
-                <span>Ver ahora</span>
-              </BaseButton>
-            </div>
-          </div>
-        </article>
-
-        <!-- Tall 1 -->
-        <router-link
-          v-if="mosaicTallOne"
-          :to="{ name: 'movie-detail', params: { id: mosaicTallOne.id } }"
-          class="relative block overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-1 md:row-span-2 aspect-[2/3] md:aspect-auto md:h-full"
-        >
-          <img
-            v-if="mosaicTallOne.poster_path"
-            :src="tallPoster(mosaicTallOne)"
-            :alt="mosaicTallOne.title"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-          <div v-else class="absolute inset-0 bg-muted" />
-          <div class="absolute inset-0 scrim-b" />
-          <div class="absolute inset-x-0 bottom-0 p-3">
-            <p class="text-sm font-semibold text-foreground line-clamp-2">{{ mosaicTallOne.title }}</p>
-            <p class="mt-1 text-xs text-muted-foreground">{{ releaseYearOf(mosaicTallOne) }}</p>
-          </div>
-        </router-link>
-
-        <!-- Tall 2 -->
-        <router-link
-          v-if="mosaicTallTwo"
-          :to="{ name: 'movie-detail', params: { id: mosaicTallTwo.id } }"
-          class="relative block overflow-hidden rounded-[var(--radius-container)] ring-1 ring-border col-span-1 md:row-span-2 aspect-[2/3] md:aspect-auto md:h-full"
-        >
-          <img
-            v-if="mosaicTallTwo.poster_path"
-            :src="tallPoster(mosaicTallTwo)"
-            :alt="mosaicTallTwo.title"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-          <div v-else class="absolute inset-0 bg-muted" />
-          <div class="absolute inset-0 scrim-b" />
-          <div class="absolute inset-x-0 bottom-0 p-3">
-            <p class="text-sm font-semibold text-foreground line-clamp-2">{{ mosaicTallTwo.title }}</p>
-            <p class="mt-1 text-xs text-muted-foreground">{{ releaseYearOf(mosaicTallTwo) }}</p>
-          </div>
-        </router-link>
-
-        <!-- Wide: proximos estrenos -->
-        <div
-          v-if="mosaicWide.length"
-          class="col-span-2 rounded-[var(--radius-container)] bg-card p-5 ring-1 ring-border md:col-span-6"
-        >
-          <h2 class="text-lg font-bold text-foreground font-poppins">Próximos estrenos</h2>
-          <ul class="mt-3 space-y-2">
-            <li v-for="movie in mosaicWide" :key="movie.id">
-              <router-link
-                :to="{ name: 'movie-detail', params: { id: movie.id } }"
-                class="flex min-h-[32px] items-center justify-between gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <span class="truncate font-medium">{{ movie.title }}</span>
-                <span class="shrink-0 text-xs">{{ releaseYearOf(movie) }}</span>
-              </router-link>
-            </li>
-          </ul>
-        </div>
-      </section>
+           (auto-rows auto) para que en 2 columnas de movil nada se solape.
+           Una sola receta para /movies, /series y /: el componente la define. -->
+      <MosaicHighlights
+        lead-kicker="Mejor valorada"
+        :lead="leadTile"
+        :loading="mosaicLoading"
+        :talls="tallTiles"
+        wide-title="Próximos estrenos"
+        :wide="wideTiles"
+      />
 
       <!-- Unico rail horizontal de la pagina (.rail via HorizontalScroll):
-           Peliculas Populares, la primera coleccion que la vista ya mostraba. -->
+           Peliculas Populares, sin la pieza que ya abre el hero. -->
       <section>
         <HorizontalScroll title="Películas Populares">
-          <template v-if="popularMovies.length">
-            <div v-for="movie in popularMovies" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
+          <template v-if="popularRest.length">
+            <div v-for="movie in popularRest" :key="movie.id" class="flex-none w-[160px] md:w-[220px]">
               <MovieCard :movie="movie" />
             </div>
           </template>
@@ -229,6 +136,8 @@ import { useMovies } from '../composables/useMovies'
 import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
 import MovieCard from '../components/MovieCard.vue'
+import MosaicHighlights from '../components/MosaicHighlights.vue'
+import type { MosaicTile } from '../types/mosaic.types'
 import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue' // Added import
 import SkeletonHero from '@/modules/ui/components/skeletons/SkeletonHero.vue'
 import SkeletonCardRow from '@/modules/ui/components/skeletons/SkeletonCardRow.vue'
@@ -245,6 +154,7 @@ const popularMovies = ref<Movie[]>([])
 const topRatedMovies = ref<Movie[]>([])
 const upcomingMovies = ref<Movie[]>([])
 const genres = ref<{ id: number; name: string }[]>([])
+const mosaicLoading = ref(true)
 
 const heroMovie = computed(() => popularMovies.value[0] || null)
 const heroBackdrop = computed(() =>
@@ -259,20 +169,32 @@ const mosaicTallTwo = computed(() => topRatedMovies.value[2] ?? null)
 const mosaicWide = computed(() => upcomingMovies.value.slice(0, 3))
 const topRatedRest = computed(() => topRatedMovies.value.slice(3))
 const upcomingRest = computed(() => upcomingMovies.value.slice(3))
-const hasMosaic = computed(
-  () =>
-    mosaicLead.value !== null ||
-    mosaicTallOne.value !== null ||
-    mosaicTallTwo.value !== null ||
-    mosaicWide.value.length > 0
-)
-const leadBackdrop = computed(() =>
-  mosaicLead.value?.backdrop_path ? getBackdropUrl(mosaicLead.value.backdrop_path, 'original') : ''
-)
-
-function tallPoster(movie: Movie): string {
-  return movie.poster_path ? getPosterUrl(movie.poster_path, 'w342') : ''
+// La rail arranca despues del hero: popular[0] ya es la pieza grande de arriba.
+const popularRest = computed(() => popularMovies.value.slice(1))
+// El mosaico recibe piezas ya resueltas: ninguna vista filtra campos de TMDB
+// al marcado (movie.title vs show.name, release_date vs first_air_date).
+function toTile(movie: Movie, variant: 'lead' | 'tall' = 'lead'): MosaicTile {
+  const backdrop = movie.backdrop_path ? getBackdropUrl(movie.backdrop_path, 'w1280') : ''
+  const poster = movie.poster_path ? getPosterUrl(movie.poster_path, 'w342') : ''
+  return {
+    id: movie.id,
+    title: movie.title,
+    artwork: variant === 'lead' ? backdrop || poster : poster || backdrop,
+    year: releaseYearOf(movie),
+    meta: `${matchOf(movie)}% Match`,
+    overview: movie.overview,
+    badge: variant === 'tall' ? 'Mejor valorada' : undefined,
+    to: { name: 'movie-detail', params: { id: movie.id } },
+  }
 }
+
+const leadTile = computed(() => (mosaicLead.value ? toTile(mosaicLead.value) : null))
+const tallTiles = computed(() =>
+  [mosaicTallOne.value, mosaicTallTwo.value]
+    .filter((movie): movie is Movie => movie !== null)
+    .map((movie) => toTile(movie, 'tall'))
+)
+const wideTiles = computed(() => mosaicWide.value.map((movie) => toTile(movie)))
 
 function releaseYearOf(movie: Movie): string {
   return movie.release_date ? String(new Date(movie.release_date).getFullYear()) : ''
@@ -298,26 +220,20 @@ function toggleHeroFavorite() {
 }
 
 onMounted(async () => {
-  const [popularRes, topRatedRes, upcomingRes, genresRes] = await Promise.all([
-     fetchPopularMovies(),
-     fetchTopRatedMovies(),
-     fetchUpcomingMovies(),
-     fetchGenres()
-  ])
+  try {
+    const [popularRes, topRatedRes, upcomingRes, genresRes] = await Promise.all([
+       fetchPopularMovies(),
+       fetchTopRatedMovies(),
+       fetchUpcomingMovies(),
+       fetchGenres()
+    ])
 
-  popularMovies.value = popularRes.results
-  topRatedMovies.value = topRatedRes.results
-  upcomingMovies.value = upcomingRes.results
-  genres.value = genresRes || []
+    popularMovies.value = popularRes.results
+    topRatedMovies.value = topRatedRes.results
+    upcomingMovies.value = upcomingRes.results
+    genres.value = genresRes || []
+  } finally {
+    mosaicLoading.value = false
+  }
 })
 </script>
-
-<style scoped>
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-</style>
