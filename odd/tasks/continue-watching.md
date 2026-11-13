@@ -469,3 +469,14 @@ Static: `vue-tsc` clean, `vite build` clean, impeccable detector on the player a
 
 Checks: `vue-tsc` clean, `vite build` clean, impeccable detector on `src/modules/player` and `src/modules/catalog`
 empty, screenshots at `temp/ego-play/`.
+
+**L18** — Two vision reviewers read the first round of screenshots and found real defects, which were fixed and re-measured.
+
+1. **The screenshots were wrong, and the wrongness was a bug.** The reviews described a source dialog sitting on top of the episode picker. It was there: both dialogs share `z-index: 60` and nothing prevented them from being open together, so opening episodes with sources open stacked them. `openEpisodes()` now closes the selector and `openSelector()` closes the episodes. Measured after the fix: with the source dialog open, opening episodes leaves `sourcesDialog: false, episodesDialog: true`.
+2. **The two-line synopsis was not clamped.** The class list carried `line-clamp-2` *and* `block`; `block` overrides the `display: -webkit-box` that the clamp relies on, so descriptions ran to three lines with an orphan word. `block` is gone: measured maximum is now **2 lines** across 13 rows.
+3. **Row rhythm was uneven** (129px pitch for rows with a synopsis, 109px without). Every row now has `min-h-[5.25rem]`: measured **one single row height, 107px, with a constant 109px pitch** for all 13 rows.
+4. **The list was hard-cropped** at the dialog edge with no separation from the header. The header now carries a hairline `border-b border-border/60`.
+5. **The 16:9 frames butchered vertical posters.** The card renders `poster_path` (2:3, natural 342×513) inside a 16:9 frame, and centred cropping decapitated the subject. Anchored at `object-[50%_18%]`, the frame now holds the head. A 1px `ring-inset ring-white/15` drawn inside the clip keeps the frame continuous over bright art, where the outer ring used to vanish, and the play disc brightens and scales on hover so the hovered card is distinguishable from its neighbours.
+6. **The source dialog's close glyph** was 16px in a 40px target and read as a speck: now 18px.
+
+Checked: `vue-tsc` clean, `vite build` clean, impeccable detector empty on both modules, mobile dialog measured at `top 70 / bottom 70` (properly centred).

@@ -18,7 +18,7 @@
           class="-mr-2 -mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
           aria-label="Cerrar"
         >
-          <XMarkIcon class="h-4 w-4" />
+          <XMarkIcon class="h-[1.125rem] w-[1.125rem]" />
         </button>
       </header>
 

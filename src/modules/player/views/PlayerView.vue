@@ -115,7 +115,7 @@
             aria-modal="true"
             aria-labelledby="episodes-title"
           >
-            <header class="flex items-center gap-[var(--spacing-3)] px-[var(--spacing-5)] pb-[var(--spacing-3)] pt-[var(--spacing-4)]">
+            <header class="flex items-center gap-[var(--spacing-3)] border-b border-border/60 px-[var(--spacing-5)] pb-[var(--spacing-3)] pt-[var(--spacing-4)]">
               <div class="min-w-0 flex-1">
                 <h2 id="episodes-title" class="type-heading-3 text-foreground">Episodios</h2>
                 <p v-if="episodes.length" class="type-supporting mt-0.5 text-muted-foreground">
@@ -158,7 +158,7 @@
                   <button
                     :ref="(el) => setEpisodeRef(el as HTMLButtonElement | null, ep.episode_number)"
                     @click="goToEpisode(ep.episode_number)"
-                    class="group/item flex w-full items-start gap-[var(--spacing-3)] rounded-[var(--radius-element)] px-[var(--spacing-2)] py-[var(--spacing-2)] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                    class="group/item flex min-h-[5.25rem] w-full items-start gap-[var(--spacing-3)] rounded-[var(--radius-element)] px-[var(--spacing-2)] py-[var(--spacing-2)] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
                     :class="
                       isCurrentEpisode(ep.episode_number)
                         ? 'bg-primary/10 ring-1 ring-primary/40'
@@ -220,7 +220,7 @@
                       </span>
                       <span
                         v-if="ep.overview"
-                        class="type-supporting mt-[var(--spacing-1)] line-clamp-2 block leading-relaxed text-muted-foreground"
+                        class="type-supporting mt-[var(--spacing-1)] line-clamp-2 leading-relaxed text-muted-foreground"
                       >
                         {{ ep.overview }}
                       </span>
@@ -376,12 +376,16 @@ function selectStream(stream: Stream) {
 // ---- Selector / Episodes ----
 function openSelector() {
   if (!sourceResults.value.length && !sourcesLoading.value) loadSources(buildMedia())
+  episodesOpen.value = false
   selectorOpen.value = true
 }
 function onSelectorClose() {
   selectorOpen.value = false
 }
 function openEpisodes() {
+  // Los dos dialogos comparten z-index: abrir uno cierra el otro para que nunca
+  // se apilen, que es lo que pasaba al abrir episodios con fuentes abiertas.
+  selectorOpen.value = false
   episodesOpen.value = true
 }
 function closeEpisodes() {

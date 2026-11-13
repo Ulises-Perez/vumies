@@ -30,16 +30,17 @@
             v-if="item.poster_path"
             :src="getPosterUrl(item.poster_path, 'w342')"
             :alt="item.title"
-            class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
+            class="absolute inset-0 h-full w-full object-cover object-[50%_18%] transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
             loading="lazy"
             decoding="async"
           />
           <span aria-hidden="true" class="absolute inset-0 scrim-b" />
+          <span aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/15" />
           <span
             class="absolute inset-0 flex items-center justify-center"
             aria-hidden="true"
           >
-            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur-sm transition-transform duration-200 group-hover:scale-105 motion-reduce:group-hover:scale-100">
+            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur-sm transition-[transform,background-color] duration-200 group-hover:scale-105 group-hover:bg-background/90 motion-reduce:group-hover:scale-100">
               <svg class="ml-0.5 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
               </svg>
