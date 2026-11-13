@@ -123,3 +123,41 @@ and the top padding (27px) is not the bottom padding (8px).
 `vue-tsc` and `vite build` clean. Impeccable detector on `/` and `/history`: only the already-waived
 `overused-font`. Not verified: the resume position itself inside the player (it is their origin and
 their storage), and anime entries (the feature flag is off, so the route is unreachable in this build).
+
+**L5** — Follow-up request: review the player at `/player/movie/969681` and find out whether
+skip-intro/outro and automatic next-episode are possible, "desde donde traer esta informacion de
+forma automatica y no manualmente".
+
+1. **Player review (verified in the browser).** `/player/movie/969681` opens with the source picker,
+   not with video: the `<iframe>` exists with an **empty `src`** and the modal says "Elige una
+   fuente · VIMEUS EMBED · Vimeus". Clicking it loads
+   `https://vimeus.net/e/movie?tmdb=969681&view_key=…&title=Vumies&theme=minimal&font=v3&overlay=v5&epanel=v3&splash=v3`
+   at 1440x900 with `referrerpolicy="origin"`. So playback works, but a single available source still
+   costs a click, and no `cf` token is present in that URL.
+2. **The skip data exists, automatically.** Two community databases answer public reads with no key:
+   - **IntroDB** `GET https://api.introdb.app/segments?imdb_id=tt0944947&season=1&episode=1` returns
+     `outro {start_sec 3631.5, end_sec 3699.5, confidence 1, submission_count 2}`, `no_recap: true`,
+     `no_intro: false`, and `intro: null` when nobody submitted one. It accepts imdb/tvdb/tmdb and
+     `is_movie=true` for films.
+   - **AniSkip** `GET https://api.aniskip.com/v2/skip-times/16498/1?types=op&types=ed&episodeLength=1420`
+     returns `op {startTime 0, endTime 90}`, keyed by MAL id and episode.
+   Verified with real responses for GoT S1E1 and AoT E1. No manual input is needed: null means "not
+   submitted", not "ask the user".
+   SponsorBlock is not usable here: it keys by video id and our stream is not a SponsorBlock video.
+3. **What is still missing is the ability to act on that data.** Skipping needs `seekTo` (exists in
+   the vimeos bridge) and auto-next near the end needs progress (also exists: `time` every 5 s with
+   `player_progress`/`player_duration`), but both are gated to vimeus' origin (L2). The one documented
+   route to authorize another origin is the listing API with `with_cf=true`, whose `embed_url` uses the
+   `/cf/*` route plus a `cf` token. **Blocked here, not by design but by configuration:** the proxy
+   (`server.ts`, already forwards `with_cf`) starts and listens on :8000, but answers
+   `VIMEUS_API_KEY is not configured` in this environment, and the key lives in `.env`, which is
+   private material this session must not read. The embed page does **not** mint a token by itself:
+   requesting `https://vimeus.net/e/serie?tmdb=1399&se=1&ep=1&with_cf=true` (and `with_cf=1`) returns
+   the same plain `https://vimeos.net/embed-uh1n724ozegr.html` with no `cf`.
+4. **Not viable: our own player over their stream.** The manifest lives inside the vimeos iframe
+   (hls.js + Google IMA). The documentation exposes embed URLs, not stream URLs; extracting a
+   manifest would mean scraping their player internals — fragile against their releases and against
+   the model the `cf` token exists to enforce. A player of our own (skip button, next-episode, our
+   controls) presupposes the bridge or a licensed manifest, not a scrape.
+5. **Rejected heuristic:** firing "next episode" from wall-clock time versus TMDB runtime. It breaks
+   on pause, seek and buffering, so it would advance people mid-episode. No.
