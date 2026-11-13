@@ -259,3 +259,42 @@ detector on the three rendered routes reports only the already-waived `overused-
 
 Not measured: real frame timing on a low-end device, and touch behaviour (the effect is hover-only
 by nature; `pointerenter` on tap primes a layer but shows nothing until the next hover).
+
+**L23** — Human report: "Cuando se activa el hover o el scale en el poster, este se rompe arriba al
+chocar... el poster se corta."
+
+The numbers, measured before touching anything: `.rail` sets `overflow-x: auto`, and the spec makes
+`overflow-y` compute to `auto` too, so the rail is a clipping box in both axes while carrying only
+`padding-block: 0.25rem 0.5rem`. On hover the card lifts 2px (`.motion-card`) and the frame another
+2px (`group-hover:-translate-y-0.5`), which put the poster's top edge at `figure.top = 892` against a
+rail top of `892` — flush with the clip line, so rounding cut the first rows — and the ambilight,
+which started at `-8%` (`top = 863`), was cut by 29px of hard horizontal edge right above the poster.
+That hard line is what the screenshots showed.
+
+Fixed in two places, and the second one matters as much as the first:
+
+1. `.rail` gets `padding-block: 0.75rem 0.5rem` (12px top). The lift now has 8px of air inside the
+   clip box. This does move every rail's cards 8px down, which widens the heading-to-cards gap from
+   16 to 24px — the same number as `--grid-gap`, so the rhythm improves rather than drifts.
+2. `.ambilight` starts at `6%` inside the poster's top edge instead of `-8%` above it, with
+   `blur(18px)`. The blur bleeds about 1.4x its radius, so the painted halo top lands ~3px inside the
+   clip box: it is now **structurally impossible** for the glow to be cut above the poster, whatever
+   the card size is. The light spills sideways and below, which is where an ambilight reads.
+
+Verified twice. By measurement: on hover `figure.top = 227.9` against `rail.top = 219.9` (8px of
+headroom instead of 0), the glow rect starts 25.3px inside the poster, and `scrollHeight ==
+clientHeight == 408`, so the rail is not scrolling vertically at all. And visually, by a subagent that
+can actually read the screenshots (this session's model cannot): BEFORE, "a hard horizontal edge at
+y≈219→220, page background (10,10,12) jumping straight to (0,0,0), nothing above the poster"; AFTER,
+"the top edge is intact... no cut line and no band above" with the glow ramping smoothly
+(10,16,21)→(14,34,40) in the side gaps, no collision with the "Tendencias" heading (40px clear), the
+neighbours or the row below, and "nothing broken or ugly".
+
+Two things recorded rather than smoothed over:
+
+- The rail's halo reads weaker than the grid's in the stills. That is the posters' own colours, not a
+  different recipe. A larger halo above the poster is possible, but it would need more rail headroom,
+  which shifts every rail down again; the current geometry is the biggest spill that fits uncut.
+- The reviewer could not tell whether the hovered card's title colour in the grid capture was
+  mid-transition; it was not re-verified because it is pre-existing card behaviour and outside this
+  report.
