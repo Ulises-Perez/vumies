@@ -161,3 +161,28 @@ forma automatica y no manualmente".
    controls) presupposes the bridge or a licensed manifest, not a scrape.
 5. **Rejected heuristic:** firing "next episode" from wall-clock time versus TMDB runtime. It breaks
    on pause, seek and buffering, so it would advance people mid-episode. No.
+
+**L6** — Player review by actually playing it (ego lite, 1440x900, screenshots read by a reviewer that
+can see them), plus the single-source fix.
+
+- **Single-source click removed.** `loadContent()` now calls `selectStream()` when the resolved source
+  list has exactly one entry and there is no remembered preference; two or more sources still open the
+  picker, because there is something to choose. Verified: `/player/movie/969681` and
+  `/player/tv/1396/2/5` both load their embed immediately (`/e/serie?tmdb=1396&se=2&ep=5&…`), no
+  "Elige una fuente" modal.
+- **The click that remains is the player's own, and not configurable.** The embed renders a full-bleed
+  poster with a big play button and only starts video after a user gesture; the first click clears the
+  poster into a black, still-loading frame and the second produces the stream (ads/autoplay policy).
+  Tested `splash=v3` (current), `splash=0`, `splash=v1` and no `splash` parameter at all, each captured
+  9 s after mounting an iframe with that URL and no clicks: **all four frames are the same poster with
+  the same play button**, so the splash parameter changes nothing here and the gesture requirement is
+  theirs, not ours.
+- **Two real defects found by playing, not fixed yet** (they are design changes to the player chrome,
+  so they need a decision): (1) the embed draws its own "Servidores 1" control at top-left, `x 16–176,
+  y 17–52`, exactly over the app's round back button, and the chevron sits on the label; (2) the app's
+  "Episodios" and "Fuentes" pills lose their dark surface once video is playing and become low-contrast
+  text over a bright frame.
+- **Confirmed working:** the episodes drawer (season selector, per-episode stills, titles, durations,
+  ratings, clamped descriptions, scroll) highlights the episode being played (S2E5 "Rotura") with a
+  distinct row, left border and play glyph; letterboxing is plain 16:9; the app does not scroll behind
+  the player.

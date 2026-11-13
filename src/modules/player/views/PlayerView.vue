@@ -249,7 +249,15 @@ async function loadContent() {
   const preferred = preferredSourceId.value
     ? sourceStreams.value.find((s) => s.sourceId === preferredSourceId.value)
     : null
-  if (preferred) selectStream(preferred)
+  if (preferred) {
+    selectStream(preferred)
+    return
+  }
+  // Una sola fuente: elegirla es un tramite, no una decision. Con dos o mas el
+  // selector sigue abriendose, porque ahi si hay algo que elegir. Si esa unica
+  // fuente falla, manda el overlay de error, que es donde se elige otra.
+  const only = sourceStreams.value[0]
+  if (sourceStreams.value.length === 1 && only) selectStream(only)
 }
 
 function selectStream(stream: Stream) {
