@@ -110,17 +110,17 @@
         @click.self="closeEpisodes"
       >
         <div
-          class="flex max-h-[86vh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-card text-card-foreground ring-1 ring-border shadow-2xl"
+          class="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-card text-card-foreground ring-1 ring-border shadow-2xl"
           role="dialog"
           aria-modal="true"
           aria-labelledby="episodes-title"
         >
-          <header class="flex items-start gap-3 px-5 pb-3 pt-5">
+          <header class="flex items-start gap-4 px-6 pb-3 pt-6">
             <div class="min-w-0 flex-1">
-              <h2 id="episodes-title" class="font-poppins text-lg font-bold tracking-tight text-foreground">
+              <h2 id="episodes-title" class="font-poppins text-xl font-bold tracking-tight text-foreground">
                 Episodios
               </h2>
-              <p class="mt-1 text-xs text-muted-foreground">
+              <p class="mt-1 text-sm text-muted-foreground">
                 <span v-if="seasons.length">{{ seasons.length }} {{ seasons.length === 1 ? 'temporada' : 'temporadas' }}</span>
                 <span v-else>Sin temporadas</span>
                 <template v-if="episodes.length">
@@ -130,7 +130,7 @@
             </div>
             <button
               @click="closeEpisodes"
-              class="-mr-2 -mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+              class="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
               aria-label="Cerrar"
             >
               <XMarkIcon class="h-5 w-5" />

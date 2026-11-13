@@ -364,3 +364,30 @@ playing) is still pending because the browser workspace is under the human's con
 Static verification: `vue-tsc` clean, `vite build` clean, impeccable detector on `src/modules/player`
 empty. As before, the rendered check is pending while the browser workspace is under the human's
 control; no claim is made that a provider actually plays until that pass runs.
+
+**L14** — "Own player" answered with evidence, and the source picker rebuilt bigger and interactive.
+
+1. **No source serves a stream.** PlayLatinSRC's player page POSTs to `/api/embed-links` with
+   `{type, id, token}` and renders `data.sources` into its own `<iframe id="_player">` — iframes all the
+   way, no manifest in the HTML (its movie page shows `sources: []` populated from that response).
+   VidFast (190 KB), VidNest (733 B shell) and EmbedWave (7.9 KB) likewise expose no `.m3u8`/`.mp4`.
+   Vimeos, checked earlier, is tokenised with a 12 h window and an anti-inspection script.
+   **tokianime** — the reference the human keeps pointing at — fetches its stream at runtime and feeds a
+   native `<video>`: its own backend, no public API, not embeddable.
+   Conclusion, recorded instead of retried a fourth time: "our own player" cannot mean our own `<video>`,
+   because nothing here gives us a URL to play. What we do own is the **chrome around the frame**, which
+   is exactly what this module is: our bar, our episodes modal, our source picker. Skip intro/outro and
+   real progress stay blocked on the same missing piece as before — a player we control.
+2. **Source picker, rebuilt bigger and interactive.** `max-w-2xl` (was `max-w-lg`), header at `text-xl`
+   with a real count that names the Spanish subset, cards at `min-h-[76px]` with a 44px monogram, the
+   language as a coloured chip (primary when Spanish), a `Recomendada` badge on the top-ranked Spanish
+   source, `En uso` on the active one, and an `Abrir` affordance that fills on hover.
+   Interaction: **real keyboard navigation** — arrows move focus between sources, `Home`/`End` jump to
+   the ends, `Enter` selects (native button), `Escape` closes (window listener removed on unmount) — and
+   the first source takes focus on open so the dialog is usable without the mouse.
+3. **Episodes modal matched to the same family**: `max-w-lg`, `text-xl` title, the same header padding,
+   the same 44px close button, the same `rounded-3xl` card, season chips and the tinted ring row.
+
+Static: `vue-tsc` clean, `vite build` clean, impeccable detector on `src/modules/player` **empty**.
+Pending, as before: the rendered pass at 1440/390 and a real playback check, because the browser
+workspace is under the human's control.
