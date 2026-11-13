@@ -410,3 +410,24 @@ Checks: `vue-tsc` clean, `vite build` clean, impeccable `[]` on all three files 
 
 Checks: `vue-tsc` clean (after removing the now-unused `nextTick` import), `vite build` clean, impeccable `[]` on all three
 files, and screenshots `temp/ego-play/serie-v6-*.png`.
+
+**L28** — The last audit question was answered by measurement, and it was a real bug I had introduced: with the header's own
+hide-on-scroll, my surface stayed behind as an empty 64px dark band.
+
+The surface now follows the chrome, not only the scroll position: it is on only when `window.scrollY > 24` **and** the header
+is actually on screen (`header.getBoundingClientRect().bottom > 8`), evaluated inside a `requestAnimationFrame`-coalesced
+passive listener so there is still no work per frame. Measured across the three states:
+
+| state | header | surface |
+| --- | --- | --- |
+| top (y=0) | 12→60, visible | **0** |
+| scrolled down (y=900) | −52→−4, hidden | **0** — no empty band |
+| scrolled back up (y=539) | 12→60, visible | **0.84** mid-fade → 1 |
+
+The vision audit also confirmed the original defect is gone: across the top 100px the art runs continuously, with the
+planet's top edge, its glow and the rim light unbroken through y≈64 — no slab, no band, no seam, and nothing broken at the
+top of the page. Verdict from the reviewer: the top of this page no longer reads as a layout bug.
+
+Accepted, documented data limitations (not defects): episodes without `runtime` keep an empty reserved duration slot, and
+rows without a synopsis stay sparse — the reserved slots are what hold every row at 143px, and filler text was the first
+thing the audits flagged.

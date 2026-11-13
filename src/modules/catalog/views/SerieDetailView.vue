@@ -217,18 +217,33 @@ const seasonsLabel = computed(() => {
 // cambia no corre por frame y es determinista.
 const surfaceVisible = ref(false)
 
-function syncSurface() {
-  const next = window.scrollY > 24
+let rafId = 0
+
+function measureSurface() {
+  rafId = 0
+  // La superficie solo existe si hay chrome detras: la barra se esconde al bajar
+  // y, sin esta condicion, quedaba una franja oscura vacia de 64px arriba.
+  const header = document.querySelector('header')
+  const headerOnScreen = header ? header.getBoundingClientRect().bottom > 8 : true
+  const next = window.scrollY > 24 && headerOnScreen
   if (next !== surfaceVisible.value) surfaceVisible.value = next
 }
 
+function syncSurface() {
+  if (rafId) return
+  rafId = requestAnimationFrame(measureSurface)
+}
+
 onMounted(() => {
-  syncSurface()
+  measureSurface()
   window.addEventListener('scroll', syncSurface, { passive: true })
+  window.addEventListener('resize', syncSurface, { passive: true })
 })
 
 onUnmounted(() => {
+  if (rafId) cancelAnimationFrame(rafId)
   window.removeEventListener('scroll', syncSurface)
+  window.removeEventListener('resize', syncSurface)
 })
 
 // Primer episodio real de la temporada cargada; 1 cuando aun carga.
