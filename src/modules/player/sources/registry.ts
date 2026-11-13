@@ -1,14 +1,17 @@
 // Central stream-source registry and aggregator.
 //
-// Web-only build: the Vimeus iframe is the single playable source. Native
-// sources (local torrent engine, native video driver) cannot run in a browser, so no
-// other source is registered here.
+// Web-only build. Vimeus is the primary source (Spanish library, its own
+// license) and the extra embed providers are fallbacks ranked below it; a
+// browser cannot run a torrent engine or a native video driver, so nothing else
+// is registered here.
 import type { Media, Stream, StreamSource } from './types'
 import { vimeusSource } from './vimeus.source'
+import { embedProviderSources } from './embed-providers'
 
 /** Base preference order of the sources (refined with `weight` per stream). */
 export const STREAM_SOURCES: StreamSource[] = [
   vimeusSource,
+  ...embedProviderSources,
 ]
 
 export interface SourceResult {

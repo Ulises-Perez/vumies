@@ -265,3 +265,33 @@ chrome was redesigned.
 3. **Not verified visually yet:** the browser task space was taken over by the human mid-run, so the
    screenshot pass over the new bar (1440/390, geometry and vision review) is pending and the numbers
    are not claimed.
+
+**L10** — Player chrome trimmed to what was asked. "Volver" is now text only (no chevron), and the
+previous/next episode arrows are gone: the episode is chosen in the panel, which already highlights the
+current one and lists stills, titles, durations and ratings. The bar is now
+`Volver | Episodios T2·E5 | Fuentes` in one pill. The dead computeds and `prevEpisode()` were removed
+with them; `nextEpisode()` stays because `onMediaEnded()` still uses it for direct-video playback.
+Impeccable's detector on `src/modules/player` then flagged one pre-existing `side-tab` (the 4px accent
+border on the selected episode row in `EpisodePlayerView.vue`); replaced with a tinted background plus a
+1px ring, so the selected row no longer relies on the banned one-sided border.
+
+**L11** — Extra sources, chosen by probing instead of by listing websites.
+
+| Provider | Template | Probe with a real TMDB id | Shipped |
+| --- | --- | --- | --- |
+| VidFast | `https://vidfast.pro/movie/{id}` · `/tv/{id}/{s}/{e}` | **200 text/html** (movie and tv) | yes |
+| VidSrc | `https://vidsrc.io/embed/movie/{id}` · `/embed/tv/{id}/{s}/{e}` | **429** (throttles scripted requests; the host answers and browsers get the page) | yes |
+| VidLink | `https://vidlink.pro/movie/{id}` · `/tv/{id}/{s}/{e}` | **000**, unreachable from this network, even its root | no |
+| 2Embed | `https://www.2embed.online/embed/…` | **301 loop** to `2embed.stream`, which also fails | no |
+
+Shipped as `embed-providers.ts`: one `StreamSource` per provider, iframe streams keyed by the TMDB id
+we already have, weights 90/70 against Vimeus' 100, so Vimeus stays the default and these are fallbacks.
+Both need no key and no configuration. The honest caveat, recorded rather than glossed: their catalogs
+are English-leaning with multi-language subtitles, they run their own ads, and they can disappear or
+change a route without notice — Vimeus remains the source with a Spanish library. Because more than one
+source now resolves, the "Fuentes" picker opens on first play (the single-source auto-select only fires
+when exactly one exists), and the remembered choice keeps it closed afterwards.
+
+**Not verified in a browser:** the workspace was under the human's control for this whole change, so the
+rendered check of the new bar (1440/390) and of the two providers actually playing was not run. What is
+verified is static: `vue-tsc`, `vite build`, the impeccable detector, and the HTTP probes above.

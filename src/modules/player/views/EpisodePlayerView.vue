@@ -64,7 +64,7 @@
               :key="episode.id"
               @click="goToEpisode(episode.episode_number)"
               class="w-full text-left p-3 rounded-lg flex gap-3 transition-all duration-200 group relative overflow-hidden"
-              :class="episode.episode_number === episodeNumber && selectedSeasonNumber === seasonNumber ? 'bg-muted/60 border-l-4 border-primary' : 'hover:bg-accent border-l-4 border-transparent'"
+              :class="episode.episode_number === episodeNumber && selectedSeasonNumber === seasonNumber ? 'bg-primary/10 ring-1 ring-primary/40' : 'hover:bg-accent ring-1 ring-transparent'"
             >
               <!-- Playing Indicator for active episode -->
               <div 

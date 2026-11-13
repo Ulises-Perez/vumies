@@ -64,29 +64,8 @@
           class="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
           aria-label="Volver" title="Volver"
         >
-          <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
-          <span class="hidden sm:inline">Volver</span>
+          <span>Volver</span>
         </button>
-
-        <template v-if="type === 'tv' || type === 'anime'">
-          <span aria-hidden="true" class="mx-0.5 h-5 w-px bg-white/15" />
-          <button
-            @click="prevEpisode"
-            :disabled="!canPrevEpisode"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/85"
-            aria-label="Episodio anterior" title="Episodio anterior"
-          >
-            <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
-          </button>
-          <button
-            @click="nextEpisode"
-            :disabled="!canNextEpisode"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/85"
-            aria-label="Episodio siguiente" title="Episodio siguiente"
-          >
-            <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
-          </button>
-        </template>
 
         <span aria-hidden="true" class="mx-0.5 h-5 w-px bg-white/15" />
 
@@ -363,42 +342,6 @@ function goToEpisode(epNum: number) {
       episode: epNum,
     },
   })
-}
-
-const canPrevEpisode = computed(() => {
-  if (type.value === 'movie') return false
-  const idx = episodes.value.findIndex((e) => e.episode_number === episode.value)
-  if (idx > 0) return true
-  const seasonIdx = seasons.value.findIndex((s) => s.season_number === season.value)
-  return seasonIdx > 0
-})
-
-const canNextEpisode = computed(() => {
-  if (type.value === 'movie') return false
-  const idx = episodes.value.findIndex((e) => e.episode_number === episode.value)
-  if (idx !== -1 && idx < episodes.value.length - 1) return true
-  const seasonIdx = seasons.value.findIndex((s) => s.season_number === season.value)
-  return seasonIdx !== -1 && seasonIdx < seasons.value.length - 1
-})
-
-function prevEpisode() {
-  if (type.value === 'movie' || !canPrevEpisode.value) return
-  const currentEpIndex = episodes.value.findIndex((e) => e.episode_number === episode.value)
-  if (currentEpIndex > 0) {
-    const prev = episodes.value[currentEpIndex - 1]
-    if (prev) goToEpisode(prev.episode_number)
-    return
-  }
-  const currentSeasonIndex = seasons.value.findIndex((s) => s.season_number === season.value)
-  if (currentSeasonIndex > 0) {
-    const prevSeason = seasons.value[currentSeasonIndex - 1]
-    if (!prevSeason) return
-    // Al retroceder de temporada se cae en su ultimo episodio, no en el primero.
-    router.push({
-      name: 'player',
-      params: { type: type.value === 'anime' ? 'anime' : 'serie', id: id.value, season: prevSeason.season_number, episode: prevSeason.episode_count || 1 },
-    })
-  }
 }
 
 function nextEpisode() {
