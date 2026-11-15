@@ -26,8 +26,6 @@
           </router-view>
         </AppErrorBoundary>
       </main>
-
-      <AppFooter />
     </div>
 
     <!-- Mobile Bottom Menu -->
@@ -48,7 +46,6 @@ import { useAnimeStore } from '@/core/stores/anime.store'
 import { FEATURES } from '@/core/config/features'
 import AppErrorBoundary from '@/core/components/AppErrorBoundary.vue'
 import AppTopBar from '@/modules/ui/components/AppTopBar.vue'
-import AppFooter from '@/modules/ui/components/AppFooter.vue'
 import BottomMenu from '@/modules/ui/components/BottomMenu.vue'
 import SideMenu from '@/modules/ui/components/SideMenu.vue'
 import CommandPalette from '@/modules/ui/components/CommandPalette.vue'

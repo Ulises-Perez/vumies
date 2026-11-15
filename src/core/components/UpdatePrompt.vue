@@ -1,39 +1,28 @@
 <template>
-  <div
-    v-if="show"
-    class="fixed inset-x-0 bottom-24 z-[80] flex justify-center px-4 md:bottom-6"
-    role="status"
-  >
+  <Transition name="update-pill">
     <div
-      class="flex items-center gap-3 rounded-full border border-border bg-card/95 py-2 pl-4 pr-2 shadow-lg backdrop-blur"
+      v-if="show"
+      class="fixed inset-x-0 bottom-24 z-[80] flex justify-center px-4 md:bottom-6"
+      role="status"
     >
-      <p class="text-sm text-foreground">Hay una versión nueva</p>
-      <button
-        type="button"
-        class="inline-flex h-9 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        @click="reload"
+      <!-- Misma receta que la pildora del BottomMenu: superficie de card, blur,
+           borde de 1px y sombra con offset. Sin boton de descarte: el aviso se
+           va cuando el usuario recarga, no antes. -->
+      <div
+        class="flex items-center gap-3 rounded-full border border-border bg-card/95 py-1.5 pl-4 pr-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.35),0_2px_8px_rgba(0,0,0,0.2)] backdrop-blur-xl"
       >
-        Recargar
-      </button>
-      <button
-        type="button"
-        class="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        aria-label="Descartar aviso"
-        @click="dismissed = true"
-      >
-        <svg
-          class="h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
+        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+        <p class="text-[13px] font-medium text-foreground">Nueva versión disponible</p>
+        <button
+          type="button"
+          class="motion-press inline-flex h-8 items-center rounded-full bg-primary-strong px-3.5 text-[13px] font-semibold text-primary-strong-foreground shadow-sm transition-colors hover:bg-primary-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-popover"
+          @click="reload"
         >
-          <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-        </svg>
-      </button>
+          Recargar
+        </button>
+      </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -42,7 +31,6 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const updateReady = ref(false)
-const dismissed = ref(false)
 
 // El chunk de entrada lleva el hash de la version: si el index.html servido
 // apunta a otro, hay un deploy nuevo. En dev el src es /src/main.ts y el regex
@@ -51,7 +39,7 @@ const currentAsset = document.querySelector<HTMLScriptElement>('script[type="mod
 
 // Nunca sobre el player: un aviso encima del video es ruido, y el usuario lo ve
 // igual al salir (updateReady queda pegado).
-const show = computed(() => updateReady.value && !dismissed.value && route.name !== 'player')
+const show = computed(() => updateReady.value && route.name !== 'player')
 
 async function check() {
   if (!currentAsset || updateReady.value) return
@@ -93,3 +81,25 @@ onUnmounted(() => {
   if (timer) clearInterval(timer)
 })
 </script>
+
+<style scoped>
+/* Entrada desde un estado ya visible: sube 10px y aparece. El bloque global de
+   prefers-reduced-motion ya neutraliza la transicion. */
+.update-pill-enter-active {
+  transition:
+    opacity 240ms var(--ease-out-quint),
+    transform 320ms var(--ease-out-quint);
+}
+
+.update-pill-leave-active {
+  transition:
+    opacity 160ms ease,
+    transform 200ms ease;
+}
+
+.update-pill-enter-from,
+.update-pill-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+</style>

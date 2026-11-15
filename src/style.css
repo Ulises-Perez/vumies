@@ -51,10 +51,6 @@
     --sidebar-border: oklch(0.92 0 0);
     --sidebar-ring: 0.55 0.22 285;
 
-    /* Legacy back-compat (BottomMenu/AppFooter usan estas vars) */
-    --color-primary: oklch(0.55 0.22 285);
-    --color-dark: oklch(1 0 0);
-
     /* ===== Astryx port (aditivo, no cambia lo que ya renderiza) =====
        Fuente: build theme-neutral publicado de Astryx. Solo agrega variables;
        ningun token existente cambia. --radius-container (0.75rem) equivale al
@@ -151,9 +147,6 @@
     --sidebar-accent-foreground: 0.985 0 0;
     --sidebar-border: oklch(1 0 0 / 8%);
     --sidebar-ring: 0.62 0.19 285;
-
-    --color-primary: oklch(0.62 0.19 285);
-    --color-dark: oklch(0.145 0.004 285);
   }
 
   * {
