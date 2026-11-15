@@ -9,15 +9,22 @@
     <!-- Contenido de la app. -->
     <div class="relative z-10 flex min-h-screen flex-col">
       <main class="flex-1">
-        <router-view v-slot="{ Component }">
-          <!-- Sin `mode="out-in"`: con una ruta que no expone un unico elemento raiz
-               la salida no termina y la ruta siguiente nunca se monta (pantalla en
-               blanco). Sin modo, la entrada ocurre en el acto y el fundido sigue
-               igual. -->
-          <transition name="page">
-            <component :is="Component" />
-          </transition>
-        </router-view>
+        <AppErrorBoundary>
+          <router-view v-slot="{ Component }">
+            <!-- Sin `mode="out-in"`: con una ruta que no expone un unico elemento raiz
+                 la salida no termina y la ruta siguiente nunca se monta (pantalla en
+                 blanco). Sin modo, la entrada ocurre en el acto y el fundido sigue
+                 igual. -->
+            <transition name="page">
+              <!-- Solo los listados se conservan: volver atrás no refetchea ni
+                   rearma la grilla. El player queda fuera a propósito (un iframe
+                   cacheado seguiría reproduciendo en segundo plano). -->
+              <KeepAlive :include="KEEP_ALIVE_VIEWS">
+                <component :is="Component" />
+              </KeepAlive>
+            </transition>
+          </router-view>
+        </AppErrorBoundary>
       </main>
 
       <AppFooter />
@@ -36,6 +43,7 @@ import { onMounted } from 'vue'
 import { useAppStore } from '@/core/stores/app.store'
 import { useAnimeStore } from '@/core/stores/anime.store'
 import { FEATURES } from '@/core/config/features'
+import AppErrorBoundary from '@/core/components/AppErrorBoundary.vue'
 import AppTopBar from '@/modules/ui/components/AppTopBar.vue'
 import AppFooter from '@/modules/ui/components/AppFooter.vue'
 import BottomMenu from '@/modules/ui/components/BottomMenu.vue'
@@ -44,6 +52,9 @@ import CommandPalette from '@/modules/ui/components/CommandPalette.vue'
 
 const appStore = useAppStore()
 const animeStore = useAnimeStore()
+
+// Nombres inferidos del archivo por `<script setup>`; KeepAlive los compara tal cual.
+const KEEP_ALIVE_VIEWS = ['HomeView', 'MoviesView', 'SeriesView']
 
 // Ejecuta cb cuando el hilo principal esté libre, fuera del camino del primer render.
 function whenIdle(cb: () => void) {

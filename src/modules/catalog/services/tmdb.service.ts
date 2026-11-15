@@ -11,6 +11,7 @@ import type {
   TMDBVideosResponse,
   TMDBImagesResponse,
   TimeWindow,
+  MultiSearchItem,
 } from '../types/tmdb.types'
 
 type Params = Record<string, string | number | boolean | undefined>
@@ -27,6 +28,15 @@ export interface TMDBExternalIds {
  * aunque la página de anime use fetch nativo. Aquí axios solo aportaba baseURL,
  * header Bearer, serialización de params y `.data`; todo replicable con fetch.
  */
+/** Tope por request: sin esto una conexion colgada deja el esqueleto para siempre. */
+const TMDB_TIMEOUT_MS = 12_000
+/** Estados transitorios que valen un reintento inmediato (rate limit incluido). */
+const TMDB_RETRY_DELAY_MS = 300
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 class TMDBService {
   private baseURL = API_CONFIG.TMDB.BASE_URL.replace(/\/$/, '')
   private headers = {
@@ -34,16 +44,100 @@ class TMDBService {
     Authorization: `Bearer ${API_CONFIG.TMDB.BEARER_TOKEN}`,
   }
 
-  private async get<T>(path: string, params?: Params): Promise<T> {
+  /**
+   * Requests en vuelo por URL. Dos consumidores que piden lo mismo mientras la
+   * primera esta abierta (portada, ficha, recomendaciones) comparten una sola
+   * request; la entrada se borra al resolver, asi que la frescura no cambia.
+   */
+  private inFlight = new Map<string, Promise<unknown>>()
+
+  /**
+   * Respuestas recientes por URL. Navegar y volver (o montar dos vistas que piden
+   * lo mismo) no debe volver a pegarle a TMDB; 5 min es mas que suficiente para
+   * que el usuario no note datos viejos.
+   */
+  private cache = new Map<string, { at: number; value: Promise<unknown> }>()
+  private static readonly CACHE_TTL_MS = 5 * 60_000
+  private static readonly CACHE_MAX = 100
+
+  /** Requests en vuelo, para cancelarlas al cambiar de ruta. */
+  private controllers = new Set<AbortController>()
+
+  /** Corta lo que quedo en vuelo: la vista vieja ya no puede pisar a la nueva. */
+  abortAll(): void {
+    for (const controller of this.controllers) controller.abort()
+    this.controllers.clear()
+  }
+
+  private get<T>(path: string, params?: Params): Promise<T> {
     const url = new URL(this.baseURL + path)
     if (params) {
       for (const [k, v] of Object.entries(params)) {
         if (v !== undefined) url.searchParams.set(k, String(v))
       }
     }
-    const res = await fetch(url, { headers: this.headers })
-    if (!res.ok) throw new Error(`TMDB ${res.status} ${res.statusText} @ ${path}`)
-    return res.json() as Promise<T>
+
+    const href = url.toString()
+    const pending = this.inFlight.get(href)
+    if (pending) return pending as Promise<T>
+
+    const cached = this.cache.get(href)
+    if (cached && Date.now() - cached.at < TMDBService.CACHE_TTL_MS) {
+      return cached.value as Promise<T>
+    }
+
+    const request = this.request<T>(url, path).finally(() => this.inFlight.delete(href))
+    this.inFlight.set(href, request)
+    // Un fallo no se cachea: el proximo intento vuelve a pedir.
+    request.catch(() => this.cache.delete(href))
+    if (this.cache.size >= TMDBService.CACHE_MAX) {
+      const oldest = this.cache.keys().next().value
+      if (oldest !== undefined) this.cache.delete(oldest)
+    }
+    this.cache.set(href, { at: Date.now(), value: request })
+    return request
+  }
+
+  private async request<T>(url: URL, path: string): Promise<T> {
+    const controller = new AbortController()
+    this.controllers.add(controller)
+    const timeoutSignal =
+      typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(TMDB_TIMEOUT_MS) : undefined
+    const signal =
+      timeoutSignal && typeof AbortSignal.any === 'function'
+        ? AbortSignal.any([controller.signal, timeoutSignal])
+        : controller.signal
+    try {
+      return await this.requestWithRetry<T>(url, path, signal)
+    } finally {
+      this.controllers.delete(controller)
+    }
+  }
+
+  private async requestWithRetry<T>(url: URL, path: string, signal: AbortSignal): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await fetch(url, { headers: this.headers, signal })
+        if (!res.ok) {
+          if (attempt === 0 && (res.status === 429 || res.status >= 500)) {
+            await sleep(TMDB_RETRY_DELAY_MS)
+            continue
+          }
+          throw new Error(`TMDB ${res.status} ${res.statusText} @ ${path}`)
+        }
+        return (await res.json()) as T
+      } catch (error) {
+        // Cancelado por navegacion: no es un fallo, no se reintenta.
+        if (error instanceof DOMException && error.name === 'AbortError') throw error
+        // Solo se reintenta un rechazo de red: un timeout ya consumio su ventana
+        // y reintentarlo duplica la espera sin cambiar el resultado.
+        if (attempt === 0 && error instanceof TypeError) {
+          await sleep(TMDB_RETRY_DELAY_MS)
+          continue
+        }
+        throw error
+      }
+    }
   }
 
   // Movies
@@ -203,7 +297,7 @@ class TMDBService {
   }
 
   // Search
-  searchMulti(query: string, page = 1): Promise<TMDBResponse<Movie | TVShow>> {
+  searchMulti(query: string, page = 1): Promise<TMDBResponse<MultiSearchItem>> {
     return this.get('/search/multi', { query, page, language: 'es-MX' })
   }
 

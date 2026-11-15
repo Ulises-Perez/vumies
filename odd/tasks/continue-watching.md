@@ -521,3 +521,117 @@ height (**107px**) in both, `vue-tsc` clean, `vite build` clean, impeccable dete
   **byte-identical screenshots** (md5 `37a7686b…` both times). These embeds typically open the first click into an ad or
   a new tab, or demand a trusted gesture, and a synthetic click from the automation is not one. Claiming "it plays"
   would be inventing evidence, so it stays open and needs one human click in the real browser.
+
+**L21** — Rediseño de la sección con el MCP de Awwwards. Pedido: "rediseñes la sección de continuar viendo, que sea
+optimizado, con un rendimiento notable, pero sobre todo un diseño genial… minimalista, pero sobre todo llamativo".
+
+1. **El MCP, instalado y conectado.** `awwwards-mcp@1.19.0` (MIT) instalado global y conectado como servidor stdio
+   `awwwards` con un bundle de configuración local en `C:/Users/ulise/dsh-plugins/awwwards-mcp`. El shim
+   `awwwards-mcp.cmd` no se puede spawnear sin shell, así que el patch apunta a `node.exe` con
+   `dist/cli.js` como argumento. Verificado: `get_index_status` responde y `search_sites` con `award: "sotd"` (22
+   sitios) y con `tags: ["typography"]` (5) devuelve fichas reales con captura. **Límite honesto**: la búsqueda por
+   texto libre sigue vacía — el índice local (`~/.awwwards-mcp/`) está a media crawla (31 sitios cacheados,
+   `indexFreshness.stale: true`), así que hoy la vía que funciona es por premio, tag o color, más las herramientas
+   que reciben una URL.
+2. **La dirección salió de las referencias, no de la paleta.** De las fichas leídas (Extrafazant, SOTD, Film & TV +
+   Typography, paleta `#F4F4F4`/`#101010`) se tomó la estructura: **una pieza grande con el titular encima del arte y
+   el resto como tira silenciosa**. El color no se toca: la app ya tiene su sistema (violeta, Inter, radios Astryx).
+3. **La jerarquía.** El `h2` "Continuar viendo" baja a etiqueta (`text-xs`, mayúsculas, `tracking-[0.18em]`,
+   `text-muted-foreground`) y el titular pasa a ser el contenido: la entrada más reciente ocupa el ancho completo con
+   su backdrop, un scrim, `Película` / `Temporada N · Episodio M`, el título a 24/36px y una píldora `Reanudar`. Es la
+   única sección personalizada del inicio, y por eso es la única que se lee así.
+4. **La tira.** Las demás entradas pierden la caja: el arte 16:9 es la tarjeta, con título y meta debajo. El disco de
+   play queda visible en reposo al 70% (en táctil no hay hover) y sube a 100% con el puntero.
+5. **Rendimiento.** Sin dependencias nuevas, sin JS de medición y sin observers: todo es CSS. El hover anima solo
+   `transform` y `opacity` (compositor) y el `backdrop-blur` del disco se fue. La pieza grande usa `srcset`
+   w780/w1280 con `sizes="100vw"` (medido: el navegador elige w1280 a 1440 y w780 a 390) y la tira sigue con una sola
+   fuente w300/w342, sin `srcset`, para que nada se re-seleccione a mitad de la interacción (L16). Se muestran 9
+   entradas y no 12: la pieza grande suma una imagen grande y la tira ya se recorre.
+6. **Medido en el navegador** (1440×900 y 390×844): pieza grande **1327×448** en desktop y **358×240** en móvil, tira
+   de 8 tarjetas de 240/200px, `overflowX: 0` en los dos. Hover: `transform: matrix(1.02…)` en la imagen, `shadow-2xl`
+   y `ring-primary/40` en la tarjeta. Foco de teclado: `outline: solid 2px` en `--primary` con `offset 2px` en las
+   tarjetas, `ring-2` + offset en la pieza grande. Sin historial no se dibuja la sección; con una sola entrada se
+   dibuja la pieza grande y ninguna tira.
+7. **Un defecto real, encontrado y corregido.** La primera pasada se editó con `Set-Content` de PowerShell 5.1, que
+   leyó el archivo como ANSI y lo reescribió como UTF-8: `Película` quedó `PelÃ­cula` y `·` quedó `Â·`. Se vio en la
+   captura ("PelÁcula", "Temporada 2 A· Episodio 5") y se confirmó leyendo los code points del DOM (`c2 b7` en vez de
+   `b7`). El archivo se reescribió entero con la herramienta de escritura y el DOM devuelve `b7` y `2192`. **Regla
+   para la próxima**: no editar archivos con acentos desde PowerShell 5.1.
+8. **El foco de las tarjetas no usaba `ring`.** `group-focus-visible:ring-2` cambiaba `--tw-ring-color` pero no el
+   ancho, así que el indicador quedaba en el hairline de 1px del borde. Se cambió a `outline` (propiedad distinta de
+   `box-shadow`, sin pelea con `ring-1`) y quedó medido en 2px sólidos.
+
+Checks: `vue-tsc` limpio, `vite build` limpio, capturas en `temp/ego-cw/`. Nota de entorno: el dev server de Vite
+muere con `EBUSY` cuando la herramienta de escritura crea su `.tmpdir` dentro de `src/` (OneDrive), así que la
+verificación se hizo con `vite build` + `vite preview`.
+
+**L22** — Dos correcciones sobre la pieza grande: la franja del borde inferior y el ambilight.
+
+1. **La franja.** Medido: tarjeta, `<img>` y scrim medían los tres 448px exactos, así que no había hueco de layout.
+   Lo que sí había era una línea clara de 2px en el borde inferior: el `ring-1 ring-inset ring-white/10` pintaba
+   `(28,27,32)` sobre el scrim casi negro `(3,3,8)`, y debajo el `ring-1 ring-border` de la tarjeta sumaba otra. Con
+   arte plano blanco el scrim llegaba a `(4,4,9)` en el borde, o sea que el scrim sí tapaba. Se corrigió por tres
+   lados: la imagen pasó a `absolute inset-0 h-full w-full` y el alto lo lleva la tarjeta (así el arte siempre llena
+   la caja exacta, sin depender del contenido), se quitó el ring interior de la pieza grande, y el scrim nuevo
+   (`.scrim-stage`) es opaco en el último 8% (36px) en vez de solo en el borde. Medido después: de y=460 a y=487 el
+   borde inferior es `(3,3,8)` uniforme, y en y=488 solo queda el borde propio de la tarjeta.
+2. **El ambilight: probado y quitado.** Se agregó un `.ambilight` a la pieza grande y se probaron tres geometrías:
+   `-3%` en los cuatro lados con `blur(18px)`, la de las tarjetas de poster (`6% -3% 20% -3%`, halo solo por los
+   costados) y la del hero del mosaico (`-3% -4%`, `blur(24px)`, opacidad 0.55). Ninguna convenció: en una tarjeta de
+   1334px el halo se lee como una mancha alrededor del arte, no como luz que sale de él. **Se quitó por completo**: no
+   queda `.ambilight`, ni el wrapper `.motion-lift`, ni la regla `.ambilight--stage`. La tarjeta conserva su hover
+   propio (imagen a 1.02, `shadow-2xl`, `ring-primary/40`). Medido después: `ambilightCount: 0`, `motionLiftCount: 0`,
+   `imgFills: true`, `overflowX: 0`.
+
+Checks: `vue-tsc` limpio, `vite build` limpio, capturas en `temp/ego-cw/v2-*.png`.
+
+**L23** — Rediseño con referencias (Awwwards MCP + tasteskill) y auditoría técnica (impeccable).
+
+1. **De dónde salió.** `search_sites` con `tags:["film"]` devolvió 8 fichas reales (la búsqueda por texto libre sigue
+   vacía: índice a medio crawlar). Se tomaron dos ideas, no dos paletas: de **Anemone** (nominee, Film & TV) el **still
+   de cine con el título en una placa debajo**, en vez de texto encima de un degradado; de **Weiss & Lameraner** el
+   contraste entre una línea de datos en versalitas muy chica y un titular enorme. El color no se toca: es el sistema
+   de la app.
+2. **La pieza grande ahora es una ficha de cine.** Arte arriba y debajo una placa sólida (`.plate-cinema`,
+   `oklch(0.1 0.02 285)`) con el titular a 60px (`md:text-5xl lg:text-6xl`, `leading-[0.98]`, `tracking-[-0.02em]`),
+   el dato debajo y la acción a la derecha. Esto resuelve de raíz lo que se venía parchando: no hay scrim que falle,
+   ni borde inferior que deje ver el arte, ni contraste que dependa de la foto. `.scrim-stage` se borró porque ya no
+   hace falta. Medido a 1440: tarjeta 1334×565 (416 de arte + 149 de placa), sección 818px.
+3. **La cola** perdió caja, disco y scrim: el arte 16:9 es la tarjeta, el título debajo y la línea de episodio en
+   versalitas para ecoar la placa. 8 tarjetas de 230px (190 en móvil).
+4. **El encabezado** pasó de etiqueta a titular de sección (`text-lg md:text-xl font-semibold`), con una línea de 1px
+   que lo une al enlace del historial. Eran dos "eyebrows" (el rótulo chico sobre la sección y el dato sobre el
+   titular) y el craft floor de impeccable los prohíbe en duro: el dato bajó a bloque de créditos y el rótulo se
+   volvió heading.
+5. **Auditoría impeccable** (`impeccable context` + `detect --json` → `[]`, sin hallazgos mecánicos). Medido, no
+   estimado: contrastes 19.72 (titular), 11.69 (dato sobre la placa), 18.95 (título de la cola y encabezado), 7.35
+   (dato de la cola y enlace del historial), 5.97 (píldora) — todos pasan AA y casi todos AAA. Foco de teclado
+   verificado: `--tw-ring-shadow` = `0 0 0 calc(2px + 2px) oklch(.66 .185 285 / 1)` con offset de 2px. Movimiento
+   reducido: sin zoom y el ring sigue cambiando, o sea que la respuesta sobrevive. 9 imágenes, todas `loading="lazy"`
+   + `decoding="async"`, `srcset` solo en la grande (w780/w1280, `sizes="100vw"`). `overflowX: 0` en
+   320/390/768/1024/1440. Una h1, seis h2.
+6. **Límites registrados** (P2/P3 de la auditoría, ninguno P0/P1): el arte de la cola va a un solo ancho w300 y se ve
+   blando en pantallas 2x/3x (`shortcut:` en `frameUrl`); "Ver historial" mide 91×24 y cumple el mínimo AA de 24×24
+   pero no los 44px táctiles; `.plate-cinema` fija su color en vez de usar token, a propósito, igual que
+   `.scrim-b`/`.scrim-r`; el kill global de `0.01ms` en `prefers-reduced-motion` es de la app entera, no de esta
+   sección.
+
+Checks: `vue-tsc` limpio, `vite build` limpio, `impeccable detect` vacío, capturas en `temp/ego-cw/final-*.png`,
+`m390.png`, `m768.png`, `m320.png`.
+
+**L24** — La sección pasa a ser un carrusel, con la tarjeta de la captura y la cabecera del resto del inicio.
+
+1. **Se borró la ficha de cine.** Fuera la pieza grande, `.plate-cinema`, `.scrim-stage`, el `featured` y `stageUrl`/
+   `stageSrcSet`. Queda un solo carril: arte 16:9 + título en negrita + tipo en versalitas, que es exactamente la
+   tarjeta de la captura que pidió el usuario. Menos código que antes de todo esto.
+2. **La cabecera ahora es la de la casa, no una propia.** Se reusa `HorizontalScroll` (el mismo componente de
+   "Tendencias", "Próximamente", "Series Populares") en vez de escribir otra cabecera y otro rail: ya trae el `h2` a
+   24/30px, las flechas con su lógica de scroll por tarjeta entera, el "Ver todo" y el camino de
+   `prefersReducedMotion`. Cero JS nuevo.
+3. **Enlace muerto corregido.** El "Ver historial" apuntaba a `/history`, que **no existe**: la ruta es `/recent`
+   (`HistoryView`). Venía roto desde L21 y caía en el catch-all. Ahora `link="/recent"` y la etiqueta es la de la casa
+   ("Ver todo").
+4. **Medido.** 1440: `h2` 30px/700, 9 tarjetas de 220×172, 2 flechas, sección 244px, `overflowX: 0`. 390: `h2` 24px,
+   tarjetas de 160×135, flechas ocultas (`hidden md:flex`, igual que las otras filas), sección 203px, `overflowX: 0`.
+
+Checks: `vue-tsc` limpio, `vite build` limpio, capturas en `temp/ego-cw/carousel-1440.png` y `carousel-390.png`.

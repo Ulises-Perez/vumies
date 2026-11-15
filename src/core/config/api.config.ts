@@ -49,11 +49,16 @@ export const IMAGE_SIZES = {
   },
 } as const
 
+// Placeholder local como data URI: public/ no tiene imágenes y un 404 en el src
+// deja el hueco roto. Un gris neutro escala con object-cover en cualquier ratio.
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23262626'/%3E%3C/svg%3E"
+
 export const getImageUrl = (
   path: string | null,
   size: string = IMAGE_SIZES.POSTER.W500
 ): string => {
-  if (!path) return '/placeholder.jpg'
+  if (!path) return PLACEHOLDER_IMAGE
   return `${API_CONFIG.TMDB.IMAGE_BASE_URL}/${size}${path}`
 }
 
@@ -61,7 +66,7 @@ export const getBackdropUrl = (
   path: string | null,
   size: string = IMAGE_SIZES.BACKDROP.W1280
 ): string => {
-  if (!path) return '/placeholder-backdrop.jpg'
+  if (!path) return PLACEHOLDER_IMAGE
   return `${API_CONFIG.TMDB.IMAGE_BASE_URL}/${size}${path}`
 }
 
@@ -69,7 +74,7 @@ export const getPosterUrl = (
   path: string | null,
   size: string = IMAGE_SIZES.POSTER.W500
 ): string => {
-  if (!path) return '/placeholder-poster.jpg'
+  if (!path) return PLACEHOLDER_IMAGE
   return `${API_CONFIG.TMDB.IMAGE_BASE_URL}/${size}${path}`
 }
 
@@ -96,7 +101,7 @@ export const getProfileUrl = (
   path: string | null,
   size: string = IMAGE_SIZES.PROFILE.W185
 ): string => {
-  if (!path) return '/placeholder-profile.jpg'
+  if (!path) return PLACEHOLDER_IMAGE
   return `${API_CONFIG.TMDB.IMAGE_BASE_URL}/${size}${path}`
 }
 

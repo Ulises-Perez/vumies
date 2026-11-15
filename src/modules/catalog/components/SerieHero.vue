@@ -19,6 +19,7 @@
       alt=""
       aria-hidden="true"
       class="absolute inset-0 h-full w-full object-cover"
+      :class="artPosition"
       loading="eager"
       fetchpriority="high"
       decoding="async"
@@ -41,16 +42,22 @@
         <div>
           <h1
             id="serie-hero-title"
-            class="text-3xl md:text-5xl font-bold font-poppins text-art leading-tight text-shadow-lg"
+            class="text-balance text-3xl md:text-5xl font-bold font-poppins text-art leading-tight text-shadow-lg"
           >
             {{ title }}
           </h1>
-          <p v-if="match || year || seasonsLabel" class="mt-2 text-sm md:text-base text-art-muted">
+          <p v-if="match || year || seasonsLabel || runtimeLabel" class="mt-2 text-sm md:text-base text-art-muted">
             <span v-if="match" class="text-art-accent font-semibold">{{ match }}</span>
-            <span v-if="match && (year || seasonsLabel)"> · </span>
+            <span v-if="match && (year || seasonsLabel || runtimeLabel)"> · </span>
             <span v-if="year">{{ year }}</span>
-            <span v-if="year && seasonsLabel"> · </span>
+            <span v-if="year && (seasonsLabel || runtimeLabel)"> · </span>
             <span v-if="seasonsLabel">{{ seasonsLabel }}</span>
+            <span v-if="seasonsLabel && runtimeLabel"> · </span>
+            <span v-if="runtimeLabel">{{ runtimeLabel }}</span>
+          </p>
+          <!-- Generos como texto plano: sin ruta de filtrado, no fingen ser enlaces. -->
+          <p v-if="tags.length" class="text-sm text-art-muted">
+            {{ tags.join(' · ') }}
           </p>
         </div>
 
@@ -102,13 +109,19 @@ withDefaults(
     backdropSrcSet?: string
     title: string
     overview?: string
-    /** Dato corto real, ej. '78% Match'. '' cuando no aplica. */
+    /** Dato corto real, ej. '★ 7.3'. '' cuando no aplica. */
     match?: string
     /** Año como texto, '' cuando se desconoce. */
     year?: string
-    /** '1 temporada' / 'N temporadas', ya con el plural correcto. */
+    /** '1 temporada' / 'N temporadas', already pluralized. */
     seasonsLabel?: string
+    /** Preformatted runtime, e.g. '2h 8m'. '' when unknown. */
+    runtimeLabel?: string
     isFavorite?: boolean
+    /** Genre names as plain text, one line under the meta line. Empty when none. */
+    tags?: string[]
+    /** Extra object-position class for the hero art. '' keeps the default framing. */
+    artPosition?: string
   }>(),
   {
     backdropUrl: '',
@@ -116,7 +129,10 @@ withDefaults(
     match: '',
     year: '',
     seasonsLabel: '',
+    runtimeLabel: '',
     isFavorite: false,
+    tags: () => [],
+    artPosition: '',
   }
 )
 

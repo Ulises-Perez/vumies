@@ -27,6 +27,11 @@ export const useAppStore = defineStore('app', () => {
       movieGenres.value = movieGenresData.genres
       tvGenres.value = tvGenresData.genres
     } catch (error) {
+      // Cancelado por una navegacion (abortAll): reintentar cuando termine.
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setTimeout(fetchGenres, 0)
+        return
+      }
       console.error('Error al cargar géneros:', error)
     } finally {
       loading.value = false

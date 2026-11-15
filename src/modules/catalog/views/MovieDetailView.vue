@@ -1,179 +1,86 @@
 <template>
+  <!-- Same recipe as the series view: full-bleed hero with the h1 in normal
+       flow below --chrome-top, a single container-app gutter, and bottom
+       clearance for the floating pill on mobile. -->
+  <div>
   <SkeletonDetail v-if="loading" />
 
-  <div v-else-if="error" class="min-h-screen pt-20">
+  <div v-else-if="error" class="min-h-screen pt-[var(--chrome-top)]">
     <div class="container-app py-8">
       <ErrorMessage :message="error" title="Error al cargar película" />
     </div>
   </div>
 
-  <div v-else-if="movieDetails" class="min-h-screen pb-20">
-    <!-- Backdrop Hero -->
-    <div
-      class="relative h-[var(--hero-lg)] w-full bg-cover bg-center"
-      :style="{ backgroundImage: `url(${backdropUrl})` }"
-    >
-      <div class="absolute inset-0 scrim-b" />
-      <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/60 to-transparent" />
-      
-      <div class="absolute inset-0 flex items-end pb-20">
-        <div class="container-app w-full">
-          <div class="max-w-3xl space-y-6">
-            <h1 class="text-5xl md:text-7xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
-              {{ movieDetails.title }}
-            </h1>
+  <div v-else-if="movieDetails" class="min-h-screen pb-[calc(70px+16px+var(--spacing-8))] md:pb-20">
+    <SerieHero
+      :backdrop-url="heroBackdropUrl"
+      :backdrop-src-set="heroBackdropSrcSet"
+      :title="movieDetails.title"
+      :match="matchLabel"
+      :year="releaseYear"
+      :runtime-label="runtimeLabel"
+      art-position="object-[center_20%]"
+      :tags="genreNames"
+      :is-favorite="isFavorite"
+      @play="playMovie"
+      @toggle-favorite="toggleFavorite"
+    />
+    <div aria-hidden="true" class="h-px w-px" />
 
-            <div class="flex items-center gap-4 text-muted-foreground text-sm md:text-base">
-              <span class="text-primary font-bold">{{ (movieDetails.vote_average * 10).toFixed(0) }}% Match</span>
-              <span>{{ releaseYear }}</span>
-              <BaseBadge variant="outline">{{ movieDetails.adult ? '18+' : 'PG-13' }}</BaseBadge>
-              <span>{{ formatRuntime(movieDetails.runtime) }}</span>
-            </div>
+    <BaseContainer class="space-y-10 md:space-y-12 pt-[var(--spacing-8)]">
+      <!-- Synopsis stacked over a full-width facts strip: no two-column split, no middle chasm. -->
+      <section aria-labelledby="movie-sinopsis-title">
+        <h2 id="movie-sinopsis-title" class="type-heading-3 font-poppins text-foreground mb-6">Sinopsis</h2>
+        <p v-if="movieDetails.overview" class="text-base leading-relaxed text-muted-foreground max-w-[65ch]">
+          {{ movieDetails.overview }}
+        </p>
+        <MovieFacts
+          class="mt-8"
+          :directors="directorsJoined"
+          :writers="writersJoined"
+          :studio="studioName"
+          :status="movieDetails.status"
+          :title="movieDetails.title"
+          :original-title="movieDetails.original_title"
+          :original-language="movieDetails.original_language"
+          :vote-count="movieDetails.vote_count"
+        />
+      </section>
 
-            <div class="flex flex-wrap gap-2">
-              <span
-                v-for="genre in movieDetails.genres"
-                :key="genre.id"
-                class="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              >
-                {{ genre.name }}<span v-if="genre !== movieDetails.genres[movieDetails.genres.length - 1]" class="mx-1">•</span>
-              </span>
-            </div>
-            
-            <div class="flex items-center gap-4 pt-4">
-              <BaseButton size="lg" @click="playMovie">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                </svg>
-                <span>Reproducir</span>
-              </BaseButton>
-
-              <BaseButton variant="secondary" size="lg" @click="toggleFavorite">
-                <svg
-                  class="w-5 h-5"
-                  :class="[isFavorite ? 'text-red-500 fill-current' : 'text-secondary-foreground']"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-                <span>Mi Lista</span>
-              </BaseButton>
-            </div>
+      <!-- Cast -->
+      <section v-if="credits && credits.cast.length" aria-labelledby="movie-reparto-title">
+        <h2 id="movie-reparto-title" class="type-heading-3 font-poppins text-foreground mb-6">Reparto</h2>
+        <!-- Snap-free rail: tabindex lets keyboard users scroll it. The edge
+             fade signals there is more to scroll. -->
+        <div
+          class="flex gap-[var(--grid-gap)] overflow-x-auto pb-[var(--spacing-4)] pr-4 scrollbar-hide [mask-image:linear-gradient(to_right,#000_92%,transparent)]"
+          tabindex="0"
+          role="region"
+          aria-label="Reparto"
+        >
+          <div v-for="actor in credits.cast.slice(0, 10)" :key="actor.id" class="flex-none w-24 md:w-28 text-left">
+            <PersonAvatar :path="actor.profile_path" :name="actor.name" class="mb-3 ring-1 ring-white/10 [&_img]:object-top" />
+            <p class="text-foreground font-medium text-sm line-clamp-2">{{ actor.name }}</p>
+            <p class="text-muted-foreground text-xs line-clamp-2">{{ formatCharacter(actor.character) }}</p>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Details Content -->
-  <div class="container-app relative z-10 -mt-10 space-y-12">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        
-        <!-- Left Column: Overview and Metadata -->
-        <div class="lg:col-span-2 space-y-10">
-           <!-- Overview -->
-           <div>
-              <h2 class="text-xl font-bold text-foreground mb-3 font-poppins">Sinopsis</h2>
-              <p class="max-w-[60ch] text-muted-foreground text-lg leading-relaxed">{{ movieDetails.overview }}</p>
-           </div>
-
-           <!-- Cast -->
-           <div v-if="credits && credits.cast.length">
-             <h2 class="text-xl font-bold text-foreground mb-4 font-poppins">Reparto Principal</h2>
-             <div class="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
-               <div v-for="actor in credits.cast.slice(0, 10)" :key="actor.id" class="flex-none w-32 text-center group">
-                 <PersonAvatar :path="actor.profile_path" :name="actor.name" class="mb-3" />
-                 <p class="text-foreground font-medium text-sm truncate">{{ actor.name }}</p>
-                 <p class="text-muted-foreground text-xs truncate">{{ actor.character }}</p>
-               </div>
-             </div>
-           </div>
-
-           <!-- Awards (Mock) -->
-           <div>
-             <h2 class="text-xl font-bold text-foreground mb-4 font-poppins">Premios</h2>
-             <div class="flex flex-wrap gap-4">
-                <BaseCard class="flex items-center gap-3 p-3">
-                  <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                  </div>
-                  <div>
-                    <p class="text-foreground font-bold text-sm">Oscar Winner</p>
-                    <p class="text-muted-foreground text-xs">Best Picture (2024)</p>
-                  </div>
-                </BaseCard>
-                <BaseCard class="flex items-center gap-3 p-3">
-                   <div class="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.699-3.181a1 1 0 011.827.954L17.18 5.485l-4.14 1.656.643 1.286 4.137-1.655a1 1 0 01.74 1.854l-4.138 1.655.644 1.288 4.137-1.655a1 1 0 11.74 1.854l-4.138 1.655.644 1.288 4.137-1.655a1 1 0 11.74 1.854l-4.138 1.655.644 1.288 4.137-1.655a1 1 0 11.74 1.854L10 16.098V20a1 1 0 11-2 0v-3.903l-7.442 2.977a1 1 0 01-1.48-.927V4.098a1 1 0 011.082-.996L10 3.323V3a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                  </div>
-                  <div>
-                    <p class="text-foreground font-bold text-sm">Golden Globe</p>
-                    <p class="text-muted-foreground text-xs">Best Director</p>
-                  </div>
-                </BaseCard>
-             </div>
-           </div>
-        </div>
-
-        <!-- Right Column: Info & Recommendations -->
-        <div class="space-y-8">
-           <BaseCard class="p-6">
-             <h2 class="text-lg font-bold text-foreground mb-4">Información</h2>
-             <div class="space-y-4">
-               <div v-if="directors.length">
-                 <p class="text-muted-foreground text-sm">Director</p>
-                 <p class="text-foreground">{{ directors.map(d => d.name).join(', ') }}</p>
-               </div>
-               <div v-if="writers.length">
-                 <p class="text-muted-foreground text-sm">Guión</p>
-                 <p class="text-foreground">{{ writers.map(w => w.name).join(', ') }}</p>
-               </div>
-               <div>
-                  <p class="text-muted-foreground text-sm">Estudio</p>
-                  <p class="text-foreground">{{ movieDetails.production_companies[0]?.name || 'N/A' }}</p>
-               </div>
-             </div>
-           </BaseCard>
-
-        </div>
-
-      </div>
-
-      <!-- Relacionados (bento grid, a lo ancho — como las recomendaciones de series) -->
-      <section v-if="hasRecommendations">
-        <h2 class="text-2xl md:text-3xl font-bold text-foreground font-poppins mb-8">Relacionados</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 auto-rows-[120px] sm:auto-rows-[140px] lg:auto-rows-[150px] gap-[var(--grid-gap)]">
-          <router-link
-            v-for="(movie, i) in recommendations.slice(0, 7)"
+      <!-- Related titles -->
+      <section v-if="hasRecommendations" aria-labelledby="movie-relacionados-title">
+        <h2 id="movie-relacionados-title" class="type-heading-3 font-poppins text-foreground mb-8">Relacionados</h2>
+        <div class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-6 lg:gap-5">
+          <MovieCard
+            v-for="movie in recommendations.slice(0, 12)"
             :key="movie.id"
-            :to="{ name: 'movie-detail', params: { id: movie.id } }"
-            :class="bentoSpan(i)"
-            class="group relative overflow-hidden rounded-xl ring-1 ring-border transition-[box-shadow] hover:ring-primary/50 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            <img
-              :src="bentoImage(movie, i)"
-              :alt="movie.title"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-            >
-            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
-            <div class="absolute inset-x-0 bottom-0 p-3">
-              <h3 class="text-white font-semibold text-sm md:text-base line-clamp-2 leading-tight drop-shadow">{{ movie.title }}</h3>
-              <div class="flex items-center gap-2 mt-1 text-[11px] text-white/80">
-                <span v-if="movie.vote_average" class="flex items-center gap-0.5 text-yellow-400 font-semibold">
-                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                  {{ movie.vote_average.toFixed(1) }}
-                </span>
-                <span v-if="movie.release_date">{{ new Date(movie.release_date).getFullYear() }}</span>
-              </div>
-            </div>
-          </router-link>
+            :movie="movie"
+          />
         </div>
       </section>
-    </div>
+    </BaseContainer>
+  </div>
 
-    <!-- Video Player Modal Removed -->
+  <div v-else class="min-h-screen" />
   </div>
 </template>
 
@@ -182,59 +89,82 @@ import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMovies } from '../composables/useMovies'
 import { useUserStore } from '@/modules/user'
-import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
+import { getBackdropUrl, getBackdropSrcSet } from '@/core/config/api.config'
+import SerieHero from '../components/SerieHero.vue'
+import MovieCard from '../components/MovieCard.vue'
+import MovieFacts from '../components/MovieFacts.vue'
 import SkeletonDetail from '@/modules/ui/components/skeletons/SkeletonDetail.vue'
 import ErrorMessage from '@/modules/ui/components/ErrorMessage.vue'
 import PersonAvatar from '@/modules/ui/components/PersonAvatar.vue'
-import { BaseBadge, BaseButton, BaseCard } from '@/modules/ui/components/base'
+import { BaseContainer } from '@/modules/ui/components/base'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const { movieDetails, credits, loading, error, recommendations, hasRecommendations, fetchMovieDetails, fetchMovieRecommendations } = useMovies()
 
-const backdropUrl = computed(() => 
-  movieDetails.value ? getBackdropUrl(movieDetails.value.backdrop_path, 'original') : ''
+// Backdrop solo cuando la pelicula trae arte real: '' pinta bg-muted en el hero.
+const heroBackdropUrl = computed(() =>
+  movieDetails.value?.backdrop_path
+    ? getBackdropUrl(movieDetails.value.backdrop_path, 'w780')
+    : ''
 )
 
-const releaseYear = computed(() => 
-  movieDetails.value ? new Date(movieDetails.value.release_date).getFullYear() : ''
+const heroBackdropSrcSet = computed(() =>
+  movieDetails.value?.backdrop_path
+    ? getBackdropSrcSet(movieDetails.value.backdrop_path)
+    : undefined
 )
 
-const isFavorite = computed(() => 
+// Puntaje real o nada: sin vote_average no hay dato que mostrar.
+const matchLabel = computed(() =>
+  movieDetails.value && movieDetails.value.vote_average > 0
+    ? `★ ${movieDetails.value.vote_average.toFixed(1)}`
+    : ''
+)
+
+const releaseYear = computed(() =>
+  movieDetails.value?.release_date
+    ? String(new Date(movieDetails.value.release_date).getFullYear())
+    : ''
+)
+
+const runtimeLabel = computed(() => formatRuntime(movieDetails.value?.runtime ?? 0))
+
+const genreNames = computed<string[]>(() =>
+  movieDetails.value ? movieDetails.value.genres.map((genre) => genre.name) : []
+)
+
+const isFavorite = computed(() =>
   movieDetails.value ? userStore.isFavorite(movieDetails.value.id, 'movie') : false
 )
 
-const directors = computed(() => 
+const directors = computed(() =>
   credits.value ? credits.value.crew.filter(c => c.job === 'Director') : []
 )
 
-const writers = computed(() => 
+const writers = computed(() =>
   credits.value ? credits.value.crew.filter(c => ['Screenplay', 'Writer', 'Story'].includes(c.job)).slice(0, 2) : []
 )
 
+const directorsJoined = computed(() => directors.value.map(d => d.name).join(', '))
+
+const writersJoined = computed(() => writers.value.map(w => w.name).join(', '))
+
+const studioName = computed(() => movieDetails.value?.production_companies[0]?.name ?? '')
+
 function formatRuntime(minutes: number) {
+  if (!minutes || minutes <= 0) return ''
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
   return `${h}h ${m}m`
 }
 
-// Bento grid de "Relacionados": patrón fijo de 7 tiles sobre una rejilla de 4 columnas
-// (la primera grande 2x2, dos anchas 2x1, el resto cuadradas 1x1) → llena 4x3 sin huecos.
-const wideIndexes = [0, 1, 6]
-
-function bentoSpan(i: number): string {
-  if (i === 0) return 'col-span-2 row-span-2'
-  if (i === 1 || i === 6) return 'col-span-2'
-  return 'col-span-1'
-}
-
-function bentoImage(movie: any, i: number): string {
-  // Tiles anchas → backdrop (apaisado); cuadradas → poster. Con fallback al otro.
-  if (wideIndexes.includes(i)) {
-    return movie.backdrop_path ? getBackdropUrl(movie.backdrop_path, 'w780') : getPosterUrl(movie.poster_path, 'w500')
-  }
-  return movie.poster_path ? getPosterUrl(movie.poster_path, 'w342') : getBackdropUrl(movie.backdrop_path, 'w500')
+// TMDB character strings leak English "(voice)": normalize only that token to
+// Spanish, leaving the rest of the string untouched.
+function formatCharacter(character: string) {
+  if (!character) return character
+  return character.replace(/\(voice\)/gi, '(voz)')
 }
 
 function playMovie() {
@@ -269,8 +199,9 @@ function toggleFavorite() {
 
 onMounted(async () => {
   const id = Number(route.params.id)
-  await fetchMovieDetails(id)
-  await fetchMovieRecommendations(id)
+  // Ficha y recomendaciones en paralelo: no dependen entre si y antes eran dos
+  // round trips encadenados.
+  await Promise.allSettled([fetchMovieDetails(id), fetchMovieRecommendations(id)])
 })
 
 watch(
@@ -279,8 +210,7 @@ watch(
     if (newId) {
       const id = Number(newId)
       window.scrollTo({ top: 0, behavior: 'smooth' })
-      await fetchMovieDetails(id)
-      await fetchMovieRecommendations(id)
+      await Promise.allSettled([fetchMovieDetails(id), fetchMovieRecommendations(id)])
     }
   }
 )
@@ -295,4 +225,3 @@ watch(
     scrollbar-width: none;
 }
 </style>
-

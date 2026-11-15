@@ -3,29 +3,22 @@
        guarda `kind` unicamente cuando hubo play, y sin play no hay rail.
        Tampoco hay porcentaje: el reproductor vive en otro origen y no expone su
        posicion a esta app (ver odd/tasks/continue-watching.md, L2). Retomar abre
-       el mismo contenido, y el propio player ofrece su reanudacion. -->
-  <section v-if="items.length" aria-labelledby="continue-watching-title">
-    <div class="mb-4 flex items-center justify-between">
-      <h2 id="continue-watching-title" class="text-2xl md:text-3xl font-bold text-foreground font-poppins">
-        Continuar viendo
-      </h2>
-      <router-link
-        to="/history"
-        class="inline-flex min-h-[24px] shrink-0 items-center gap-1 rounded-[var(--radius-inner)] px-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
-      >
-        Ver historial
-        <span aria-hidden="true">→</span>
-      </router-link>
-    </div>
+       el mismo contenido, y el propio player ofrece su reanudacion.
 
-    <div class="rail">
+       Un solo carril, como el resto del inicio: el arte 16:9 es la tarjeta, y el
+       titulo y el tipo van debajo. La cabecera, las flechas y el enlace son los
+       de HorizontalScroll, para que esta fila se lea igual que las demas. -->
+  <section v-if="items.length">
+    <HorizontalScroll title="Continuar viendo" link="/recent">
       <router-link
         v-for="item in items"
         :key="`${item.type}-${item.id}`"
         :to="resumeRoute(item)"
-        class="group relative flex-none w-[240px] overflow-hidden rounded-[var(--radius-container)] bg-card text-left ring-1 ring-border transition-shadow duration-200 hover:shadow-lg hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:w-[280px]"
+        class="group w-[160px] flex-none focus-visible:outline-none md:w-[220px]"
       >
-        <span class="relative block aspect-[16/9] w-full overflow-hidden bg-muted">
+        <span
+          class="relative block aspect-[16/9] w-full overflow-hidden rounded-[var(--radius-container)] bg-muted ring-1 ring-border transition-[box-shadow] duration-200 group-hover:shadow-lg group-hover:ring-primary/50 group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-primary"
+        >
           <!-- Backdrop 16:9 si existe: el marco es 16:9 y recortar un poster 2:3
                corta cabezas, elija el anclaje que elija. El poster queda como
                respaldo, anclado arriba, que es donde esta la cara. -->
@@ -38,30 +31,17 @@
             loading="lazy"
             decoding="async"
           />
-          <span aria-hidden="true" class="absolute inset-0 scrim-b" />
-          <span aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/20" />
-          <span
-            class="absolute bottom-2 right-2 flex items-end justify-end"
-            aria-hidden="true"
-          >
-            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur-sm transition-[transform,background-color] duration-200 group-hover:scale-105 group-hover:bg-background/90 motion-reduce:group-hover:scale-100">
-              <svg class="ml-0.5 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-              </svg>
-            </span>
-          </span>
         </span>
-
-        <span class="flex flex-col gap-1 p-3">
-          <span class="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-            {{ item.title }}
-          </span>
-          <span class="text-xs text-muted-foreground">
-            {{ describe(item) }}
-          </span>
+        <span
+          class="mt-2 block truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary md:text-base"
+        >
+          {{ item.title }}
+        </span>
+        <span class="block truncate text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground">
+          {{ describe(item) }}
         </span>
       </router-link>
-    </div>
+    </HorizontalScroll>
   </section>
 </template>
 
@@ -69,9 +49,13 @@
 import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import { getBackdropUrl, getPosterUrl } from '@/core/config/api.config'
+import HorizontalScroll from '@/modules/ui/components/HorizontalScroll.vue'
 import { useUserStore } from '@/modules/user'
 
-/** 16:9 backdrop at the card's real width, poster only when there is no backdrop. */
+/** 16:9 backdrop at the card's real width, poster only when there is no backdrop.
+ *  shortcut: un solo ancho (w300); en pantallas 2x/3x se ve blando. Si molesta,
+ *  pasar a un srcset w300/w780 con `sizes` fijo, para que el navegador no
+ *  re-seleccione candidato a mitad del hover (L16). */
 function frameUrl(item: ResumeItem): string {
   return item.backdrop_path ? getBackdropUrl(item.backdrop_path, 'w300') : getPosterUrl(item.poster_path, 'w342')
 }
@@ -93,9 +77,7 @@ interface ResumeItem {
 const userStore = useUserStore()
 
 const items = computed<ResumeItem[]>(() =>
-  (userStore.watchHistory as ResumeItem[])
-    .filter((item) => item.kind)
-    .slice(0, 12)
+  (userStore.watchHistory as ResumeItem[]).filter((item) => item.kind).slice(0, 12)
 )
 
 function resumeRoute(item: ResumeItem): RouteLocationRaw {

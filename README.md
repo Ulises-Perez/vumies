@@ -13,7 +13,7 @@ listing endpoints with the `X-API-Key` header.
 - ✨ **Modern UI**: Vue 3 + TypeScript + Tailwind CSS, with glassmorphism
 - 🎬 **Full catalog**: movies, series and anime via TMDB
 - 📺 **Integrated player**: Vimeus embeds (`/e/movie`, `/e/serie`, `/e/anime`) in an iframe
-- 🔍 **Realtime search** and ❤️ local favorites
+- 🔍 **Debounced search** (500 ms) and ❤️ local favorites
 - 🔐 **Keys kept server-side**: the Vimeus API key lives only in the Deno environment
 - 📱 **Responsive**: adapts from mobile to desktop
 
@@ -105,7 +105,6 @@ Build-time variables (read by Vite, reach the client by design):
 ```bash
 # ---- TMDB (required: catalog, images and search) ----
 # https://www.themoviedb.org/settings/api
-VITE_TMDB_API_KEY=
 VITE_TMDB_BEARER_TOKEN=
 
 # ---- Vimeus (player) ----
@@ -124,8 +123,7 @@ What each one is for:
 
 | Variable | Read by | Reaches the client? | Purpose |
 | --- | --- | --- | --- |
-| `VITE_TMDB_BEARER_TOKEN` | Vite (build) | Yes | Authorizes calls to the TMDB API |
-| `VITE_TMDB_API_KEY` | Vite (build) | Yes | Reserved for v3 endpoints that use `api_key` |
+| `VITE_TMDB_BEARER_TOKEN` | Vite (build) | Yes | Authorizes calls to the TMDB API (v4 bearer; the only TMDB credential the app reads) |
 | `VITE_VIMEUS_VIEW_KEY` | Vite (build) | Yes, by design | Required parameter of every embed URL; the player validates it by referrer |
 | `VIMEUS_API_KEY` | Deno server | **No** | Authenticates `/api/listing/*` with the `X-API-Key` header |
 
@@ -148,25 +146,51 @@ deno task start
 
 ## 📦 Deploy
 
-Publish from the Deno Deploy dashboard or with the CLI:
+The Deno Deploy app builds from GitHub and publishes the **production branch**
+(`main`). A push to any other branch only creates a preview deployment, so the
+production URL keeps serving the last `main` build. A change reaches
+`https://vumies.devk.deno.net/` only after it is committed **and** merged into
+`main`:
 
 ```bash
-pnpm install
-pnpm build
-deployctl deploy --project=<name> server.ts
+git switch main
+git merge --ff-only feature/ui-shell-ambilight
+git push origin main
+```
+
+To publish the local directory without going through `main`:
+
+```bash
+deno task deploy   # deno deploy --prod
 ```
 
 Set `VIMEUS_API_KEY` as an environment variable of the deployment project.
-The server serves the static files from `./dist` and proxies
-`/api/vimeus/listing/*` to `vimeus.net` with the `X-API-Key` header.
-`GET /healthz` returns `ok` for health checks.
+
+The app is currently deployed as a **static** site (`dist` + SPA fallback), so
+`server.ts` does not run: `/api/vimeus/listing/*` returns the SPA HTML and the
+player falls back to the embed providers. To restore the proxy, switch the app
+to the dynamic runtime with `server.ts` as entrypoint (dashboard, or a `deploy`
+section in `deno.json`):
+
+```jsonc
+{
+  "deploy": {
+    "install": "pnpm install",
+    "build": "pnpm build",
+    "runtime": { "type": "dynamic", "entrypoint": "./server.ts" }
+  }
+}
+```
+
+`server.ts` then serves `./dist` and proxies `/api/vimeus/listing/*` to
+`vimeus.net` with the `X-API-Key` header; `GET /healthz` returns `ok`.
 
 ## 🗂️ Project structure
 
 ```
 Vumies/
 ├── server.ts                # Deno entry: serves dist/ + proxies /api/vimeus/listing/*
-├── deno.json                # Deno tasks (dev, start)
+├── deno.json                # Deno tasks (dev, start, deploy)
 ├── src/                     # Vue 3 frontend
 │   ├── core/                # config, router, stores and shared utilities
 │   │   ├── config/          # API_CONFIG (TMDB, Vimeus, features)

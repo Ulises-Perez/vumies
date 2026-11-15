@@ -280,6 +280,7 @@ const episodesOpen = ref(false)
 const preferredSourceId = ref<string | null>(null)
 const selectedSeasonNumber = ref(1)
 const hasContentError = ref(false)
+const embedOrigin = ref('')
 let iframeTimeout: number | null = null
 
 // ---- Params ----
@@ -323,7 +324,9 @@ async function loadContent() {
   hasContentError.value = false
   activeStream.value = null
   embedUrl.value = ''
+  embedOrigin.value = ''
   videoUrl.value = ''
+  if (iframeTimeout) clearTimeout(iframeTimeout)
 
   selectorOpen.value = true
   const sourcesPromise = loadSources(buildMedia())
@@ -366,7 +369,12 @@ function selectStream(stream: Stream) {
 
   if (stream.kind === 'iframe') {
     embedUrl.value = stream.url || ''
+    embedOrigin.value = originOf(embedUrl.value)
     if (iframeTimeout) clearTimeout(iframeTimeout)
+    // Si el embed no carga en 15s, overlay en vez de un iframe en blanco.
+    iframeTimeout = window.setTimeout(() => {
+      hasContentError.value = true
+    }, 15_000)
     checkEmbedUrlStatus(embedUrl.value)
   } else if (stream.kind === 'direct') {
     videoUrl.value = stream.url || ''
@@ -392,10 +400,18 @@ function closeEpisodes() {
   episodesOpen.value = false
 }
 
+function originOf(url: string): string {
+  try {
+    return new URL(url).origin
+  } catch {
+    return ''
+  }
+}
+
 async function checkEmbedUrlStatus(url: string) {
   try {
     const res = await fetch(url, { method: 'HEAD' })
-    if (!res.ok && res.status === 404) hasContentError.value = true
+    if (res.status === 404) hasContentError.value = true
   } catch (e) {
     console.warn('No se pudo verificar la URL del embed', e)
   }
@@ -513,6 +529,9 @@ function nextEpisode() {
 }
 
 function handleMessage(event: MessageEvent) {
+  // Solo el embed que estamos mostrando puede mandar eventos: cualquier ventana
+  // que nos enmarque podria forzar navegacion o el overlay de error.
+  if (!embedOrigin.value || event.origin !== embedOrigin.value) return
   if (event.data === 'ended' || event.data?.event === 'ended') {
     if (type.value === 'tv' || type.value === 'anime') nextEpisode()
   }

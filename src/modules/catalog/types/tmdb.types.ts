@@ -96,6 +96,19 @@ export interface Genre {
   name: string
 }
 
+/** Entrada de /search/multi: TMDB agrega `media_type` a cada resultado. */
+export type MultiSearchItem =
+  | (Movie & { media_type: 'movie' })
+  | (TVShow & { media_type: 'tv' })
+  | { media_type: 'person'; id: number }
+
+/** Lo que la app conserva de /search/multi: personas fuera. */
+export type MultiSearchResult = Extract<MultiSearchItem, { media_type: 'movie' | 'tv' }>
+
+export function isMultiSearchResult(item: MultiSearchItem): item is MultiSearchResult {
+  return item.media_type === 'movie' || item.media_type === 'tv'
+}
+
 export interface ProductionCompany {
   id: number
   name: string

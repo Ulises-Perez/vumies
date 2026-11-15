@@ -61,13 +61,6 @@ export default {
         // via-dark/40 sigan funcionando con el nuevo look.
         dark: {
           DEFAULT: 'oklch(var(--background) / <alpha-value>)',
-          50: 'oklch(var(--accent) / <alpha-value>)',
-          100: 'oklch(var(--card) / <alpha-value>)',
-          200: 'oklch(var(--popover) / <alpha-value>)',
-          300: 'oklch(var(--background) / <alpha-value>)',
-          400: 'oklch(0.12 0.004 285 / <alpha-value>)',
-          500: 'oklch(0.10 0.004 285 / <alpha-value>)',
-          600: 'oklch(0.08 0.004 285 / <alpha-value>)',
         },
       },
       borderRadius: {

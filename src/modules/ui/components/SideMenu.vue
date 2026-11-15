@@ -120,6 +120,7 @@ import { FEATURES } from '@/core/config/features'
 import { useSettingsStore, type Theme } from '@/core/stores/settings.store'
 import { useSidebar } from '../composables/useSidebar'
 import { useCommandPalette } from '../composables/useCommandPalette'
+import { trapTab } from '@/core/utils/focusTrap'
 
 const route = useRoute()
 const { isOpen, close } = useSidebar()
@@ -244,6 +245,12 @@ watch(() => route.fullPath, () => nextTick(measureIndicator))
  * toca nada.
  */
 function onWindowKeydown(e: KeyboardEvent) {
+  // El panel es modal mientras esta abierto: Tab no debe salir a la pagina de atras.
+  // Con el buscador abierto el trap lo resuelve CommandPalette.
+  if (e.key === 'Tab' && isOpen.value && !isPaletteOpen.value) {
+    trapTab(e, panelRef.value)
+    return
+  }
   if (e.key !== 'Escape' || !isOpen.value || isPaletteOpen.value) return
   e.preventDefault()
   close()

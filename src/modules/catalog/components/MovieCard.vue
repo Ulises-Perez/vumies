@@ -1,7 +1,6 @@
 <template>
   <div
     class="group motion-lift motion-card cursor-pointer relative isolate"
-    @click="handleClick"
     @mouseenter="primeAmbilight"
     @focusin="primeAmbilight"
   >
@@ -142,16 +141,6 @@ const movieLink = computed(() => ({
 }))
 
 const isFavorite = computed(() => userStore.isFavorite(props.movie.id, 'movie'))
-
-function handleClick() {
-  // Track in history when clicked
-  userStore.addToHistory({
-    id: props.movie.id,
-    type: 'movie',
-    title: props.movie.title,
-    poster_path: props.movie.poster_path,
-  })
-}
 
 function toggleFavorite() {
   userStore.toggleFavorite({

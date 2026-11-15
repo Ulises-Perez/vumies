@@ -104,7 +104,6 @@ const isHidden = computed(() => scrollingDown.value && !isOpen.value && !isPalet
 const isPlayerRoute = computed(
   () =>
     route.name === 'player' ||
-    route.name === 'episode-player' ||
     route.path.startsWith('/player'),
 )
 

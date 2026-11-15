@@ -113,10 +113,12 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { RouteLocationRaw } from 'vue-router'
 import { tmdbService } from '@/modules/catalog/services/tmdb.service'
+import { isMultiSearchResult, type MultiSearchResult } from '@/modules/catalog/types/tmdb.types'
 import { getPosterUrl } from '@/core/config/api.config'
 import { useAnimeStore } from '@/core/stores/anime.store'
 import { FEATURES } from '@/core/config/features'
 import { useCommandPalette } from '../composables/useCommandPalette'
+import { trapTab } from '@/core/utils/focusTrap'
 
 interface CmdItem {
   kind: 'action' | 'page' | 'result'
@@ -139,7 +141,7 @@ const listRef = ref<HTMLElement | null>(null)
 const panelRef = ref<HTMLElement | null>(null)
 /** Elemento que tenía el foco antes de abrir, para devolvérselo al cerrar. */
 let restoreFocusTo: HTMLElement | null = null
-const suggestions = ref<any[]>([])
+const suggestions = ref<MultiSearchResult[]>([])
 let searchTimeout: number | null = null
 
 const PAGES: { id: string; label: string; to: RouteLocationRaw }[] = [
@@ -169,7 +171,7 @@ const pages = computed<CmdItem[]>(() =>
     .map((p) => ({ kind: 'page', id: p.id, label: p.label, to: p.to })),
 )
 
-function resultRoute(item: any): RouteLocationRaw {
+function resultRoute(item: MultiSearchResult): RouteLocationRaw {
   if (item.media_type === 'movie') return { name: 'movie-detail', params: { id: item.id } }
   // Con anime desactivado, todo TV cae a serie-detail (igual que en el resto de la app).
   const name = FEATURES.anime && animeStore.isAnime(item.id) ? 'anime-detail' : 'serie-detail'
@@ -180,7 +182,7 @@ const results = computed<CmdItem[]>(() =>
   suggestions.value.map((item) => ({
     kind: 'result',
     id: `${item.media_type}-${item.id}`,
-    label: item.title || item.name,
+    label: item.media_type === 'movie' ? item.title : item.name,
     subtitle: `${item.media_type === 'movie' ? 'Película' : 'Serie'} • ${(item.vote_average || 0).toFixed(1)}`,
     poster: item.poster_path ? getPosterUrl(item.poster_path, 'w92') : null,
     to: resultRoute(item),
@@ -222,9 +224,7 @@ watch(flatItems, () => {
 async function fetchSuggestions() {
   try {
     const res = await tmdbService.searchMulti(query.value.trim())
-    suggestions.value = res.results
-      .filter((i: any) => i.media_type === 'movie' || i.media_type === 'tv')
-      .slice(0, 6)
+    suggestions.value = res.results.filter(isMultiSearchResult).slice(0, 6)
   } catch {
     suggestions.value = []
   }
@@ -262,31 +262,9 @@ function onKeydown(e: KeyboardEvent) {
   // que funcione aunque el foco esté en la lista, en el panel o en el body.
 }
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-
 /** Mantiene el foco dentro del diálogo mientras está abierto. */
-function trapTab(e: KeyboardEvent) {
-  const panel = panelRef.value
-  if (!panel) return
-  const nodes = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-    (el) => el.offsetParent !== null,
-  )
-  if (!nodes.length) return
-  const first = nodes[0]
-  const last = nodes[nodes.length - 1]
-  if (!first || !last) return
-  const active = document.activeElement as HTMLElement | null
-  const outside = !active || !panel.contains(active)
-  if (e.shiftKey) {
-    if (outside || active === first) {
-      e.preventDefault()
-      last.focus()
-    }
-  } else if (outside || active === last) {
-    e.preventDefault()
-    first.focus()
-  }
+function trapTabKey(e: KeyboardEvent) {
+  trapTab(e, panelRef.value)
 }
 
 /**
@@ -338,7 +316,7 @@ function onGlobalKeydown(e: KeyboardEvent) {
     close()
     return
   }
-  if (e.key === 'Tab') trapTab(e)
+  if (e.key === 'Tab') trapTabKey(e)
 }
 
 onMounted(() => window.addEventListener('keydown', onGlobalKeydown, true))

@@ -1,6 +1,7 @@
 <template>
   <div class="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm">
     <div
+      ref="dialogRef"
       class="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-2xl"
       role="dialog"
       aria-modal="true"
@@ -79,6 +80,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import LoadingSpinner from '@/modules/ui/components/LoadingSpinner.vue'
+import { trapTab } from '@/core/utils/focusTrap'
 import type { SourceResult, Stream } from '@/modules/player'
 
 const props = defineProps<{
@@ -99,6 +101,8 @@ const streams = computed<Stream[]>(() =>
 
 const items = ref<(HTMLButtonElement | null)[]>([])
 const closeButton = ref<HTMLButtonElement | null>(null)
+const dialogRef = ref<HTMLElement | null>(null)
+let restoreFocusTo: HTMLElement | null = null
 
 function setItemRef(el: HTMLButtonElement | null, index: number) {
   items.value[index] = el
@@ -118,21 +122,29 @@ function moveFocus(delta: number) {
   focusIndex(current + delta)
 }
 
-function handleEscape(event: KeyboardEvent) {
+function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     event.stopPropagation()
     emit('close')
+  } else if (event.key === 'Tab') {
+    trapTab(event, dialogRef.value)
   }
 }
 
 onMounted(async () => {
+  restoreFocusTo = document.activeElement as HTMLElement | null
   await nextTick()
   if (streams.value.length) focusIndex(0)
   else closeButton.value?.focus()
-  window.addEventListener('keydown', handleEscape)
+  window.addEventListener('keydown', handleKeydown)
 })
 
-onBeforeUnmount(() => window.removeEventListener('keydown', handleEscape))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  const target = restoreFocusTo
+  restoreFocusTo = null
+  if (target && document.contains(target)) target.focus({ preventScroll: true })
+})
 
 const summary = computed(() => {
   const n = streams.value.length

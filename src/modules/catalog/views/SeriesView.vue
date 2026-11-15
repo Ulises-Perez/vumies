@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onActivated, onMounted, computed } from 'vue'
 import { useSeries } from '@/modules/catalog/composables/useSeries'
 import TVShowCard from '@/modules/catalog/components/TVShowCard.vue'
 import MosaicHighlights from '@/modules/catalog/components/MosaicHighlights.vue'
@@ -109,15 +109,29 @@ function matchOf(show: TVShow): string {
   return (show.vote_average * 10).toFixed(0)
 }
 
-onMounted(async () => {
-  try {
-    const popularRes = await fetchPopularSeries()
-    popularSeries.value = popularRes.results
+const REFRESH_AFTER_MS = 10 * 60_000
+let loadedAt = 0
 
-    const topRatedRes = await fetchTopRatedSeries()
-    topRatedSeries.value = topRatedRes.results
+async function loadSeries() {
+  loadedAt = Date.now()
+  try {
+    // Las dos listas no dependen entre si: antes eran dos round trips
+    // encadenados y el mosaico seguia en esqueleto hasta terminar el segundo.
+    const [popularRes, topRatedRes] = await Promise.allSettled([
+      fetchPopularSeries(),
+      fetchTopRatedSeries(),
+    ])
+    if (popularRes.status === 'fulfilled') popularSeries.value = popularRes.value.results
+    if (topRatedRes.status === 'fulfilled') topRatedSeries.value = topRatedRes.value.results
   } finally {
     mosaicLoading.value = false
   }
+}
+
+onMounted(loadSeries)
+
+// KeepAlive: al volver, solo se refetchea si el dato tiene mas de 10 min.
+onActivated(() => {
+  if (Date.now() - loadedAt > REFRESH_AFTER_MS) void loadSeries()
 })
 </script>

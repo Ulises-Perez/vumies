@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onActivated, onMounted, ref } from 'vue'
 import { useMovies } from '../composables/useMovies'
 import { getBackdropSrcSet, getBackdropUrl, getPosterSrcSet, getPosterUrl } from '@/core/config/api.config'
 import { useUserStore } from '@/modules/user'
@@ -178,21 +178,32 @@ function toggleLeadFavorite() {
   }
 }
 
-onMounted(async () => {
+const REFRESH_AFTER_MS = 10 * 60_000
+let loadedAt = 0
+
+async function loadMovies() {
+  loadedAt = Date.now()
   try {
-    const [popularRes, topRatedRes, upcomingRes, genresRes] = await Promise.all([
+    const [popularRes, topRatedRes, upcomingRes, genresRes] = await Promise.allSettled([
        fetchPopularMovies(),
        fetchTopRatedMovies(),
        fetchUpcomingMovies(),
        fetchGenres()
     ])
 
-    popularMovies.value = popularRes.results
-    topRatedMovies.value = topRatedRes.results
-    upcomingMovies.value = upcomingRes.results
-    genres.value = genresRes || []
+    if (popularRes.status === 'fulfilled') popularMovies.value = popularRes.value.results
+    if (topRatedRes.status === 'fulfilled') topRatedMovies.value = topRatedRes.value.results
+    if (upcomingRes.status === 'fulfilled') upcomingMovies.value = upcomingRes.value.results
+    if (genresRes.status === 'fulfilled') genres.value = genresRes.value || []
   } finally {
     mosaicLoading.value = false
   }
+}
+
+onMounted(loadMovies)
+
+// KeepAlive: al volver, solo se refetchea si el dato tiene mas de 10 min.
+onActivated(() => {
+  if (Date.now() - loadedAt > REFRESH_AFTER_MS) void loadMovies()
 })
 </script>

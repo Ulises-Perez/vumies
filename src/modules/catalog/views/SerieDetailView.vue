@@ -174,8 +174,8 @@ const { seriesDetails, currentSeason, credits, loading, error, recommendations, 
 const selectedSeasonNumber = ref(1)
 
 // Backdrop solo cuando la serie trae arte real: '' pinta bg-muted en el hero.
-// Pasar el fallback '/placeholder-backdrop.jpg' (que no existe en public/)
-// romperia la imagen igual que los stills nulos de los episodios.
+// El placeholder de getBackdropUrl es un gris plano y en el hero se ve peor que
+// el bg-muted del contenedor.
 const heroBackdropUrl = computed(() =>
   seriesDetails.value?.backdrop_path
     ? getBackdropUrl(seriesDetails.value.backdrop_path, 'original')
@@ -267,19 +267,27 @@ async function loadSeason(seasonNum: number) {
   }
 }
 
+// La temporada inicial la carga el watch de selectedSeasonNumber cuando cambia;
+// si ya vale lo mismo (caso normal: temporada 1) hay que pedirla a mano. Antes se
+// pedia siempre y el watch volvia a pedirla: dos requests de la misma temporada.
+async function selectFirstSeason() {
+  const firstSeason =
+    seriesDetails.value?.seasons?.find((s) => s.season_number === 1) ||
+    seriesDetails.value?.seasons?.[0]
+  if (!firstSeason) return
+  if (selectedSeasonNumber.value === firstSeason.season_number) {
+    await loadSeason(firstSeason.season_number)
+  } else {
+    selectedSeasonNumber.value = firstSeason.season_number
+  }
+}
+
 onMounted(async () => {
   const id = Number(route.params.id)
-  await fetchSeriesDetails(id)
-  await fetchSeriesRecommendations(id)
-
-  // Load first season by default or logic related
-  if (seriesDetails.value && seriesDetails.value.seasons?.length > 0) {
-     const firstSeason = seriesDetails.value.seasons.find(s => s.season_number === 1) || seriesDetails.value.seasons[0]
-     if (firstSeason) {
-       selectedSeasonNumber.value = firstSeason.season_number
-       await loadSeason(selectedSeasonNumber.value)
-     }
-  }
+  // La ficha y las recomendaciones no dependen entre si: antes eran dos round
+  // trips encadenados. La temporada si necesita la ficha, asi que espera.
+  await Promise.allSettled([fetchSeriesDetails(id), fetchSeriesRecommendations(id)])
+  await selectFirstSeason()
 })
 
 watch(
@@ -288,15 +296,8 @@ watch(
     if (newId) {
       const id = Number(newId)
       window.scrollTo({ top: 0, behavior: 'smooth' })
-      await fetchSeriesDetails(id)
-      await fetchSeriesRecommendations(id)
-      if (seriesDetails.value && seriesDetails.value.seasons?.length > 0) {
-         const firstSeason = seriesDetails.value.seasons.find(s => s.season_number === 1) || seriesDetails.value.seasons[0]
-         if (firstSeason) {
-            selectedSeasonNumber.value = firstSeason.season_number
-            await loadSeason(selectedSeasonNumber.value)
-         }
-      }
+      await Promise.allSettled([fetchSeriesDetails(id), fetchSeriesRecommendations(id)])
+      await selectFirstSeason()
     }
   }
 )

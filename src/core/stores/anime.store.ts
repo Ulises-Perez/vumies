@@ -67,7 +67,6 @@ export const useAnimeStore = defineStore('anime', () => {
 
             animeTmdbIds.value = ids
             loaded.value = true
-            console.log(`[AnimeStore] Loaded ${ids.size} anime TMDB IDs from Vimeus`)
         } catch (error) {
             console.error('[AnimeStore] Error fetching anime IDs:', error)
         } finally {

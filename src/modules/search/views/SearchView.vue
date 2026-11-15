@@ -23,13 +23,13 @@
             <div class="container-app w-full">
               <div class="max-w-3xl space-y-6">
                 <h1 class="text-4xl md:text-6xl font-bold font-poppins text-foreground leading-tight text-shadow-lg">
-                  {{ heroItem.title || heroItem.name }}
+                  {{ heroItem.media_type === 'movie' ? heroItem.title : heroItem.name }}
                 </h1>
                 
                 <div class="flex items-center space-x-4 text-muted-foreground text-sm md:text-base">
                    <span class="capitalize">{{ heroItem.media_type === 'movie' ? 'Película' : 'Serie' }}</span>
                    <span v-if="heroItem.vote_average" class="text-primary font-semibold">{{ (heroItem.vote_average * 10).toFixed(0) }}% Match</span>
-                   <span v-if="heroItem.release_date || heroItem.first_air_date">{{ new Date(heroItem.release_date || heroItem.first_air_date).getFullYear() }}</span>
+                   <span v-if="heroItem.media_type === 'movie' ? heroItem.release_date : heroItem.first_air_date">{{ new Date(heroItem.media_type === 'movie' ? heroItem.release_date : heroItem.first_air_date).getFullYear() }}</span>
                 </div>
 
                 <p v-if="heroItem.overview" class="text-lg text-muted-foreground line-clamp-3 text-shadow max-w-2xl leading-relaxed">
@@ -76,13 +76,10 @@
                 </div>
                 
                 <div class="grid-posters">
-                 <component
-                    v-for="item in gridItems"
-                    :key="`${item.id}-${item.media_type}`"
-                    :is="item.media_type === 'movie' ? MovieCard : TVShowCard"
-                    :movie="item.media_type === 'movie' ? item : undefined"
-                    :series="item.media_type === 'tv' ? item : undefined"
-                />
+                 <template v-for="item in gridItems" :key="`${item.id}-${item.media_type}`">
+                   <MovieCard v-if="item.media_type === 'movie'" :movie="item" />
+                   <TVShowCard v-else :series="item" />
+                 </template>
                 </div>
         </BaseContainer>
     </div>
@@ -129,6 +126,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { tmdbService } from '@/modules/catalog/services/tmdb.service'
+import { isMultiSearchResult, type MultiSearchResult } from '@/modules/catalog/types/tmdb.types'
 import { getBackdropUrl } from '@/core/config/api.config'
 import MovieCard from '@/modules/catalog/components/MovieCard.vue'
 import TVShowCard from '@/modules/catalog/components/TVShowCard.vue'
@@ -140,7 +138,7 @@ import { BaseButton, BaseContainer } from '@/modules/ui/components/base'
 const route = useRoute()
 const userStore = useUserStore()
 const searchQuery = ref('')
-const results = ref<any[]>([])
+const results = ref<MultiSearchResult[]>([])
 const searching = ref(false)
 let searchTimeout: number | null = null
 
@@ -162,7 +160,7 @@ function toggleHeroFavorite() {
     userStore.toggleFavorite({
       id: heroItem.value.id,
       type: heroItem.value.media_type,
-      title: heroItem.value.title || heroItem.value.name,
+      title: heroItem.value.media_type === 'movie' ? heroItem.value.title : heroItem.value.name,
       poster_path: heroItem.value.poster_path,
     })
   }
@@ -177,9 +175,7 @@ async function performSearch() {
   searching.value = true
   try {
     const response = await tmdbService.searchMulti(searchQuery.value)
-    results.value = response.results.filter(
-      (item: any) => item.media_type === 'movie' || item.media_type === 'tv'
-    )
+    results.value = response.results.filter(isMultiSearchResult)
   } catch (error) {
     console.error('Error en búsqueda:', error)
   } finally {

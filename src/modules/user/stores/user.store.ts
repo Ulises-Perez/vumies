@@ -38,20 +38,49 @@ export const useUserStore = defineStore('user', () => {
   const hasFavorites = computed(() => favorites.value.length > 0)
   const hasHistory = computed(() => watchHistory.value.length > 0)
 
-  // Load from localStorage
+  // localStorage es entrada no confiable: otra version, otra pestaña o editada a
+  // mano. Un JSON valido con el tipo equivocado (p.ej. "null") rompia hasFavorites
+  // y dejaba la vista en blanco, asi que se valida item a item.
+  const STORAGE_VERSION = 1
+  const MAX_FAVORITES = 200
+  const MAX_HISTORY = 50
+  const storageError = ref<string | null>(null)
+
+  function isValidItem(value: unknown): value is FavoriteItem {
+    if (!value || typeof value !== 'object') return false
+    const item = value as Record<string, unknown>
+    return (
+      typeof item.id === 'number' &&
+      (item.type === 'movie' || item.type === 'tv') &&
+      typeof item.title === 'string'
+    )
+  }
+
+  function readList<T>(key: string): T[] {
+    try {
+      const raw = localStorage.getItem(key)
+      if (!raw) return []
+      const parsed: unknown = JSON.parse(raw)
+      return Array.isArray(parsed) ? (parsed.filter(isValidItem) as T[]) : []
+    } catch {
+      return []
+    }
+  }
+
   function loadFromStorage() {
     try {
-      const storedFavorites = localStorage.getItem('vumies_favorites')
-      const storedHistory = localStorage.getItem('vumies_history')
-
-      if (storedFavorites) {
-        favorites.value = JSON.parse(storedFavorites)
+      const version = Number(localStorage.getItem('vumies_user_v') ?? STORAGE_VERSION)
+      // Version futura: no la entendemos, mejor arrancar vacio que romper.
+      if (version > STORAGE_VERSION) {
+        favorites.value = []
+        watchHistory.value = []
+        return
       }
-      if (storedHistory) {
-        watchHistory.value = JSON.parse(storedHistory)
-      }
-    } catch (error) {
-      console.error('Error al cargar desde localStorage:', error)
+      favorites.value = readList<FavoriteItem>('vumies_favorites')
+      watchHistory.value = readList<WatchHistoryItem>('vumies_history')
+    } catch {
+      favorites.value = []
+      watchHistory.value = []
     }
   }
 
@@ -60,7 +89,10 @@ export const useUserStore = defineStore('user', () => {
     try {
       localStorage.setItem('vumies_favorites', JSON.stringify(favorites.value))
       localStorage.setItem('vumies_history', JSON.stringify(watchHistory.value))
+      localStorage.setItem('vumies_user_v', String(STORAGE_VERSION))
+      storageError.value = null
     } catch (error) {
+      storageError.value = 'No se pudo guardar en este navegador.'
       console.error('Error al guardar en localStorage:', error)
     }
   }
@@ -69,6 +101,9 @@ export const useUserStore = defineStore('user', () => {
   function addToFavorites(item: Omit<FavoriteItem, 'addedAt'>) {
     if (!isFavorite(item.id, item.type)) {
       favorites.value.unshift({ ...item, addedAt: Date.now() })
+      if (favorites.value.length > MAX_FAVORITES) {
+        favorites.value = favorites.value.slice(0, MAX_FAVORITES)
+      }
       saveToStorage()
     }
   }
@@ -115,9 +150,8 @@ export const useUserStore = defineStore('user', () => {
     }
     watchHistory.value.unshift(historyItem)
 
-    // Keep only last 50 items
-    if (watchHistory.value.length > 50) {
-      watchHistory.value = watchHistory.value.slice(0, 50)
+    if (watchHistory.value.length > MAX_HISTORY) {
+      watchHistory.value = watchHistory.value.slice(0, MAX_HISTORY)
     }
 
     saveToStorage()
@@ -139,6 +173,13 @@ export const useUserStore = defineStore('user', () => {
   // Initialize
   loadFromStorage()
 
+  // Otra pestaña cambio el estado: recargar en vez de pisarlo en silencio.
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'vumies_favorites' || event.key === 'vumies_history') {
+      loadFromStorage()
+    }
+  })
+
   return {
     // State
     favorites,
@@ -147,6 +188,7 @@ export const useUserStore = defineStore('user', () => {
     // Computed
     hasFavorites,
     hasHistory,
+    storageError,
 
     // Actions
     addToFavorites,

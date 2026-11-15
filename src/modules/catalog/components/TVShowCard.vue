@@ -1,7 +1,6 @@
 <template>
   <div
     class="group motion-lift motion-card cursor-pointer relative isolate"
-    @click="handleClick"
     @mouseenter="primeAmbilight"
     @focusin="primeAmbilight"
   >
@@ -152,15 +151,6 @@ const seriesLink = computed(() => ({
 }))
 
 const isFavorite = computed(() => userStore.isFavorite(props.series.id, 'tv'))
-
-function handleClick() {
-  userStore.addToHistory({
-    id: props.series.id,
-    type: 'tv',
-    title: props.series.name,
-    poster_path: props.series.poster_path,
-  })
-}
 
 function toggleFavorite() {
   userStore.toggleFavorite({

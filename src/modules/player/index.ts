@@ -1,6 +1,5 @@
 // Player module barrel export
 export { vimeusService } from './services/vimeus.service'
-export { usePlayer } from './composables/usePlayer'
 
 // Multi-source abstraction (web-only: Vimeus iframe)
 export { useStreamSources } from './composables/useStreamSources'

@@ -61,10 +61,11 @@
                 <div class="aspect-poster rounded-lg overflow-hidden bg-muted ring-1 ring-border mb-3 transition-[transform,box-shadow] duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-primary/40">
                   <img
                     v-if="item.poster_path"
-                    :src="getPosterUrl(item.poster_path)"
+                    :src="getPosterUrl(item.poster_path, 'w342')"
                     :alt="item.title"
                     class="w-full h-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <h3 class="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{{ item.title }}</h3>
@@ -75,6 +76,7 @@
                  @click.prevent="removeItem(item.id, item.type)"
                  class="absolute top-2 right-2 bg-background/60 text-foreground hover:bg-destructive hover:text-destructive-foreground rounded-full p-1.5 backdrop-blur-sm transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                  title="Eliminar de favoritos"
+                 aria-label="Eliminar de favoritos"
               >
                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>

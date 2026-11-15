@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onActivated, onMounted, ref } from 'vue'
 import { useMovies } from '../composables/useMovies'
 import { useSeries } from '../composables/useSeries'
 import { getBackdropSrcSet, getBackdropUrl, getPosterSrcSet, getPosterUrl } from '@/core/config/api.config'
@@ -139,24 +139,42 @@ const wideTiles = computed(() =>
 )
 const upcomingRest = computed(() => localUpcomingMovies.value.slice(3))
 
-onMounted(async () => {
+const REFRESH_AFTER_MS = 10 * 60_000
+let loadedAt = 0
+
+async function loadHome() {
+  loadedAt = Date.now()
   // 1) Tendencias primero: alimenta el mosaico (LCP). El flag se apaga en
   //    finally para que un fallo no deje un esqueleto eterno en el inicio.
   try {
     const trendingRes = await fetchTrendingMovies('day')
     localTrendingMovies.value = trendingRes.results
+  } catch (error) {
+    console.error('Error al cargar tendencias:', error)
   } finally {
     mosaicLoading.value = false
   }
 
-  // 2) Resto de carruseles en paralelo, sin bloquear el mosaico
-  const [upcomingRes, nowPlayingRes] = await Promise.all([
+  // 2) Resto de carruseles en paralelo, sin bloquear el mosaico. Un fallo en uno
+  //    no debe dejar vacios los otros.
+  const [upcomingRes, nowPlayingRes] = await Promise.allSettled([
     fetchUpcomingMovies(),
     fetchNowPlayingMovies(),
   ])
-  localUpcomingMovies.value = upcomingRes.results
-  recentlyAddedMovies.value = nowPlayingRes.results
+  if (upcomingRes.status === 'fulfilled') localUpcomingMovies.value = upcomingRes.value.results
+  if (nowPlayingRes.status === 'fulfilled') recentlyAddedMovies.value = nowPlayingRes.value.results
 
-  await fetchPopularSeries()
+  try {
+    await fetchPopularSeries()
+  } catch (error) {
+    console.error('Error al cargar series populares:', error)
+  }
+}
+
+onMounted(loadHome)
+
+// KeepAlive: al volver, solo se refetchea si el dato tiene mas de 10 min.
+onActivated(() => {
+  if (Date.now() - loadedAt > REFRESH_AFTER_MS) void loadHome()
 })
 </script>

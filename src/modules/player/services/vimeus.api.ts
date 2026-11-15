@@ -31,19 +31,46 @@ export async function fetchVimeusListing<T>(
   if (query.withCf !== undefined) params.set('with_cf', String(query.withCf))
 
   const qs = params.toString()
-  const res = await fetch(`/api/vimeus/listing/${kind}${qs ? `?${qs}` : ''}`, {
-    headers: { Accept: 'application/json' },
-  })
+  const endpoint = `/api/vimeus/listing/${kind}${qs ? `?${qs}` : ''}`
 
-  const body = (await res.json()) as VimeusListResponse<T> & { message?: string }
+  // Un reintento para 429/5xx y para un fallo de red. El upstream responde 503
+  // con una pagina HTML de Cloudflare: sin esto el cuerpo no es JSON y el
+  // consumidor recibia un error de parseo en vez del estado real.
+  for (let attempt = 0; ; attempt++) {
+    let res: Response
+    try {
+      res = await fetch(endpoint, { headers: { Accept: 'application/json' } })
+    } catch (error) {
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        continue
+      }
+      throw error
+    }
 
-  if (!res.ok) {
-    throw new Error(
-      typeof body?.message === 'string' && body.message
-        ? body.message
-        : `Vimeus listing request failed with status ${res.status}`
-    )
+    const text = await res.text()
+    let body: (VimeusListResponse<T> & { message?: string }) | null = null
+    try {
+      body = text ? JSON.parse(text) : null
+    } catch {
+      body = null
+    }
+
+    if (!res.ok || !body) {
+      // Solo se reintenta lo transitorio (429/5xx, que es donde Cloudflare
+      // devuelve su pagina HTML). Un 200 con cuerpo no-JSON no mejora repitiendo.
+      const transient = res.status === 429 || res.status >= 500
+      if (attempt === 0 && transient) {
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        continue
+      }
+      throw new Error(
+        typeof body?.message === 'string' && body.message
+          ? body.message
+          : `Vimeus listing request failed with status ${res.status}`
+      )
+    }
+
+    return body
   }
-
-  return body
 }
