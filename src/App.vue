@@ -35,6 +35,9 @@
 
     <!-- Command Palette (⌘K) — buscador centrado global -->
     <CommandPalette />
+
+    <!-- Aviso de deploy nuevo: no recarga solo, el usuario decide. -->
+    <UpdatePrompt />
   </div>
 </template>
 
@@ -49,6 +52,7 @@ import AppFooter from '@/modules/ui/components/AppFooter.vue'
 import BottomMenu from '@/modules/ui/components/BottomMenu.vue'
 import SideMenu from '@/modules/ui/components/SideMenu.vue'
 import CommandPalette from '@/modules/ui/components/CommandPalette.vue'
+import UpdatePrompt from '@/core/components/UpdatePrompt.vue'
 
 const appStore = useAppStore()
 const animeStore = useAnimeStore()
