@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -72,6 +72,10 @@ function tick() {
 function reload() {
   window.location.reload()
 }
+
+// Navegar es el otro momento natural para enterarse: un usuario que recorre el
+// catalogo no tiene que esperar al intervalo. Una vez detectado, check() corta.
+watch(() => route.fullPath, tick)
 
 let timer: ReturnType<typeof setInterval> | undefined
 
