@@ -497,6 +497,89 @@
   }
 }
 
+/* === Confeti (Ajustes > Sorpresa) ===
+   Las piezas las crea ConfettiBurst.vue; aqui viven la forma, la caida y el
+   aleteo. Todo anima transform/opacity: nada repinta. */
+.confetti {
+  position: absolute;
+  top: -12vh;
+  left: var(--x, 50%);
+  width: var(--w, 8px);
+  height: var(--h, 12px);
+  opacity: 0;
+  animation: confetti-fall var(--dur, 4s) linear var(--delay, 0s) infinite;
+}
+
+.confetti__inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r, 1px);
+  background: var(--c, #8b5cf6);
+  opacity: var(--o, 1);
+  animation: confetti-flutter var(--flutter, 1s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--drift, 0px), 124vh, 0);
+    opacity: 0;
+  }
+}
+
+/* El aleteo: la pieza se mece y gira sobre si misma, como el papel de verdad. */
+@keyframes confetti-flutter {
+  from {
+    transform: translateX(calc(var(--sway, 20px) * -1))
+      rotate3d(var(--ax, 0.4), var(--ay, 0.6), 0, var(--rot, 540deg));
+  }
+  to {
+    transform: translateX(var(--sway, 20px))
+      rotate3d(var(--ax, 0.4), var(--ay, 0.6), 0, calc(var(--rot, 540deg) * -1));
+  }
+}
+
+/* Sin movimiento: las piezas quedan repartidas y quietas. */
+.confetti.is-static {
+  top: var(--y, 50%);
+  opacity: 1;
+  animation: none;
+}
+
+.confetti.is-static .confetti__inner {
+  animation: none;
+  transform: rotate(calc(var(--rot, 540deg) / 4));
+}
+
+/* La entrada del mensaje: sube una vez, no en cada seccion. Solo mueve
+   transform, asi que el texto se lee aunque la animacion no llegue a correr. */
+.celebrate-in {
+  animation: celebrate-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.celebrate-in-late {
+  animation: celebrate-in 700ms cubic-bezier(0.16, 1, 0.3, 1) 140ms both;
+}
+
+@keyframes celebrate-in {
+  from {
+    transform: translateY(14px);
+  }
+  to {
+    transform: none;
+  }
+}
+
 /* === Respeto a prefers-reduced-motion (WCAG 2.3.3) ===
    Neutraliza de golpe transiciones, animaciones infinitas y scroll suave para
    usuarios que pidieron menos movimiento. El smooth-scroll por JS se cubre aparte

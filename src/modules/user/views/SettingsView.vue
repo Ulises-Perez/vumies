@@ -86,6 +86,27 @@
         </BaseCard>
       </section>
 
+      <!-- Sorpresa -->
+      <section>
+        <h2 class="text-lg font-semibold tracking-normal text-foreground mb-3 px-1">Sorpresa</h2>
+        <BaseCard class="p-5 md:p-6">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="font-medium text-foreground">Cumpleaños</p>
+              <p class="text-sm text-muted-foreground">Espero te guste, Miranda.</p>
+            </div>
+            <BaseButton
+              variant="outline"
+              size="sm"
+              aria-label="Celebrar el cumpleaños de Miranda"
+              @click="celebrating = true"
+            >
+              Celebrar
+            </BaseButton>
+          </div>
+        </BaseCard>
+      </section>
+
       <!-- Acerca de -->
       <section>
         <h2 class="text-lg font-semibold tracking-normal text-foreground mb-3 px-1">Acerca de</h2>
@@ -106,18 +127,23 @@
         </BaseCard>
       </section>
     </div>
+
+    <ConfettiBurst :show="celebrating" @close="celebrating = false" />
   </BaseContainer>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { MoonIcon, SunIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
 import { useSettingsStore, type Theme } from '@/core/stores/settings.store'
 import { useUserStore } from '@/modules/user'
 import { BaseBadge, BaseButton, BaseCard, BaseContainer } from '@/modules/ui/components/base'
+import ConfettiBurst from '@/modules/ui/components/ConfettiBurst.vue'
 
 const settings = useSettingsStore()
 const userStore = useUserStore()
+
+const celebrating = ref(false)
 
 const version = '2.0.3'
 
