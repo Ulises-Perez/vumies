@@ -6,12 +6,15 @@
 // subbed versions selectable inside its own player). The rest are fallbacks for
 // when a title is missing or a source is down.
 //
-// Every template was verified by probing it with a real TMDB id, movie AND tv
+// Every template was verified by probing it with a real id, movie AND tv
 // (odd/tasks/continue-watching.md, L12). A provider that did not answer both is
 // not here: VidSrc (429 for scripted probes and the human reporting it broken),
 // EmbedWave (removed on request), VidLink (unreachable), 2Embed (301 loop),
 // VidEasy (redirect to an unreachable host), Stellar and AutoEmbed (tv route 404
 // with the documented shape).
+//
+// The probe only checked for HTTP 200, which is how PlayLatinSRC shipped
+// pointing at the wrong film: it answers 200 for any id. Check the title.
 // ============================================================================
 import type { Media, Stream, StreamSource } from './types'
 
@@ -25,8 +28,13 @@ interface ProviderTemplates {
    * rather than guessed: the picker shows nothing instead of a wrong language.
    */
   languageLabel?: string
-  movie: (tmdbId: number) => string
-  tv: (tmdbId: number, season: number, episode: number) => string
+  /**
+   * Id the provider indexes by. PlayLatinSRC resolves by IMDb and answers 200
+   * with a different film when handed a TMDB id, so it must not get one.
+   */
+  idKind?: 'tmdb' | 'imdb'
+  movie: (id: string) => string
+  tv: (id: string, season: number, episode: number) => string
 }
 
 const PROVIDERS: ProviderTemplates[] = [
@@ -35,6 +43,7 @@ const PROVIDERS: ProviderTemplates[] = [
     label: 'PlayLatinSRC',
     weight: 95,
     languageLabel: 'Latino · Castellano · Subtitulado',
+    idKind: 'imdb',
     movie: (id) => `https://playlatinsrc.co/movie/${id}`,
     // Ruta documentada por ellos: /serial/{id} para la serie entera y
     // /custom/serial/{id}/{s}/{e} para un episodio. Con /tv/... caia en su home.
@@ -58,13 +67,15 @@ const PROVIDERS: ProviderTemplates[] = [
   },
 ]
 
-function build(template: ProviderTemplates, media: Media): Stream {
+function build(template: ProviderTemplates, media: Media): Stream | null {
+  const id = template.idKind === 'imdb' ? media.imdbId : String(media.tmdbId)
+  // Sin el id correcto el proveedor devuelve otra pelicula: mejor no ofrecerlo.
+  if (!id) return null
+
   const season = media.season ?? 1
   const episode = media.episode ?? 1
   const url =
-    media.type === 'movie'
-      ? template.movie(media.tmdbId)
-      : template.tv(media.tmdbId, season, episode)
+    media.type === 'movie' ? template.movie(id) : template.tv(id, season, episode)
 
   return {
     sourceId: template.id,
@@ -81,5 +92,8 @@ export const embedProviderSources: StreamSource[] = PROVIDERS.map((template) => 
   id: template.id,
   label: template.label,
   isEnabled: () => true,
-  getStreams: async (media: Media) => [build(template, media)],
+  getStreams: async (media: Media) => {
+    const stream = build(template, media)
+    return stream ? [stream] : []
+  },
 }))

@@ -255,6 +255,7 @@ import LoadingSpinner from '@/modules/ui/components/LoadingSpinner.vue'
 import StreamSourceModal from '@/modules/player/components/StreamSourceModal.vue'
 import { useMovies } from '@/modules/catalog/composables/useMovies'
 import { useSeries } from '@/modules/catalog/composables/useSeries'
+import { tmdbService } from '@/modules/catalog/services/tmdb.service'
 import { useStreamSources } from '@/modules/player'
 import type { Media, Stream } from '@/modules/player'
 
@@ -311,12 +312,34 @@ function goBack() {
   }
 }
 
-function buildMedia(): Media {
+function buildMedia(imdbId?: string): Media {
   return {
     type: type.value as Media['type'],
     tmdbId: id.value,
+    imdbId,
     season: type.value === 'movie' ? undefined : season.value,
     episode: type.value === 'movie' ? undefined : episode.value,
+  }
+}
+
+/**
+ * PlayLatinSRC indexa por IMDb: con el id de TMDB responde 200 con otra
+ * pelicula. Sin este id la fuente se oculta, que es mejor que reproducir algo
+ * distinto a lo elegido.
+ */
+async function resolveImdbId(): Promise<string | undefined> {
+  try {
+    // El id de anime es de MyAnimeList, no de TMDB, asi que no hay como
+    // resolverlo aqui.
+    // shortcut: anime sin PlayLatinSRC, mapear malId -> TMDB si se pide.
+    if (type.value === 'anime') return undefined
+    const external =
+      type.value === 'movie'
+        ? await tmdbService.getMovieExternalIds(id.value)
+        : await tmdbService.getTVShowExternalIds(id.value)
+    return external.imdb_id ?? undefined
+  } catch {
+    return undefined
   }
 }
 
@@ -329,7 +352,7 @@ async function loadContent() {
   if (iframeTimeout) clearTimeout(iframeTimeout)
 
   selectorOpen.value = true
-  const sourcesPromise = loadSources(buildMedia())
+  const sourcesPromise = resolveImdbId().then((imdbId) => loadSources(buildMedia(imdbId)))
 
   if (type.value === 'movie') {
     fetchMovieDetails(id.value).catch(() => {})
