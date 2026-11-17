@@ -2,7 +2,8 @@ import type { RouteLocationRaw } from 'vue-router'
 
 /** Pieza del mosaico de destacados, ya resuelta por el llamador: sin campos de TMDB. */
 export interface MosaicTile {
-  id: number
+  /** Solo se usa como key del v-for: la busqueda pasa `id-media_type` para no chocar. */
+  id: number | string
   title: string
   /** URL de imagen ya resuelta (backdrop para el lead, poster para las piezas altas). */
   artwork: string
