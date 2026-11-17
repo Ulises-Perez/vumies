@@ -62,12 +62,14 @@
           v-if="showFavorite"
           variant="ghost"
           size="icon"
-          class="absolute top-2 right-2 h-8 w-8 bg-background/60 backdrop-blur-sm border border-border/60"
+          class="absolute top-2 right-2 bg-background/60 backdrop-blur-sm border border-border/60"
+          :aria-label="`${movie.title}, favorito`"
+          :aria-pressed="isFavorite"
           @click.prevent="toggleFavorite"
         >
           <svg
             class="w-4 h-4 transition-colors"
-            :class="[isFavorite ? 'text-red-500 fill-current' : 'text-muted-foreground']"
+            :class="[isFavorite ? 'text-destructive fill-current' : 'text-muted-foreground']"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -148,6 +150,7 @@ function toggleFavorite() {
     type: 'movie',
     title: props.movie.title,
     poster_path: props.movie.poster_path,
+    backdrop_path: props.movie.backdrop_path,
   })
 }
 </script>

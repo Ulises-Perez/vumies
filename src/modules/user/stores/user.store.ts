@@ -1,15 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { tmdbService } from '@/modules/catalog/services/tmdb.service'
 
-interface FavoriteItem {
+export interface FavoriteItem {
   id: number
   type: 'movie' | 'tv'
   title: string
   poster_path: string | null
+  /** Backdrop 16:9 cuando la ficha lo tenia: las tarjetas de Favoritos son 16:9. */
+  backdrop_path?: string | null
   addedAt: number
 }
 
-interface WatchHistoryItem extends FavoriteItem {
+export interface WatchHistoryItem extends FavoriteItem {
   watchedAt: number
   /**
    * Backdrop 16:9 cuando la ficha lo tenia. Las tarjetas de "Continuar viendo"
@@ -170,6 +173,51 @@ export const useUserStore = defineStore('user', () => {
     saveToStorage()
   }
 
+  let backfilling = false
+
+  /**
+   * Rellena backdrop_path de lo guardado antes de que existiera el campo: sin el,
+   * la tarjeta 16:9 recorta un poster 2:3. En lotes para no saturar TMDB; lo que
+   * falle (o se aborte al navegar) se reintenta en la proxima visita.
+   */
+  async function backfillBackdrops() {
+    if (backfilling) return
+    const pending = [...favorites.value, ...watchHistory.value].filter((i) => !i.backdrop_path)
+    if (!pending.length) return
+
+    backfilling = true
+    let changed = false
+    try {
+      for (let i = 0; i < pending.length; i += 8) {
+        const batch = pending.slice(i, i + 8)
+        const results = await Promise.allSettled(
+          batch.map(async (item) => {
+            const details =
+              item.type === 'movie'
+                ? await tmdbService.getMovieDetails(item.id)
+                : await tmdbService.getTVShowDetails(item.id)
+            return { id: item.id, type: item.type, backdrop: details.backdrop_path }
+          }),
+        )
+        for (const result of results) {
+          if (result.status !== 'fulfilled') continue
+          const { id, type, backdrop } = result.value
+          if (!backdrop) continue
+          for (const list of [favorites.value, watchHistory.value]) {
+            const hit = list.find((i) => i.id === id && i.type === type)
+            if (hit && !hit.backdrop_path) {
+              hit.backdrop_path = backdrop
+              changed = true
+            }
+          }
+        }
+      }
+    } finally {
+      backfilling = false
+    }
+    if (changed) saveToStorage()
+  }
+
   // Initialize
   loadFromStorage()
 
@@ -199,6 +247,7 @@ export const useUserStore = defineStore('user', () => {
     addToHistory,
     removeFromHistory,
     clearHistory,
+    backfillBackdrops,
   }
 })
 

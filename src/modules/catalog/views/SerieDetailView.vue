@@ -231,6 +231,7 @@ function toggleFavorite() {
       type: 'tv',
       title: seriesDetails.value.name,
       poster_path: seriesDetails.value.poster_path,
+      backdrop_path: seriesDetails.value.backdrop_path,
     })
   }
 }

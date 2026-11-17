@@ -174,6 +174,7 @@ function toggleLeadFavorite() {
       type: 'movie',
       title: mosaicLead.value.title,
       poster_path: mosaicLead.value.poster_path,
+      backdrop_path: mosaicLead.value.backdrop_path,
     })
   }
 }
