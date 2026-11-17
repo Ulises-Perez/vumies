@@ -10,6 +10,9 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    // Los editores escriben con un directorio temporal oculto junto al archivo;
+    // en OneDrive ese temporal queda bloqueado y el watcher moria con EBUSY.
+    watch: { ignored: ['**/.*.tmpdir/**'] },
   },
   // ===== TOGGLE ÚNICO DEL MÓDULO DE ANIME =====
   // Cambiar a `true` para REACTIVAR todo el anime (rutas, navegación, búsqueda).
