@@ -166,24 +166,13 @@ deno task deploy   # deno deploy --prod
 
 Set `VIMEUS_API_KEY` as an environment variable of the deployment project.
 
-The app is currently deployed as a **static** site (`dist` + SPA fallback), so
-`server.ts` does not run: `/api/vimeus/listing/*` returns the SPA HTML and the
-player falls back to the embed providers. To restore the proxy, switch the app
-to the dynamic runtime with `server.ts` as entrypoint (dashboard, or a `deploy`
-section in `deno.json`):
+The app runs on the **dynamic** runtime (`deno.json` → `deploy.runtime`), with
+`server.ts` as entrypoint. It serves `./dist`, proxies `/api/vimeus/listing/*`
+to `vimeus.net` with the `X-API-Key` header, and serves the ad-stripping embed
+proxy under `/embed/<provider>/…`; `GET /healthz` returns `ok`.
 
-```jsonc
-{
-  "deploy": {
-    "install": "pnpm install",
-    "build": "pnpm build",
-    "runtime": { "type": "dynamic", "entrypoint": "./server.ts" }
-  }
-}
-```
-
-`server.ts` then serves `./dist` and proxies `/api/vimeus/listing/*` to
-`vimeus.net` with the `X-API-Key` header; `GET /healthz` returns `ok`.
+If the project is ever switched back to a static site, `/embed/*` returns the
+SPA HTML and every player shows the 404 view.
 
 ## 🗂️ Project structure
 

@@ -4,6 +4,11 @@
     "start": "deno run -A server.ts",
     "deploy": "deno deploy --prod"
   },
+  "deploy": {
+    "install": "pnpm install",
+    "build": "pnpm build",
+    "runtime": { "type": "dynamic", "entrypoint": "./server.ts" }
+  },
   "fmt": {},
   "lint": {}
 }
