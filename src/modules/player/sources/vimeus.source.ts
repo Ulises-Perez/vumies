@@ -20,12 +20,15 @@ export const vimeusSource: StreamSource = {
   },
 
   async getStreams(media: Media): Promise<Stream[]> {
-    const url = vimeusService.getEmbedUrl(VIMEUS_TYPE[media.type], {
+    const direct = vimeusService.getEmbedUrl(VIMEUS_TYPE[media.type], {
       tmdbId: media.tmdbId,
       imdbId: media.imdbId,
       season: media.season,
       episode: media.episode,
     })
+    // El proxy vive en /embed/vimeus; el embed directo es el mismo path sin el
+    // prefijo, y queda como respaldo si el proxy no responde.
+    const { pathname, search } = new URL(direct)
 
     return [
       {
@@ -33,8 +36,10 @@ export const vimeusSource: StreamSource = {
         label: 'Vimeus',
         languageLabel: 'Español latino',
         kind: 'iframe',
-        url,
+        url: `/embed/vimeus${pathname}${search}`,
+        fallbackUrl: direct,
         playable: true,
+        sandboxed: true,
         weight: 100, // fuente principal por ahora
       },
     ]

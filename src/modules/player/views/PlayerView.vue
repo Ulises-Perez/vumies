@@ -14,14 +14,20 @@
         </button>
       </div>
 
-      <!-- Iframe (Vimeus embed) -->
+      <!-- Iframe del embed, servido por el proxy de server.ts. sandbox sin
+           allow-popups, allow-top-navigation ni allow-same-origin: el documento
+           corre en un origen opaco, asi que no puede abrir ventanas, navegar el
+           top ni tocar el origen de Vumies. Si el proxy falla se reintenta con
+           la URL directa del proveedor, que ya no va sandboxeada. -->
       <iframe
+        ref="iframeEl"
         v-show="activeStream?.kind === 'iframe' && embedUrl && !hasContentError"
         @error="handleIframeError"
         @load="handleIframeLoad"
         :src="embedUrl"
         class="absolute inset-0 h-full w-full"
         frameborder="0"
+        :sandbox="activeStream?.sandboxed && !usingFallback ? 'allow-scripts' : undefined"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
         referrerpolicy="origin"
@@ -274,6 +280,9 @@ const { loading: sourcesLoading, results: sourceResults, streams: sourceStreams,
 // ---- State ----
 const embedUrl = ref('')
 const videoUrl = ref('')
+const iframeEl = ref<HTMLIFrameElement | null>(null)
+/** El embed proxeado fallo y estamos en la URL directa del proveedor. */
+const usingFallback = ref(false)
 
 const activeStream = ref<Stream | null>(null)
 const selectorOpen = ref(false)
@@ -281,7 +290,6 @@ const episodesOpen = ref(false)
 const preferredSourceId = ref<string | null>(null)
 const selectedSeasonNumber = ref(1)
 const hasContentError = ref(false)
-const embedOrigin = ref('')
 let iframeTimeout: number | null = null
 
 // ---- Params ----
@@ -347,8 +355,8 @@ async function loadContent() {
   hasContentError.value = false
   activeStream.value = null
   embedUrl.value = ''
-  embedOrigin.value = ''
   videoUrl.value = ''
+  usingFallback.value = false
   if (iframeTimeout) clearTimeout(iframeTimeout)
 
   selectorOpen.value = true
@@ -387,21 +395,35 @@ function selectStream(stream: Stream) {
   selectorOpen.value = false
   episodesOpen.value = false
   hasContentError.value = false
+  usingFallback.value = false
   embedUrl.value = ''
   videoUrl.value = ''
 
   if (stream.kind === 'iframe') {
-    embedUrl.value = stream.url || ''
-    embedOrigin.value = originOf(embedUrl.value)
-    if (iframeTimeout) clearTimeout(iframeTimeout)
-    // Si el embed no carga en 15s, overlay en vez de un iframe en blanco.
-    iframeTimeout = window.setTimeout(() => {
-      hasContentError.value = true
-    }, 15_000)
-    checkEmbedUrlStatus(embedUrl.value)
+    loadEmbed(stream.url || '')
   } else if (stream.kind === 'direct') {
     videoUrl.value = stream.url || ''
   }
+}
+
+function loadEmbed(url: string) {
+  embedUrl.value = url
+  if (iframeTimeout) clearTimeout(iframeTimeout)
+  // Si el embed no carga en 15s, overlay en vez de un iframe en blanco.
+  iframeTimeout = window.setTimeout(failEmbed, 15_000)
+  checkEmbedUrlStatus(url)
+}
+
+// El proxy puede caerse o el proveedor cambiar su HTML: antes de rendirnos,
+// reintentamos con la URL directa, que ya no pasa por el proxy ni por sandbox.
+function failEmbed() {
+  const fallback = activeStream.value?.fallbackUrl
+  if (fallback && !usingFallback.value) {
+    usingFallback.value = true
+    loadEmbed(fallback)
+    return
+  }
+  hasContentError.value = true
 }
 
 // ---- Selector / Episodes ----
@@ -423,23 +445,15 @@ function closeEpisodes() {
   episodesOpen.value = false
 }
 
-function originOf(url: string): string {
-  try {
-    return new URL(url).origin
-  } catch {
-    return ''
-  }
-}
-
 async function checkEmbedUrlStatus(url: string) {
   try {
     const res = await fetch(url, { method: 'HEAD' })
-    if (res.status === 404) hasContentError.value = true
+    if (res.status === 404) failEmbed()
   } catch (e) {
     console.warn('No se pudo verificar la URL del embed', e)
   }
 }
-function handleIframeError() { hasContentError.value = true }
+function handleIframeError() { failEmbed() }
 function handleIframeLoad() { if (iframeTimeout) clearTimeout(iframeTimeout) }
 function onMediaEnded() { if (type.value === 'tv' || type.value === 'anime') nextEpisode() }
 
@@ -553,13 +567,20 @@ function nextEpisode() {
 
 function handleMessage(event: MessageEvent) {
   // Solo el embed que estamos mostrando puede mandar eventos: cualquier ventana
-  // que nos enmarque podria forzar navegacion o el overlay de error.
-  if (!embedOrigin.value || event.origin !== embedOrigin.value) return
+  // que nos enmarque podria forzar navegacion o el overlay de error. Se compara
+  // por ventana y no por origen porque el embed proxeado corre en origen opaco.
+  if (!iframeEl.value || event.source !== iframeEl.value.contentWindow) return
+  // El documento proxeado avisa en cuanto su shim corre: el embed esta vivo
+  // aunque sus imagenes tarden, y no hay que caer al proveedor directo.
+  if (event.data?.event === 'ready') {
+    if (iframeTimeout) clearTimeout(iframeTimeout)
+    return
+  }
   if (event.data === 'ended' || event.data?.event === 'ended') {
     if (type.value === 'tv' || type.value === 'anime') nextEpisode()
   }
   if (event.data === 'error' || event.data?.event === 'error' || event.data?.status === 404) {
-    hasContentError.value = true
+    failEmbed()
   }
 }
 

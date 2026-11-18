@@ -13,6 +13,11 @@
 // VidEasy (redirect to an unreachable host), Stellar and AutoEmbed (tv route 404
 // with the documented shape).
 //
+// Every embed is served through the proxy in server.ts (/embed/<id>/…), which
+// strips the ad tags and shims the player, and is framed with
+// sandbox="allow-scripts". The direct URL is kept as `fallbackUrl` for when the
+// proxy itself is down.
+//
 // The probe only checked for HTTP 200, which is how PlayLatinSRC shipped
 // pointing at the wrong film: it answers 200 for any id. Check the title.
 // ============================================================================
@@ -33,6 +38,13 @@ interface ProviderTemplates {
    * with a different film when handed a TMDB id, so it must not get one.
    */
   idKind?: 'tmdb' | 'imdb'
+  /**
+   * The provider is a SPA that routes on `location.pathname`, so it cannot be
+   * served under `/embed/<id>/`: its router would not match and it renders its
+   * own 404. Those are served at their real pathname with a `__embed` marker in
+   * the query instead, which the router ignores.
+   */
+  pathRouted?: boolean
   movie: (id: string) => string
   tv: (id: string, season: number, episode: number) => string
 }
@@ -54,14 +66,17 @@ const PROVIDERS: ProviderTemplates[] = [
     label: 'VidFast',
     weight: 75,
     languageLabel: 'Inglés',
-    movie: (id) => `https://vidfast.pro/movie/${id}`,
-    tv: (id, season, episode) => `https://vidfast.pro/tv/${id}/${season}/${episode}`,
+    pathRouted: true,
+    // .vc y no .pro: el .pro solo redirige aqui, y el proxy apunta a .vc.
+    movie: (id) => `https://vidfast.vc/movie/${id}`,
+    tv: (id, season, episode) => `https://vidfast.vc/tv/${id}/${season}/${episode}`,
   },
   {
     id: 'vidnest',
     label: 'VidNest',
     weight: 65,
     languageLabel: 'Subtítulos automáticos',
+    pathRouted: true,
     movie: (id) => `https://vidnest.pro/movie/${id}`,
     tv: (id, season, episode) => `https://vidnest.pro/tv/${id}/${season}/${episode}`,
   },
@@ -74,15 +89,23 @@ function build(template: ProviderTemplates, media: Media): Stream | null {
 
   const season = media.season ?? 1
   const episode = media.episode ?? 1
-  const url =
+  const direct =
     media.type === 'movie' ? template.movie(id) : template.tv(id, season, episode)
+  // El proxy reescribe el HTML del proveedor y le quita los anuncios; la URL
+  // directa solo se usa si el proxy no responde.
+  const { pathname, search } = new URL(direct)
+  const url = template.pathRouted
+    ? `${pathname}${search}${search ? '&' : '?'}__embed=${template.id}`
+    : `/embed/${template.id}${pathname}${search}`
 
   return {
     sourceId: template.id,
     label: template.label,
     kind: 'iframe',
     url,
+    fallbackUrl: direct,
     playable: true,
+    sandboxed: true,
     weight: template.weight,
     languageLabel: template.languageLabel,
   }

@@ -49,6 +49,17 @@ export interface Stream {
   languageLabel?: string
   /** Can the current player handle this codec without transcoding? */
   playable?: boolean
+  /**
+   * El embed se sirve a traves del proxy de `server.ts` y corre dentro de un
+   * iframe con `sandbox="allow-scripts"`: origen opaco, sin ventanas nuevas, sin
+   * navegar el top y sin acceso al origen de Vumies.
+   */
+  sandboxed?: boolean
+  /**
+   * URL directa del proveedor, sin proxy. Solo se usa si el embed proxeado no
+   * carga: el proxy puede caerse o el proveedor cambiar su HTML.
+   */
+  fallbackUrl?: string
   /** Higher = prioritized earlier in the list and in auto-play. */
   weight?: number
 }
