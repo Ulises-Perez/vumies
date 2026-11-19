@@ -252,6 +252,9 @@ type EmbedProvider = {
   shim?: string
   /** Where to inject `shim`; defaults to just before `</head>`. */
   shimAnchor?: RegExp
+  /** Route playlists and segments through this server. Only needed when the
+   *  CDN refuses a foreign Referer; it costs the deploy's egress quota. */
+  proxyMedia?: boolean
 }
 
 const escapeRe = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -343,6 +346,8 @@ const EMBED_PROVIDERS: Record<string, EmbedProvider> = {
       /<script[^>]*cloudflareinsights[^>]*><\/script>/g,
     ],
     dropInline: ['llvpn.com'],
+    // dropcdn answers 403 unless the request carries the provider's Referer.
+    proxyMedia: true,
     shim: VIMEUS_SHIM,
     shimAnchor: /(<script\b[^>]*jwplayer\.js[^>]*>\s*<\/script>)/i,
   },
@@ -358,10 +363,11 @@ const EMBED_PROVIDERS: Record<string, EmbedProvider> = {
 }
 
 /** Runs inside the proxied document before any of its own scripts. */
-function embedShim(providerId: string): string {
+function embedShim(providerId: string, proxyMedia: boolean): string {
   return `(function () {
 var P = ${JSON.stringify(providerId)};
 var PRE = '/embed/' + P;
+var PROXY_MEDIA = ${JSON.stringify(proxyMedia)};
 var ADS = ${JSON.stringify(AD_HOSTS)};
 function isAd(u) {
   try {
@@ -406,10 +412,12 @@ Element.prototype.setAttribute = function (name, value) {
   if (this instanceof HTMLIFrameElement && String(name).toLowerCase() === 'src') value = nested(value);
   return setAttr.call(this, name, value);
 };
-// Media CDNs only answer the provider's own Referer, which a browser cannot
-// forge, so playlists and segments come back through this server instead.
+// Video bytes stay on the CDN: proxying them spent the deploy's whole egress
+// quota (20 GiB/month) after a dozen movies. Only providers whose CDN refuses
+// a foreign Referer still come through here.
 var MEDIA = /\\.(m3u8|ts|m4s|mp4|key|vtt)(\\?|$)/i;
 function media(u) {
+  if (!PROXY_MEDIA) return fix(u);
   if (typeof u !== 'string') return u;
   var abs;
   try { abs = new URL(u, location.href) } catch (e) { return fix(u) }
@@ -540,7 +548,10 @@ function rewriteEmbed(html: string, providerId: string, provider: EmbedProvider)
   // Root-relative URLs must come back through this proxy, not the site root.
   // Single quotes matter: jwplayer ships as src='/player/jw8/jwplayer.js'.
   out = out.replace(/(\s(?:src|href)\s*=\s*["'])\/(?!\/)/g, `$1/embed/${providerId}/`)
-  out = out.replace(/<\/head>/i, `<script>${embedShim(providerId)}</script></head>`)
+  out = out.replace(
+    /<\/head>/i,
+    `<script>${embedShim(providerId, provider.proxyMedia === true)}</script></head>`
+  )
   if (provider.shim) {
     const extra = `<script>${provider.shim}</script>`
     out = provider.shimAnchor
